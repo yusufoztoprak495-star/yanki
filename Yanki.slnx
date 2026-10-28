@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Yanki.Cli/Yanki.Cli.csproj" />
+    <Project Path="src/Yanki.Core/Yanki.Core.csproj" />
+    <Project Path="src/Yanki.Dialogue/Yanki.Dialogue.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Yanki.Core.Tests/Yanki.Core.Tests.csproj" />
+    <Project Path="tests/Yanki.Scenarios.Tests/Yanki.Scenarios.Tests.csproj" />
+  </Folder>
+</Solution>

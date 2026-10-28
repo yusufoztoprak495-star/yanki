@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Konsol sandbox ve araçlar: yanki run / why / diff / validate / coverage (ilerleyen haftalarda). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Yanki.Cli</RootNamespace>
+    <AssemblyName>yanki</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Yanki.Core\Yanki.Core.csproj" />
+    <ProjectReference Include="..\Yanki.Dialogue\Yanki.Dialogue.csproj" />
+  </ItemGroup>
+
+</Project>

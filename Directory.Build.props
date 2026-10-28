@@ -1,0 +1,18 @@
+<Project>
+  <!-- Tüm projelerde ortak ayarlar. Kütüphaneler bunu kendi TargetFrameworks'leriyle genişletir. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <Authors>Yusuf Öztoprak</Authors>
+    <Copyright>Copyright (c) 2026 Yusuf Öztoprak</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/yusufoztoprak495-star/yanki</RepositoryUrl>
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+</Project>

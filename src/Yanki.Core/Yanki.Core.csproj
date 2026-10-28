@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Motorun çekirdeği: olay kaydı, dünya, zihin, algı, karar, kurallar.
+    Hiçbir dış pakete bağımlı değildir (ADR-001, ADR-004).
+    netstandard2.1 → Unity uyumu, net10.0 → güncel LTS.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace>Yanki.Core</RootNamespace>
+    <Description>Yankı: oyuncu kararlarının NPC'lerde ve dünyada yankılandığı, motordan bağımsız NPC ve sonuç motoru.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

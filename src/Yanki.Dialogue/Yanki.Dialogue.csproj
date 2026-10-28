@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Diyalog katmanı: niyet, kriter tabanlı şablon seçimi, mini gramer, IDialogueRenderer.
+    Çekirdeğe bağımlıdır; çekirdek bu projeyi asla tanımaz.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+    <RootNamespace>Yanki.Dialogue</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Yanki.Core\Yanki.Core.csproj" />
+  </ItemGroup>
+
+</Project>
