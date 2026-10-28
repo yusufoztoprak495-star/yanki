@@ -36,7 +36,21 @@ jobs:
         run: dotnet build Yanki.slnx -c Release --no-restore
 
       - name: Test
-        run: dotnet test Yanki.slnx -c Release --no-build --logger "trx;LogFilePrefix=results" --results-directory TestResults
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet test Yanki.slnx -c Release --no-build \
+            --logger "trx;LogFilePrefix=results" --logger "console;verbosity=normal" \
+            --results-directory TestResults 2>&1 | tee test.log
+
+      # Test kırılırsa hatanın özetini Actions ekranında annotation olarak göster.
+      - name: Test hatasını özetle
+        if: failure()
+        shell: bash
+        run: |
+          grep -E "Failed |Error Message|error |Assert|Exception|Testhost|No test" test.log | head -40 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
 
       - name: Test sonuçlarını yükle
         if: always()
