@@ -6,8 +6,8 @@ namespace Yanki.Core.Criteria
 {
     /// <summary>
     /// Yalnızca dünyaya dayanan iki sorgu fonksiyonunu çözer: <c>gercek</c> ve <c>ayni_mekanda</c>
-    /// (<c>konum!</c> gerçeklerinden). Zihin, hafıza ve yay tabanlı diğer 13 fonksiyon 3. haftadan sonra gelir;
-    /// bu çözücüde <see cref="NotSupportedException"/> verir.
+    /// (<c>konum!</c> gerçeklerinden). Zihin, hafıza ve yay tabanlı diğer 13 fonksiyon <see cref="ZihinSorguCozucusu"/>'nda
+    /// (bu çözücüde <see cref="NotSupportedException"/> verir).
     /// </summary>
     public sealed class DunyaSorguCozucusu : ISorguCozucu
     {

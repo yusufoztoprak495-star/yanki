@@ -50,3 +50,11 @@ v0.1'de sabit, belgelenmiş küçük bir set (yaklaşık 15 fonksiyon). **Bu sö
 | 13 | `ayni_mekanda(hedef)` | Hedefle aynı mekanda mı | doğru/yanlış | `ayni_mekanda(oyuncu)` |
 | 14 | `gercek(onerme)` | Önerme dünyada nesnel olarak doğru mu (yalnızca sonuç kuralları ve yazar koşulları için; NPC zihni bunu göremez) | doğru/yanlış | `gercek(konum!(Ali, han))` |
 | 15 | `yay(degisken)` | Senaryo düzeyindeki dramatik yay değişkeninin değeri | sayı | `yay(kasaba_gerginligi) aralik [2, 4]` |
+
+## Bağlama durumu (3. hafta)
+
+`ZihinSorguCozucusu` 15 fonksiyonun 13'ünü gerçek veriye bağlar: zihne dayanan 11 (`kisilik`, `eksen`, `fikir`, `fikir_bandi`, `modifier_var`, `duygu`,
+`duygu_hedefi`, `stres`, `inanc`, `kaynak`, `hafiza_var`) ve dünyaya dayanan 2 (`gercek`, `ayni_mekanda`). `yalan_soyledi` (yalan kaydı, 6. hafta) ve
+`yay` (yay değişkenleri, 7. hafta) henüz bağlı değildir. Sözlüğe yeni fonksiyon eklenmedi. `inanc` çelişkide kaybeden önerme için 0 döner;
+`degil(p)` biçimli inançlar sözlükte (iç içe önerme yasağı) sorgulanamaz; ayrıntı için `docs/notes/zihin.md` açık noktalar.
+
