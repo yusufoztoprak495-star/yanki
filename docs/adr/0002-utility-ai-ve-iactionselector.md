@@ -1,8 +1,7 @@
 # ADR-0002: NPC kararları için utility AI ve takılabilir `IActionSelector`
 
-**Durum:** Kabul edildi
+**Durum:** Önerildi
 **Tarih:** 2026-10-29
-**Karar veren:** Yusuf
 
 ## Bağlam
 NPC'ler doğal davranmalı ama kişiliklerine tutarlı kalmalı; aynı seed ile aynı kararı vermeli; her kararın gerekçesi
@@ -41,9 +40,11 @@ GOAP ve davranış ağaçları için olgun kütüphaneler zaten var; onlarla yar
 **Artıları:** Olgun, iyi bilinen.
 **Eksileri:** Sosyal ve duygusal durumları tartmakta zayıf; mevcut kütüphanelerle yarışmak anlamsız.
 
-## Ödünleşim analizi
+## Ödünleşimler
 A projenin üç iddiasını (tutarlılık, determinizm, açıklanabilirlik) aynı anda karşılayan tek seçenek. C'yi dışlamak
 yerine arayüz arkasına alıyoruz.
+
+## Gerekçe (Yusuf)
 
 ## Sonuçlar
 - Kolaylaşan: Karar izi, sıra etkisi testleri, kişilik tutarlılığı.
