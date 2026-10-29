@@ -51,5 +51,24 @@ namespace Yanki.Core.Tests
 
             Assert.False(File.Exists(path) || Directory.Exists(path), $"{relativePath} 1. haftada oluşturulmamalı.");
         }
+
+        [Fact]
+        public void Adr_007_vardir_onerildi_durumunda_ve_gerekcesi_bostur()
+        {
+            var path = RepoRoot.Combine("docs", "adr", "0007-sayisal-temsil-decimal.md");
+
+            Assert.True(File.Exists(path), "ADR-007 yok.");
+            var text = File.ReadAllText(path).Replace("\r\n", "\n");
+            Assert.Contains("**Durum:** Önerildi", text);
+            Assert.Contains("**Kabul eden:** —", text);
+
+            // "Gerekçe (Yusuf)" bölümünü Yusuf yazar; bu bölüm boş kalmalı.
+            var start = text.IndexOf("## Gerekçe (Yusuf)", System.StringComparison.Ordinal);
+            Assert.True(start >= 0, "Gerekçe (Yusuf) başlığı yok.");
+            var rest = text.Substring(start + "## Gerekçe (Yusuf)".Length);
+            var next = rest.IndexOf("\n## ", System.StringComparison.Ordinal);
+            var body = next >= 0 ? rest.Substring(0, next) : rest;
+            Assert.True(string.IsNullOrWhiteSpace(body), "Gerekçe (Yusuf) boş olmalı.");
+        }
     }
 }
