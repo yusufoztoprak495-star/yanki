@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    BenchmarkDotNet konsolu. 1. haftada benchmark yok; 11. haftada 10 / 50 / 200 NPC için tick süresi eklenecek.
+    Test koşusuna dahil değildir: elle ya da etiketle çalıştırılır (dotnet run -c Release, tests/Yanki.Benchmarks klasöründen).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Yanki.Core\Yanki.Core.csproj" />
+  </ItemGroup>
+
+</Project>
