@@ -25,7 +25,7 @@ Bu projede AI kod aracını (Claude Code) açıkça ve bilinçli olarak kullanı
 
 ## Görev metinleri
 
-Her haftanın Claude Code'a verilen görev metni [`docs/prompts/`](prompts/) altında duruyor (şimdilik [4. hafta](prompts/hafta-04.md)). Böylece hangi işin AI'ye nasıl tarif edildiği, hangi kararların Yusuf'a bırakıldığı açıkça görülebiliyor.
+Her haftanın Claude Code'a verilen görev metni [`docs/prompts/`](prompts/) altında duruyor. Metinleri Yusuf hazırlar ve birebir kaydedilir; Claude Code görev metni yazmaz. Böylece hangi işin AI'ye nasıl tarif edildiği açıkça görülebiliyor.
 
 ## Çıktı nasıl doğrulanıyor
 
