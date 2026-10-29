@@ -49,4 +49,5 @@ alfabe kodlama ve ayraç karışıklığı ihtimalini sıfırlıyor.
 ## Emin olmadığım / Yusuf'un bakması gereken noktalar
 
 - Görünen ad alanı (yerelleştirme) ne zaman ve nerede? Diyalog haftasına (8. hafta) mı, varlık tanımına mı?
+  - **Karar (Yusuf):** Görünen ad alanı 8. haftada diyalogla birlikte gelecek. Bu hafta kodda yok; kimlikler ASCII kalır.
 - Korumalı bayraklar (5.10) ve yay değişkenleri 7. haftada; hash'e girecekler mi? (Muhtemelen evet.)

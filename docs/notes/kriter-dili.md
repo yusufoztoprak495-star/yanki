@@ -49,5 +49,7 @@ Bir kriter, "şu sorgunun cevabı şu karşılaştırmayı sağlıyor mu?" sorus
 ## Emin olmadığım / Yusuf'un bakması gereken noktalar
 
 - `gercek(...)` ve `inanc(...)` önermelerinde `*` her argüman konumunda mı serbest olmalı (yüklemin kendisinde değil)?
+  - **Karar (Yusuf):** `*` önermenin her argüman yerinde serbesttir (ör. `borclu(*, Ayse, *)`). Testler: `Gercek_joker_her_arguman_yerinde_serbest` ve sözlük doğrulama testleri (`inanc`, `gercek`, `kaynak`).
 - `ayni_mekanda(hedef)`: iki tarafın da `konum!` gerçeği yoksa `false` döndürüyorum; "bilinmiyor" ayrı bir durum olmalı mı?
+  - **Karar (Yusuf):** Konum bilinmiyorsa `false`, hata yok. Mevcut davranış bu; `AyniMekanda_konumu_olmayan_varlik_icin_false` testi korur.
 - Puan eşitliğinde RNG yerine ikinci bir kriter (öncelik) istenir mi?

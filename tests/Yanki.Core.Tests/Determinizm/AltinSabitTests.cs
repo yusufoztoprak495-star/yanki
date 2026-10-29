@@ -8,7 +8,8 @@ namespace Yanki.Core.Tests.Determinizm
     /// Altın sabit testleri: beklenen değerler testin içinde sabit yazılıdır. Biri hash'e <c>GetHashCode</c> gibi kararsız bir
     /// şey, yuvarlamaya <c>AwayFromZero</c> ya da RNG'ye başka bir akış karıştırırsa bu test kırılır.
     /// Değerler C# çıktısından kopyalanmadı: aynı algoritmayı (FNV-1a 64 + SplitMix64, UTF-8, Python <c>decimal</c> ile
-    /// <c>ROUND_HALF_EVEN</c>) bağımsız bir Python betiğinde uygulayıp hesaplandı.
+    /// <c>ROUND_HALF_EVEN</c>) bağımsız bir Python betiğinde uygulayıp hesaplandı: <c>tools/golden_ref.py</c>
+    /// (motorun parçası değil, yalnızca doğrulama aracı; çalıştırma yönergesi betiğin başında).
     /// </summary>
     public class AltinSabitTests
     {

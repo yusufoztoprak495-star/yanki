@@ -40,6 +40,24 @@ namespace Yanki.Core.Tests.Criteria
             Assert.False(Tutar("gercek(alacakli(*, *, *))", b));
         }
 
+        // Karar (Yusuf): '*' önermenin her argüman yerinde serbesttir.
+        [Theory]
+        [InlineData("gercek(borclu(*, Ayse, *))", true)]      // ilk ve son argüman joker
+        [InlineData("gercek(borclu(*, Mehmet, *))", false)]   // Mehmet kimseye alacaklı değil
+        [InlineData("gercek(borclu(Mehmet, *, 500))", true)]  // ortadaki joker
+        [InlineData("gercek(borclu(Mehmet, *, 400))", false)]
+        [InlineData("gercek(borclu(*, *, 500))", true)]
+        [InlineData("gercek(borclu(*, *, *))", true)]
+        [InlineData("gercek(konum!(*, han))", true)]          // tek değerli yüklemde de
+        [InlineData("gercek(konum!(*, kale))", false)]
+        [InlineData("gercek(konum!(Ali, *))", true)]
+        [InlineData("gercek(konum!(Veli, *))", false)]
+        [InlineData("gercek(faiz(*, *, 0.000002))", true)]    // sayı argümanı ve jokerler
+        public void Gercek_joker_her_arguman_yerinde_serbest(string alan, bool beklenen)
+        {
+            Assert.Equal(beklenen, Tutar(alan, new SorguBaglami("Ali")));
+        }
+
         [Fact]
         public void Gercek_olay_hedef_ve_ben_rolleri_baglamdan_cozulur()
         {

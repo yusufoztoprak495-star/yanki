@@ -141,6 +141,12 @@ namespace Yanki.Core.Tests.Criteria
         [InlineData("hafiza_var(yardim_etti, oyuncu, 168)")]
         [InlineData("eksen(oyuncu, guven)")]
         [InlineData("yalan_soyledi(olay.hedef)")]
+        [InlineData("inanc(borclu(*, Ayse, *))")]                // Karar (Yusuf): '*' her argüman yerinde serbest
+        [InlineData("inanc(borclu(Mehmet, *, 500))")]
+        [InlineData("inanc(borclu(*, *, *))")]
+        [InlineData("gercek(borclu(*, Ayse, *))")]
+        [InlineData("gercek(konum!(*, han))")]
+        [InlineData("kaynak(borclu(*, Ayse, *), Mehmet)")]
         public void Gecerli_ifadeler_dogrulanir(string ifade)
         {
             SorguSozlugu.Dogrula(IfadeAyristirici.Ayristir(ifade));
