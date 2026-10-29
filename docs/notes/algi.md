@@ -8,7 +8,7 @@ Bu hafta yalnızca **doğrudan algı** var (plan 5.3, ilk madde). Bir olay oldu�
 
 | Görünürlük (`Yuk["gorunurluk"]`)  | Kim algılar                                                         |
 | --------------------------------- | ------------------------------------------------------------------- |
-| `acik` (anahtar yoksa varsayılan) | Olayın `Mekan`'ında bulunan bütün NPC'ler (`konum!` gerçeğine göre) |
+| `acik` (anahtar yoksa varsayılan) | Olayın `Mekan`'ında bulunan bütün NPC'ler (`konum!` gerçeğine göre) + `Fail` |
 | `sessiz`                          | Yalnızca `Fail` ve `Hedef`                                          |
 | `gizli`                           | Yalnızca `Fail`                                                     |
 
@@ -37,15 +37,18 @@ Dedikodu (`anlat`, `duydu` kanıtı aktarımı), konu sınırı, yalan kaydı: 6
 Kararlı olanlar **Karar (Yusuf)** satırıyla işaretli (PR #4 incelemesinde verildi); işaretsizler hâlâ açık.
 
 1. **`gordu` kanıt gücü `0.9`.** Aynı olay türü tekrarlanırsa (aynı önerme) kanıtlar birikir (`1 − 0.1 × 0.1 = 0.99`). Tekrar eden gözlem inancı bu kadar mı güçlendirsin?
+   - **Karar (Yusuf):** Aynı NPC'nin aynı önerme, tür ve kaynaktan tekrar eden kanıtı birikmez, mevcut kanıt tazelenir (tick yeni, güç ikisinin büyüğü); bkz. `zihin.md`.
 2. **Hafıza önemi `0.5` (herkes için aynı).** Kalıcılık eşiğinin (0.7) altında, yani algılanan her şey zamanla unutulur. Fail ve hedefin önemi daha yüksek (kalıcı) olsun mu?
    Önem olayın türüne ya da görünürlüğüne göre mi değişsin?
    - **Karar (Yusuf):** Hafıza önemi `0.5`, herkese aynı (mevcut davranış); `gordu` gücü `0.9`.
 3. **`sessiz` olayda mekan aranmaz:** fail ve hedef, başka mekanda olsa bile algılar. Aynı mekanda olmaları şart mı?
    - **Karar (Yusuf):** `sessiz` olayda `Hedef`, olayın `Mekan`'ında bulunmalıdır (`Fail` mekandan bağımsız algılar; `Mekan` boşsa hedef algılamaz). Testler: `Sessiz_olayda_hedef_olayin_mekaninda_degilse_algilamaz`, `Mekani_olmayan_sessiz_olayi_hedef_algilamaz`.
 4. **`acik` olayda `Mekan` boşsa kimse algılamaz.** Fail bile. Failın kendi eylemini her zaman algıladığı varsayımı gerekli mi?
+   - **Karar (Yusuf):** Fail her görünürlükte ve `Mekan` boş olsa bile kendi olayını algılar. Testler: `Fail_her_gorunurlukte_ve_mekan_bos_olsa_bile_kendi_olayini_algilar`, `Fail_olayin_mekaninda_degilse_bile_acik_olayi_algilar`.
 5. **Oyuncu bir NPC değil.** `oyuncu` varlığı dünyada `npc` türünde kayıtlıysa algılar ve zihni olması gerekir; değilse algılamaz. Oyuncunun varlık türü nedir?
    - **Karar (Yusuf):** Oyuncu NPC değildir, algılamaz, zihni yoktur.
 6. **Önerme türetmede boş fail/hedef atlanır** (`selamladi(Ali)`); ikisi de boşsa kanıt üretilmez, yalnızca hafıza yazılır. Yeterli mi?
 7. **Önerme adı olay türünden gelir** (`yardim_etti(oyuncu,Can)`). Olay türleri ASCII kimlik olmalı; kimlik olmayan bir tür `Gercek` doğrulamasında hata verir.
 8. **Bilinmeyen görünürlük değeri hata** (`yari_acik` gibi). Sessizce `acik` sayılsın mı?
+   - **Karar (Yusuf):** Kalsın: bilinmeyen görünürlük hatadır.
 9. **Gözlenen kanıt çelişen eski bir inancı ezebilir** (ör. `gercek_kaldirildi` → `degil(p)` 0.9, eski `duydu` 0.4). Bu istenen davranış, ama dedikodu devreye girince dengesini sınamak gerek (6. hafta).

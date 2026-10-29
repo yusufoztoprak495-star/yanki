@@ -119,6 +119,13 @@ namespace Yanki.Core.Criteria
         private static OnermeDeseni Desen(SorguCagrisi cagri, SorguBaglami baglam)
         {
             var onerme = ((OnermeArgumani)cagri.Argumanlar[0]).Cagri;
+            var olumsuz = false;
+            if (onerme.Ad == "degil" && !onerme.TekDegerli)
+            {
+                olumsuz = true;
+                onerme = ((OnermeArgumani)onerme.Argumanlar[0]).Cagri;
+            }
+
             var args = new List<string?>(onerme.Argumanlar.Count);
             foreach (var a in onerme.Argumanlar)
             {
@@ -132,7 +139,7 @@ namespace Yanki.Core.Criteria
                 }
             }
 
-            return new OnermeDeseni(new GercekDeseni(onerme.Ad + (onerme.TekDegerli ? "!" : string.Empty), args), false);
+            return new OnermeDeseni(new GercekDeseni(onerme.Ad + (onerme.TekDegerli ? "!" : string.Empty), args), olumsuz);
         }
     }
 }

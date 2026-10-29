@@ -90,25 +90,42 @@ namespace Yanki.Core.Mind
         /// <summary>Hesabın yapıldığı tick.</summary>
         public long Tick { get; }
 
-        /// <summary>Katkılar.</summary>
+        /// <summary>Katkılar; toplam kırpıldıysa sonda <c>kirpma</c> satırı da bulunur, böylece katkıların toplamı <see cref="Toplam"/>'a eşit kalır.</summary>
         public IReadOnlyList<FikirKatkisi> Katkilar { get; }
 
         /// <summary>Kırpılmış toplam fikir.</summary>
         public decimal Toplam { get; }
+
+        /// <summary>Kırpılmadan önceki toplam (eksenler + modifier'lar).</summary>
+        public decimal HamToplam { get; }
+
+        /// <summary>Toplam −100..100 dışına çıktığı için kırpıldı mı.</summary>
+        public bool Kirpildi => HamToplam != Toplam;
+
+        /// <summary>Kırpıldıysa <c>kırpıldı: 130 → 100</c>; kırpılmadıysa <c>null</c>.</summary>
+        public string? KirpmaMetni { get; }
 
         internal FikirDokumu(string sahip, string hedef, long tick, IList<FikirKatkisi> katkilar)
         {
             Sahip = sahip;
             Hedef = hedef;
             Tick = tick;
-            Katkilar = new ReadOnlyCollection<FikirKatkisi>(new List<FikirKatkisi>(katkilar));
-            var toplam = 0m;
-            foreach (var k in katkilar)
+            var liste = new List<FikirKatkisi>(katkilar);
+            var ham = 0m;
+            foreach (var k in liste)
             {
-                toplam += k.Deger;
+                ham += k.Deger;
             }
 
-            Toplam = Math.Max(Eksenler.Alt, Math.Min(Eksenler.Ust, toplam));
+            HamToplam = ham;
+            Toplam = Math.Max(Eksenler.Alt, Math.Min(Eksenler.Ust, ham));
+            if (Toplam != ham)
+            {
+                liste.Add(new FikirKatkisi("kirpma", Toplam - ham, 0, -1));
+                KirpmaMetni = "kırpıldı: " + World.KanonikYazici.Sayi(ham) + " → " + World.KanonikYazici.Sayi(Toplam);
+            }
+
+            Katkilar = new ReadOnlyCollection<FikirKatkisi>(liste);
         }
     }
 }

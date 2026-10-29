@@ -516,6 +516,18 @@ namespace Yanki.Core.Mind
                 _inanclar.Add(anahtar, kayit);
             }
 
+            // Aynı önerme, tür ve kaynaktan tekrar gelen kanıt yeni kanıt sayılmaz: mevcut olan tazelenir
+            // (tick = yeni tick, güç = ikisinin büyüğü), böylece tekrar eden gözlem güveni şişirmez.
+            for (var i = 0; i < kayit.Kanitlar.Count; i++)
+            {
+                var eski = kayit.Kanitlar[i];
+                if (eski.Tur == tur && string.Equals(eski.Kaynak, kaynak, StringComparison.Ordinal))
+                {
+                    kayit.Kanitlar[i] = new Kanit(tur, kaynak, olay.Tick, Math.Max(eski.Guc, guc), olay.Id);
+                    return;
+                }
+            }
+
             kayit.Kanitlar.Add(new Kanit(tur, kaynak, olay.Tick, guc, olay.Id));
         }
 

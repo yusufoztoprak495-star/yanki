@@ -286,5 +286,49 @@ namespace Yanki.Core.Tests.Mind
 
             Assert.Equal(new[] { "yalan_soyledi", "yay" }, desteklenmeyen);
         }
+
+        [Fact]
+        public void Inanc_degil_onermesiyle_sorgulanabilir_Ali_handa_degil()
+        {
+            var d = new Duzen();
+            d.Uygula(d.Uretici.Kanit("Can", "degil(konum!(Ali,han))", "duydu", "Ayse", 0.6m));
+
+            Assert.True(Sayi(d, "inanc(degil(konum!(Ali, han)))", KriterOperatoru.Esit, 0.6m));
+            Assert.True(Sayi(d, "inanc(degil(konum!(Ali, *)))", KriterOperatoru.BuyukEsit, 0.5m));
+            Assert.True(Sayi(d, "inanc(konum!(Ali, han))", KriterOperatoru.Esit, 0m));
+            Assert.True(Sayi(d, "inanc(degil(konum!(Ali, pazar)))", KriterOperatoru.Esit, 0m));
+        }
+
+        [Fact]
+        public void Inanc_degil_rol_argumani_ve_celiskili_olumlu_inanci_ezer()
+        {
+            var d = new Duzen();
+            d.Uygula(d.Uretici.Kanit("Can", "konum!(Ayse,han)", "duydu", "Veli", 0.3m));
+            d.Uygula(d.Uretici.Kanit("Can", "degil(konum!(Ayse,han))", "gordu", "Can", 0.9m));
+
+            Assert.True(Sayi(d, "inanc(degil(konum!(dinleyen, han)))", KriterOperatoru.Esit, 0.9m));
+            Assert.True(Sayi(d, "inanc(konum!(dinleyen, han))", KriterOperatoru.Esit, 0m));
+        }
+
+        [Fact]
+        public void Kaynak_da_degil_onermesi_kabul_eder()
+        {
+            var d = new Duzen();
+            d.Uygula(d.Uretici.Kanit("Can", "degil(konum!(Ali,han))", "duydu", "Ayse", 0.6m));
+
+            Assert.True(Mantik(d, "kaynak(degil(konum!(Ali, han)), Ayse)"));
+            Assert.False(Mantik(d, "kaynak(konum!(Ali, han), Ayse)"));
+        }
+
+        [Theory]
+        [InlineData("gercek(degil(konum!(Ali, han)))")]
+        [InlineData("inanc(degil(degil(konum!(Ali, han))))")]
+        [InlineData("inanc(degil(konum!(Ali, han), x))")]
+        [InlineData("inanc(degil(Ali))")]
+        [InlineData("inanc(foo(konum!(Ali, han)))")]
+        public void Degil_yalnizca_tek_onermeyi_sarar_ve_yalniz_inanc_kaynakta_kabul_edilir(string alan)
+        {
+            Assert.Throws<KriterHatasi>(() => Kriter.Olustur(alan, KriterOperatoru.Esit, SorguDegeri.Sayi(0m)));
+        }
     }
 }

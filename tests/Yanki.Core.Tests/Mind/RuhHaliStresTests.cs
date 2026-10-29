@@ -169,5 +169,30 @@ namespace Yanki.Core.Tests.Mind
             Assert.Equal(60m, z.Stres(10));
             Assert.Equal(55m, z.Stres(15));
         }
+
+        [Fact]
+        public void Duygu_karsilastirmasi_mevcut_duygunun_simdiki_tickteki_sonmus_siddetiyle_yapilir()
+        {
+            var z = Yeni(); // sönme 0.1/tick
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Duygu("Can", "ofke", 0.5m, "oyuncu"));
+            u.Tick = 2; // öfke şimdi 0.3
+            z.Uygula(u.Duygu("Can", "korku", 0.4m, "Ali")); // 0.4 > 0.3 ama 0.4 < 0.5 (ham)
+
+            Assert.Equal("korku", z.Duygu!.Tur);
+            Assert.Equal("ofke", z.OncekiDuygu!.Tur);
+        }
+
+        [Fact]
+        public void Sonmus_siddetten_zayif_yeni_duygu_baskin_olmaz()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Duygu("Can", "ofke", 0.5m, "oyuncu"));
+            u.Tick = 2; // öfke 0.3
+            z.Uygula(u.Duygu("Can", "korku", 0.2m, "Ali"));
+
+            Assert.Equal("ofke", z.Duygu!.Tur);
+        }
     }
 }

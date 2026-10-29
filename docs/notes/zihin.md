@@ -66,9 +66,22 @@ Kararlı olanlar **Karar (Yusuf)** satırıyla işaretli (PR #4 incelemesinde ve
    - **Karar (Yusuf):** Kaybeden için `inanc()` 0 döner (mevcut davranış).
 11. **`degil(p)` kriter dilinde sorgulanamaz:** sözlük kuralı önerme içinde önerme yasaklıyor. Zihin `degil(p)` inançlarını tutuyor ve çelişkiyi çözüyor, ama `inanc(degil(...))` yazılamaz.
     Sözlük Yusuf'un alanı olduğundan dokunmadım; istenirse ayrı bir karar.
+   - **Karar (Yusuf):** Yeni fonksiyon eklenmedi; `inanc(...)` (ve `kaynak(...)`) önerme argümanında `degil(yuklem(...))` kabul edilir, `gercek` içinde edilmez. Sözlük doğrulayıcı `degil`in tek bir önermeyi sarmasını şart koşar. Testler: `Inanc_degil_onermesiyle_sorgulanabilir_Ali_handa_degil` ve ilgili.
 12. **`degil` yüklem adı olarak ayrıldı:** `degil(Ali)` gibi bir gerçek yazılamaz.
+   - **Karar (Yusuf):** Kalsın: `degil` yüklem adı olarak ayrılmıştır.
 13. **Kanıt kaynağı `gordu` için NPC'nin kendisi** (doğrudan algıda). `kaynak(p, ben)` bu yüzden doğru döner. Başka bir değer istenir mi (ör. `gozlem`)?
+   - **Karar (Yusuf):** Kalsın: `gordu` kaynağı NPC'nin kendisi.
 14. **Kanıt gücü sönünce çelişki kararı da değişir:** eski kanıtla desteklenen inanç zamanla başka bir inanca yenilebilir. İstenen davranış bu mu?
+   - **Karar (Yusuf):** Beklenen davranış; test `Sonen_kanitla_celiski_karari_degisir_beklenen_davranis_budur` belgeliyor.
 15. **Neden olay kimliği:** bir modifier/duygu/kanıt, kendi eklendiği olayın kimliğini taşır (o olayın `NedenOlaylar` zinciri geriye gider). Eksen katkısı için son `eksen_degisti` olayı.
 16. **Stres:** olay delta taşır, **sönmüş güncel değere** eklenir (ör. 50 → 10 tick sonra 40, +20 ile 60). Planda sönme hızı belirtilmediğinden `0.2` öneri.
 17. **Kişilik aralık dışı değeri** (örn. 1.2) `ArgumentOutOfRangeException` ile reddediliyor; senaryo doğrulayıcı (yanki validate) bunu dosya/satırla gösterecek (4. hafta sonrası).
+
+## Eklemeler (inceleme turu 2)
+
+- **Tekrar eden kanıt tazelenir:** aynı NPC, aynı önerme, aynı tür ve aynı kaynak için yeni kanıt eklenmez; mevcut kanıtın tick'i yeni tick, gücü ikisinin büyüğü olur
+  (`kanit_eklendi` olay kimliği de yenisi). Farklı kaynak ya da tür birikmeye devam eder. Testler: `Ayni_tur_ve_kaynaktan_tekrar_eden_kanit_mevcut_kaniti_tazeler` ve komşuları.
+- **`FikirDokumu` kırpmayı gösterir:** toplam kırpıldıysa sonda `kirpma` katkısı (`HamToplam → Toplam`) ve `KirpmaMetni` ("kırpıldı: 130 → 100") bulunur.
+- **Duygu karşılaştırması** mevcut duygunun şimdiki tick'teki sönmüş şiddetiyle yapılır (testli).
+- **Oyuncu** (`esya` türünde kayıtlı): `konum!`, fail, hedef ve fikir hedefi olabilir; zihni ve algısı yoktur (testli).
+

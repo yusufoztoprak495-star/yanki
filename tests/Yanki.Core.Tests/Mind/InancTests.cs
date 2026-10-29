@@ -271,5 +271,86 @@ namespace Yanki.Core.Tests.Mind
             Assert.False(d.Uyar(Onerme.Ayristir("degil(borclu(Mehmet,Ayse,500))")));
             Assert.False(d.Uyar(Onerme.Ayristir("borclu(Ali,Ayse,500)")));
         }
+
+        [Fact]
+        public void Sonen_kanitla_celiski_karari_degisir_beklenen_davranis_budur()
+        {
+            // han: tick 0'da 0.9; pazar: tick 50'de 0.8. Oran 0.01/tick: tick 50'de han 0.4'e iner, pazar kazanır.
+            var z = Yeni(new ZihinAyarlari { KanitSonumuTickBasina = 0.01m });
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Kanit("Can", "konum!(Ali,han)", "duydu", "Ayse", 0.9m));
+            u.Tick = 50;
+            z.Uygula(u.Kanit("Can", "konum!(Ali,pazar)", "duydu", "Veli", 0.8m));
+
+            Assert.True(z.Inanilan("konum!(Ali,han)", 0));
+            Assert.False(z.Inanilan("konum!(Ali,pazar)", 0));
+            Assert.False(z.Inanilan("konum!(Ali,han)", 50));
+            Assert.True(z.Inanilan("konum!(Ali,pazar)", 50));
+        }
+
+        [Fact]
+        public void Ayni_tur_ve_kaynaktan_tekrar_eden_kanit_mevcut_kaniti_tazeler()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici { Tick = 2 };
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Ayse", 0.5m));
+            u.Tick = 9;
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Ayse", 0.7m));
+
+            var k = z.Kanitlar(Borc).Single();
+            Assert.Equal(9, k.Tick);
+            Assert.Equal(0.7m, k.Guc);
+            Assert.Equal(0.7m, z.Guven(Borc, 9)); // 1 - 0.5*0.3 = 0.85 olmaz
+        }
+
+        [Fact]
+        public void Tazelemede_guc_ikisinin_buyugu_olur()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici { Tick = 2 };
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Ayse", 0.8m));
+            u.Tick = 9;
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Ayse", 0.3m));
+
+            var k = z.Kanitlar(Borc).Single();
+            Assert.Equal(9, k.Tick);
+            Assert.Equal(0.8m, k.Guc);
+        }
+
+        [Fact]
+        public void Farkli_kaynak_ya_da_tur_yeni_kanit_olarak_birikir()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Ayse", 0.5m));
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Veli", 0.5m));
+            z.Uygula(u.Kanit("Can", Borc, "gordu", "Ayse", 0.5m));
+
+            Assert.Equal(3, z.Kanitlar(Borc).Count);
+        }
+
+        [Fact]
+        public void Tazeleme_farkli_npc_ya_da_onerme_icin_ayri_tutulur()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Kanit("Can", Borc, "duydu", "Ayse", 0.5m));
+            z.Uygula(u.Kanit("Can", "borclu(Mehmet,Veli,200)", "duydu", "Ayse", 0.5m));
+
+            Assert.Single(z.Kanitlar(Borc));
+            Assert.Single(z.Kanitlar("borclu(Mehmet,Veli,200)"));
+        }
+
+        [Fact]
+        public void Olumsuz_onerme_deseni_olumsuz_inancla_eslesir()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Kanit("Can", "degil(konum!(Ali,han))", "duydu", "Ayse", 0.6m));
+
+            Assert.Equal(0.6m, z.InancDerecesi("degil(konum!(Ali,han))", 0));
+            Assert.Equal(0.6m, z.InancDerecesi("degil(konum!(Ali,*))", 0));
+            Assert.Equal(0m, z.InancDerecesi("konum!(Ali,*)", 0));
+        }
     }
 }

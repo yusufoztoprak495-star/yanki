@@ -31,7 +31,7 @@ namespace Yanki.Core.Perception
 
         /// <summary>
         /// Olayı algılayan NPC'ler, ordinal sıralı. <c>acik</c>: olayın mekanındaki (<c>konum!</c> gerçeğine göre) bütün NPC'ler;
-        /// <c>sessiz</c>: fail ve (olayın mekanında bulunan) hedef; <c>gizli</c>: yalnızca fail. NPC olmayan fail/hedef algılamaz.
+        /// <c>sessiz</c>: fail ve (olayın mekanında bulunan) hedef; <c>gizli</c>: yalnızca fail. Fail her görünürlükte algılar. NPC olmayan fail/hedef algılamaz.
         /// </summary>
         /// <exception cref="ArgumentException">Görünürlük değeri bilinmiyorsa.</exception>
         public static IReadOnlyList<string> Algilayanlar(Dunya dunya, Olay olay)
@@ -47,6 +47,9 @@ namespace Yanki.Core.Perception
             }
 
             var sonuc = new SortedSet<string>(StringComparer.Ordinal);
+
+            // Fail kendi eylemini her görünürlükte ve olayın mekanı boş olsa bile algılar.
+            NpcIse(dunya, olay.Fail, sonuc);
             switch (Gorunurluk(olay))
             {
                 case "acik":
@@ -63,7 +66,6 @@ namespace Yanki.Core.Perception
 
                     break;
                 case "sessiz":
-                    NpcIse(dunya, olay.Fail, sonuc);
                     if (olay.Mekan.Length > 0 && string.Equals(dunya.TekDeger("konum!", olay.Hedef), olay.Mekan, StringComparison.Ordinal))
                     {
                         NpcIse(dunya, olay.Hedef, sonuc);
@@ -71,7 +73,6 @@ namespace Yanki.Core.Perception
 
                     break;
                 default:
-                    NpcIse(dunya, olay.Fail, sonuc);
                     break;
             }
 

@@ -51,9 +51,57 @@ namespace Yanki.Core.Tests.Perception
         }
 
         [Fact]
-        public void Mekani_olmayan_acik_olayi_kimse_algilamaz()
+        public void Mekani_olmayan_acik_olayi_yalniz_fail_algilar()
         {
-            Assert.Empty(Algi(Gozlem("duyuru", "Ali", "", "", "acik")));
+            Assert.Equal(new[] { "Ali" }, Algi(Gozlem("duyuru", "Ali", "", "", "acik")));
+            Assert.Empty(Algi(Gozlem("duyuru", "", "", "", "acik")));
+        }
+
+        [Theory]
+        [InlineData("acik")]
+        [InlineData("sessiz")]
+        [InlineData("gizli")]
+        public void Fail_her_gorunurlukte_ve_mekan_bos_olsa_bile_kendi_olayini_algilar(string gorunurluk)
+        {
+            Assert.Contains("Mehmet", Algi(Gozlem("yardim_etti", "Mehmet", "Ayse", "", gorunurluk)));
+        }
+
+        [Fact]
+        public void Fail_olayin_mekaninda_degilse_bile_acik_olayi_algilar()
+        {
+            // Mehmet pazar'da, olay han'da.
+            Assert.Equal(new[] { "Ali", "Ayse", "Mehmet" }, Algi(Gozlem("yardim_etti", "Mehmet", "Ali", "han", "acik")));
+        }
+
+        [Fact]
+        public void Oyuncu_npc_degildir_konum_fail_ve_hedef_olabilir_ama_zihni_ve_algisi_yoktur()
+        {
+            var u = new OlayUretici();
+            var dunya = OlayUretici.SabitDunya();
+            dunya.Uygula(u.Varlik("oyuncu", "esya"));
+            dunya.Uygula(u.GercekEkle("konum!(oyuncu,han)"));
+            var depo = new ZihinDeposu();
+            foreach (var id in new[] { "Ali", "Ayse" })
+            {
+                depo.Ekle(new Zihin(id, new Kisilik(0.5m, 0.5m, 0.5m, 0.5m, 0.5m, 0.5m)));
+            }
+
+            var oyuncuFail = Gozlem("yardim_etti", "oyuncu", "Ayse", "han", "acik");
+            var oyuncuHedef = Gozlem("tehdit_etti", "Ali", "oyuncu", "han", "sessiz");
+
+            Assert.Equal("han", dunya.TekDeger("konum!", "oyuncu"));
+            Assert.Equal(new[] { "Ali", "Ayse" }, DogrudanAlgi.Algilayanlar(dunya, oyuncuFail));
+            Assert.Equal(new[] { "Ali" }, DogrudanAlgi.Algilayanlar(dunya, oyuncuHedef));
+            Assert.Empty(DogrudanAlgi.Algilayanlar(dunya, Gozlem("gezdi", "oyuncu", "", "han", "gizli")));
+            Assert.False(depo.Var("oyuncu"));
+
+            // Üretilen olayların hiçbiri oyuncuya ait değil.
+            var (gunluk, gozlenen) = GunlukKur(oyuncuFail);
+            Assert.All(DogrudanAlgi.Uret(dunya, gozlenen, gunluk), o => Assert.NotEqual("oyuncu", o.Deger("npc")));
+
+            // Fikir hedefi olabilir.
+            depo.Uygula(new ZihinOlayUretici().Eksen("Ali", "oyuncu", "guven", 50m));
+            Assert.Equal(20m, depo.Fikir("Ali", "oyuncu", 0));
         }
 
         [Fact]
@@ -250,7 +298,7 @@ namespace Yanki.Core.Tests.Perception
         [Fact]
         public void Algilayan_yoksa_olay_uretilmez()
         {
-            var (gunluk, gozlenen) = GunlukKur(Gozlem("duyuru", "Ali", "", "", "acik"));
+            var (gunluk, gozlenen) = GunlukKur(Gozlem("duyuru", "", "", "", "acik"));
 
             Assert.Empty(DogrudanAlgi.Uret(OlayUretici.SabitDunya(), gozlenen, gunluk));
         }

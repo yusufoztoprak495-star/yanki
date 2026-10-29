@@ -293,5 +293,41 @@ namespace Yanki.Core.Tests.Mind
             Assert.Equal(new[] { 20m, 18m }, yeni);
             Assert.Equal(new[] { 20m }, eski);
         }
+
+        [Fact]
+        public void Fikir_dokumu_toplam_kirpilinca_kirpma_satiri_ekler()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Modifier("Can", "oyuncu", "a", 90m, 100));
+            z.Uygula(u.Modifier("Can", "oyuncu", "b", 40m, 100));
+
+            var d = z.FikirDokumu("oyuncu", 0);
+
+            Assert.True(d.Kirpildi);
+            Assert.Equal(130m, d.HamToplam);
+            Assert.Equal(100m, d.Toplam);
+            Assert.Equal("kırpıldı: 130 → 100", d.KirpmaMetni);
+            var son = d.Katkilar.Last();
+            Assert.Equal("kirpma", son.Kaynak);
+            Assert.Equal(-30m, son.Deger);
+            Assert.Equal(d.Toplam, d.Katkilar.Sum(k => k.Deger));
+        }
+
+        [Fact]
+        public void Eksi_yonde_kirpma_ve_kirpilmayan_dokum()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Modifier("Can", "oyuncu", "a", -90m, 100));
+            z.Uygula(u.Modifier("Can", "oyuncu", "b", -40m, 100));
+
+            Assert.Equal("kırpıldı: -130 → -100", z.FikirDokumu("oyuncu", 0).KirpmaMetni);
+
+            var temiz = z.FikirDokumu("Ayse", 0);
+            Assert.False(temiz.Kirpildi);
+            Assert.Null(temiz.KirpmaMetni);
+            Assert.DoesNotContain(temiz.Katkilar, k => k.Kaynak == "kirpma");
+        }
     }
 }

@@ -194,5 +194,31 @@ namespace Yanki.Core.Tests.Mind
                 }
             }
         }
+
+        [Fact]
+        public void Alti_zihin_olayinin_her_biri_durum_hashini_degistirir()
+        {
+            var depo = new ZihinDeposu();
+            depo.Ekle(new Zihin("Can", K()));
+            var u = new ZihinOlayUretici();
+            var olaylar = new[]
+            {
+                u.Modifier("Can", "oyuncu", "minnet", 20m, 50),
+                u.Eksen("Can", "oyuncu", "guven", 10m),
+                u.Duygu("Can", "ofke", 0.5m, "oyuncu"),
+                u.Stres("Can", 5m),
+                u.Kanit("Can", "borclu(Mehmet,Ayse,500)", "duydu", "Ayse", 0.7m),
+                u.Hafiza("Can", 3, 0.6m),
+            };
+
+            var onceki = depo.DurumHash();
+            foreach (var olay in olaylar)
+            {
+                depo.Uygula(olay);
+                var yeni = depo.DurumHash();
+                Assert.NotEqual(onceki, yeni);
+                onceki = yeni;
+            }
+        }
     }
 }
