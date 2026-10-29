@@ -2,7 +2,8 @@
 
 **Durum:** Önerildi | Kabul edildi | Kullanımdan kalktı | Yerini aldı: ADR-XXXX
 **Tarih:** YYYY-AA-GG
-**Karar veren:** Yusuf
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 Durum ne? Hangi kuvvetler etkili?
@@ -23,7 +24,9 @@ Ne yapıyoruz?
 **Artıları:** …
 **Eksileri:** …
 
-## Ödünleşim analizi
+## Ödünleşimler
+
+## Gerekçe (Yusuf)
 
 ## Sonuçlar
 - Kolaylaşan:

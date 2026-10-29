@@ -1,8 +1,9 @@
 # ADR-0001: Olay kaynaklı (event-sourced) çekirdek
 
-**Durum:** Kabul edildi
+**Durum:** Önerildi
 **Tarih:** 2026-10-29
-**Karar veren:** Yusuf
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 Yankı'nın ana iddiası "her karar yankılanır ve motor nedenini gösterebilir". Bunun için üç şey gerekiyor:
@@ -39,9 +40,11 @@ Durum = günlüğün baştan uygulanması. Günlük biçiminin bir sürüm numar
 **Artıları:** Başlaması kolay, alışılmış.
 **Eksileri:** "Neden?" sorusu ancak log disiplinle tutulursa cevaplanır; replay garanti değil.
 
-## Ödünleşim analizi
+## Ödünleşimler
 B ilk iki haftayı hızlandırır ama projenin farkını (kanıtlanabilir nedensellik, deterministik replay) zayıflatır.
 A biraz daha fazla tören getirir; ölçek küçük olduğu için performans maliyeti önemsiz.
+
+## Gerekçe (Yusuf)
 
 ## Sonuçlar
 - Kolaylaşan: `yanki why`, `yanki diff`, golden replay testleri, demodaki geri sarma.

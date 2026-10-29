@@ -1,8 +1,9 @@
 # ADR-0005: Tarayıcı demosu ve hata ayıklama ekranı için Blazor WebAssembly
 
-**Durum:** Kabul edildi
+**Durum:** Önerildi
 **Tarih:** 2026-10-29
-**Karar veren:** Yusuf
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 İşe alımcılar bir repoya ortalama 30 saniye bakıyor. "Oyunu olmayan motor" yarım iş gibi algılanıyor. Linke tıklayınca
@@ -33,13 +34,15 @@ Demo ve hata ayıklama ekranı **tek bir Blazor WebAssembly uygulaması** olarak
 ### Seçenek C: Godot C#
 **Eksileri:** Godot 4 C# projeleri web'e export edilemiyor.
 
-## Ödünleşim analizi
-A, 12 haftalık takvimde motoru göstermenin en ucuz yolu. Unity örneği v0.2 sonrasına ertelendi.
+## Ödünleşimler
+A, 12 haftalık takvimde motoru göstermenin en ucuz yolu. **Unity WebGL reddedildi:** hem Unity öğrenmek hem zihin panelini Unity içinde ayrıca yazmak takvimi taşırır; Unity entegrasyonu, "v0.2 sonrası" listesinin ilk maddesi olarak küçük bir örnek projeyle gösterilecek. **Godot C# reddedildi:** Godot 4 C# projeleri web'e export edilemiyor.
+
+## Gerekçe (Yusuf)
 
 ## Sonuçlar
 - Kolaylaşan: Repodaki README'den tek tıkla demo; mülakatta canlı gösterim.
 - Zorlaşan: Çekirdeğin WASM'da çalışması (çoklu iş parçacığı yok, dosya sistemi yok) — ADR-0004 ile zaten uyumlu.
-- Yeniden bakılacak: Küçük Unity örnek projesi (v0.2 sonrası).
+- Yeniden bakılacak: Küçük Unity örnek projesi ("v0.2 sonrası" listesinin ilk maddesi).
 
 ## Yapılacaklar
 1. [ ] 10. hafta: `Yanki.Demo` projesi, Pages yayını.

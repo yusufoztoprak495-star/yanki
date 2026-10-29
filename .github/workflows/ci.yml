@@ -40,6 +40,7 @@ jobs:
         run: |
           set -o pipefail
           dotnet test Yanki.slnx -c Release --no-build \
+            --collect:"XPlat Code Coverage" \
             --logger "trx;LogFilePrefix=results" --logger "console;verbosity=normal" \
             --results-directory TestResults 2>&1 | tee test.log
 
@@ -59,3 +60,12 @@ jobs:
           name: test-results
           path: TestResults
           if-no-files-found: ignore
+
+      # CODECOV_TOKEN yoksa (ör. fork PR'ı) bu adım CI'ı kırmaz.
+      - name: Coverage'ı Codecov'a yükle
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          files: TestResults/**/coverage.cobertura.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false

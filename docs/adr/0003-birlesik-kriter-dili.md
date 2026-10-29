@@ -1,8 +1,9 @@
 # ADR-0003: Sonuç kuralları ve diyalog için tek kriter dili
 
-**Durum:** Kabul edildi
+**Durum:** Önerildi
 **Tarih:** 2026-10-29
-**Karar veren:** Yusuf
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 İki yerde "şu koşullar sağlanıyorsa" demek gerekiyor: sonuç kuralları (oyuncu hancıya yalan söyledi ve hancı bunu
@@ -38,9 +39,11 @@ Valve'ın Left 4 Dead / Dynamic Dialog sisteminden esinlenen **ağırlıklı kri
 **Artıları:** Her biri kendi işine özel.
 **Eksileri:** İki kat iş, iki kat hata.
 
-## Ödünleşim analizi
+## Ödünleşimler
 Kısıtlı bir dil, içerik yazımını doğrulanabilir ve ölçülebilir kılıyor; bu, "seçimler gerçekten önemli mi?"
 sorusunu kanıtlamanın ön şartı.
+
+## Gerekçe (Yusuf)
 
 ## Sonuçlar
 - Kolaylaşan: Doğrulama, kapsama raporu, karar izinde "hangi kriterler sağlandı" gösterimi.

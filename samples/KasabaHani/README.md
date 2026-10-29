@@ -2,5 +2,5 @@
 
 8 NPC'lik küçük bir han ve çevresi. Motorun "her karar yankılanır" iddiasını gösteren örnek senaryo.
 
-İçerik 9. haftada yazılacak (NPC'ler, eylemler, kurallar, şablonlar — JSON). Şimdilik NPC'lerin tek satırlık tanımları
-[`docs/yusuf/hafta-01.md`](../../docs/yusuf/hafta-01.md) içinde toplanıyor.
+- NPC'ler: [`npcs.md`](npcs.md) (Yusuf dolduracak).
+- Senaryo içeriği (eylemler, kurallar, şablonlar: JSON) 9. haftada yazılacak.
