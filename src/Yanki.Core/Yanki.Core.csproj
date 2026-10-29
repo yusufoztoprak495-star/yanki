@@ -14,4 +14,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- RNG referans vektörleri gibi iç ayrıntıları sınamak için. -->
+    <InternalsVisibleTo Include="Yanki.Core.Tests" />
+  </ItemGroup>
+
 </Project>

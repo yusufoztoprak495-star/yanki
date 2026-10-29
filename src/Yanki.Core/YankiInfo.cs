@@ -1,8 +1,8 @@
 namespace Yanki.Core
 {
     /// <summary>
-    /// Kütüphane hakkında temel bilgiler. 1. hafta iskeletinin tek gerçek tipi;
-    /// modüller (Events, World, Mind, Perception, Decision, Rules) 2. haftadan itibaren eklenir.
+    /// Kütüphane hakkında temel bilgiler. Modüller (Events, World, Criteria 2. haftada; Mind, Perception,
+    /// Decision, Rules sonraki haftalarda) kendi ad alanlarında yer alır.
     /// </summary>
     public static class YankiInfo
     {
