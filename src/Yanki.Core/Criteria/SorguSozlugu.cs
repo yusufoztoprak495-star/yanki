@@ -130,7 +130,26 @@ namespace Yanki.Core.Criteria
                         throw new KriterHatasi($"'{tanim.Ad}' fonksiyonunun {i + 1}. argümanı bir önerme olmalı (ör. yuklem(a, b))", arg.Konum);
                     }
 
-                    OnermeDogrula(onerme.Cagri);
+                    var icerik = onerme.Cagri;
+                    if (string.Equals(icerik.Ad, "degil", StringComparison.Ordinal) && !icerik.TekDegerli)
+                    {
+                        // Olumsuz önerme yalnızca zihin sorgularında (inanc, kaynak): degil(yuklem(...)) tek bir önermeyi sarar.
+                        if (tanim.Ad != "inanc" && tanim.Ad != "kaynak")
+                        {
+                            throw new KriterHatasi($"'degil(...)' yalnızca 'inanc' ve 'kaynak' içinde kullanılabilir, '{tanim.Ad}' içinde değil", icerik.Konum);
+                        }
+
+                        if (icerik.Argumanlar.Count != 1 || !(icerik.Argumanlar[0] is OnermeArgumani sarilan))
+                        {
+                            throw new KriterHatasi("'degil' tek bir önerme sarmalıdır (ör. degil(konum!(Ali, han)))", icerik.Konum);
+                        }
+
+                        OnermeDogrula(sarilan.Cagri);
+                    }
+                    else
+                    {
+                        OnermeDogrula(icerik);
+                    }
                 }
                 else if (arg is OnermeArgumani)
                 {

@@ -8,7 +8,7 @@ namespace Yanki.Core.World
     /// <summary>
     /// Dünya durumu: varlıklar, mekan grafiği ve gerçekler (plan 5.2). Durum yalnızca olaylar
     /// <see cref="Uygula"/> ile işlenerek ilerler (ADR-001). Bu hafta yalnızca dünya olayları vardır:
-    /// <c>varlik_eklendi</c> (<c>id</c>, <c>tur</c>: npc|mekan|esya), <c>gercek_eklendi</c> / <c>gercek_kaldirildi</c>
+    /// <c>varlik_eklendi</c> (<c>id</c>, <c>tur</c>: npc|mekan|esya|oyuncu), <c>gercek_eklendi</c> / <c>gercek_kaldirildi</c>
     /// (<c>gercek</c>: kanonik metin) ve <c>mekan_baglandi</c> (<c>a</c>, <c>b</c>).
     /// Kimin ne bildiği burada tutulmaz.
     /// </summary>
@@ -209,6 +209,7 @@ namespace Yanki.Core.World
             {
                 case VarlikTuru.Npc: return "npc";
                 case VarlikTuru.Mekan: return "mekan";
+                case VarlikTuru.Oyuncu: return "oyuncu";
                 default: return "esya";
             }
         }
@@ -228,8 +229,9 @@ namespace Yanki.Core.World
                 case "npc": turu = VarlikTuru.Npc; break;
                 case "mekan": turu = VarlikTuru.Mekan; break;
                 case "esya": turu = VarlikTuru.Esya; break;
+                case "oyuncu": turu = VarlikTuru.Oyuncu; break;
                 default:
-                    throw new ArgumentException($"Bilinmeyen varlık türü: \"{tur}\" (npc, mekan ya da esya olmalı).");
+                    throw new ArgumentException($"Bilinmeyen varlık türü: \"{tur}\" (npc, mekan, esya ya da oyuncu olmalı).");
             }
 
             if (_varliklar.ContainsKey(id))

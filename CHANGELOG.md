@@ -16,3 +16,8 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/), sürümleme [Se
 - 2. hafta: `Yanki.Core.Criteria` (ayrıştırıcı, 15 fonksiyonluk sözlük ve doğrulayıcı, `Kriter`, `ISorguCozucu`, `DunyaSorguCozucusu` (`gercek`, `ayni_mekanda`), `Secici.EnIyiSec` ve eşleşme izi). Kriterler C# ile kurulur; JSON okuma yok.
 - 2. hafta testleri: determinizm, altın sabit (hash ve RNG, bağımsız hesapla doğrulanmış), yasaklı API taraması (`System.Random`, `DateTime.Now`, `double`/`float`, sırasız koleksiyonlar vb.), sözlük-docs eşitleme testi.
 - ADR-007: simülasyonda `decimal` (durum: önerildi). `docs/notes/` altında `olay-kaydi.md`, `dunya.md`, `kriter-dili.md` taslakları.
+- 3. hafta: `Yanki.Core.Mind` (`Zihin`, `ZihinDeposu`, `Kisilik`, ilişki eksenleri ve süreli fikir modifier'ları, `FikirDokumu`, tek duygulu ruh hali, stres, kanıtlı inançlar ve çelişki kuralı, hafıza, `Sonumleme` saf sönme fonksiyonları, `ZihinAyarlari`, altı zihin olayı, birleşik `DurumHashu`).
+- 3. hafta: `Yanki.Core.Perception` (`DogrudanAlgi`: `acik`/`sessiz`/`gizli` görünürlük, `gordu` kanıtı ve hafıza olayı üretimi).
+- 3. hafta: `ZihinSorguCozucusu`: sözlükteki 15 fonksiyonun 13'ü gerçek veriye bağlandı (`yalan_soyledi` 6., `yay` 7. hafta).
+- 3. hafta: `VarlikTuru.Oyuncu` (`oyuncu` varlık türü; eşya değil). `inanc`/`kaynak` içinde `degil(...)`, tekrar eden kanıtın tazelenmesi, `FikirDokumu` kırpma satırı.
+- ADR-008: zihin olaylardan türetilir; süreli değerler sorgu anında hesaplanır (durum: önerildi). `docs/notes/zihin.md`, `docs/notes/algi.md` taslakları. `docs/DURUM.md` proje durum dosyası (her PR'da güncellenir).

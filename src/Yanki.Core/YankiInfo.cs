@@ -1,7 +1,7 @@
 namespace Yanki.Core
 {
     /// <summary>
-    /// Kütüphane hakkında temel bilgiler. Modüller (Events, World, Criteria 2. haftada; Mind, Perception,
+    /// Kütüphane hakkında temel bilgiler. Modüller (Events, World, Criteria 2. haftada; Mind, Perception 3. haftada;
     /// Decision, Rules sonraki haftalarda) kendi ad alanlarında yer alır.
     /// </summary>
     public static class YankiInfo
