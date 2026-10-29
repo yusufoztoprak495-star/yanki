@@ -159,6 +159,60 @@ namespace Yanki.Core.World
             return g.Argumanlar[g.Argumanlar.Count - 1];
         }
 
+        /// <summary>
+        /// Dünya durumunun 64 bit hash'i, 16 karakterlik küçük harfli onaltılık metin olarak (plan 5.1).
+        /// Kanonik metin: sürüm başlığı, ardından <c>V|id|tur</c>, <c>M|a|b</c> (a &lt; b) ve <c>G|gercek</c> satırları;
+        /// her grup ordinal sıralıdır. Aynı durum, nasıl oluştuğundan bağımsız olarak aynı hash'i verir.
+        /// </summary>
+        public string DurumHash() => Hash64.Hex(Hash64.Hesapla(KanonikMetin()));
+
+        /// <summary>Hash'in girdisi olan kanonik metin (hata ayıklama ve sınama için).</summary>
+        internal string KanonikMetin()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("YANKI-DURUM|").Append(YankiInfo.EventLogFormatVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append('\n');
+
+            foreach (var kv in _varliklar)
+            {
+                sb.Append("V|").Append(kv.Key).Append('|').Append(TurMetni(kv.Value)).Append('\n');
+            }
+
+            foreach (var kv in _komsular)
+            {
+                foreach (var komsu in kv.Value)
+                {
+                    if (string.CompareOrdinal(kv.Key, komsu) < 0)
+                    {
+                        sb.Append("M|").Append(kv.Key).Append('|').Append(komsu).Append('\n');
+                    }
+                }
+            }
+
+            var gercekler = new List<string>();
+            foreach (var g in _gercekler.Values)
+            {
+                gercekler.Add(g.ToString());
+            }
+
+            gercekler.Sort(StringComparer.Ordinal);
+            foreach (var g in gercekler)
+            {
+                sb.Append("G|").Append(g).Append('\n');
+            }
+
+            return sb.ToString();
+        }
+
+        private static string TurMetni(VarlikTuru tur)
+        {
+            switch (tur)
+            {
+                case VarlikTuru.Npc: return "npc";
+                case VarlikTuru.Mekan: return "mekan";
+                default: return "esya";
+            }
+        }
+
         private static string Anahtar(Gercek g) => g.TekDegerli ? g.TekDegerAnahtari : g.ToString();
 
         private void VarlikEkle(string id, string tur)
