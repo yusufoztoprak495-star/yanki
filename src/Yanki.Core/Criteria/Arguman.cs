@@ -43,6 +43,21 @@ namespace Yanki.Core.Criteria
                 default: return "olay.hedef";
             }
         }
+
+        /// <summary>Rol adını (<c>ben</c>, <c>olay.fail</c> ...) <see cref="Rol"/> değerine çevirir.</summary>
+        public static bool TryCoz(string ad, out Rol rol)
+        {
+            switch (ad)
+            {
+                case "ben": rol = Rol.Ben; return true;
+                case "oyuncu": rol = Rol.Oyuncu; return true;
+                case "konusan": rol = Rol.Konusan; return true;
+                case "dinleyen": rol = Rol.Dinleyen; return true;
+                case "olay.fail": rol = Rol.OlayFail; return true;
+                case "olay.hedef": rol = Rol.OlayHedef; return true;
+                default: rol = Rol.Ben; return false;
+            }
+        }
     }
 
     /// <summary>Bir sorgu çağrısının argümanı (soyut taban).</summary>
