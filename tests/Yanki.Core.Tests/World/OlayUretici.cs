@@ -42,6 +42,9 @@ namespace Yanki.Core.Tests.World
             dunya.Uygula(u.GercekEkle("konum!(Ayse,han)"));
             dunya.Uygula(u.GercekEkle("konum!(Mehmet,pazar)"));
             dunya.Uygula(u.GercekEkle("borclu(Mehmet,Ayse,500)"));
+
+            // Tam orta nokta: 0.0000025 → ToEven ile 0.000002 (AwayFromZero olsaydı 0.000003 olurdu).
+            dunya.Uygula(u.GercekEkle("faiz(Mehmet,Ayse," + KanonikYazici.Sayi(0.0000025m) + ")"));
             return dunya;
         }
     }
