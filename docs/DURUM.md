@@ -34,6 +34,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - [ ] **`docs/notes/` taslaklarını kendi cümlelerimle yeniden yazmak:** `dunya.md`, `olay-kaydi.md`, `kriter-dili.md`, `zihin.md`, `algi.md`.
 - [x] **`CODECOV_TOKEN` secret'ı:** GitHub repo ayarlarına eklendi.
 - [ ] **Kasaba Hanı NPC'leri:** 4. haftada 3, 9. haftada 8.
+- [ ] **`docs/prompts/` incelemesi:** 4. hafta görev metni (`hafta-04.md`) eklendi; 4. haftaya başlamadan önce okunup düzeltilecek.
 
 ## Açık kararlar (Yusuf'u bekleyen)
 
