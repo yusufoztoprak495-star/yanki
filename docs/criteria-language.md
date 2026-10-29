@@ -8,9 +8,9 @@ Tek ayrıştırıcı, tek doğrulayıcı, tek kapsama aracı üç kullanım içi
 Bir kriter JSON nesnesidir:
 
 ```json
-{ "alan": "fikir(konuşan, dinleyen)", "op": "<", "değer": -10, "ağırlık": 2 }
-{ "alan": "inanç(dinleyen, borçlu(Mehmet,*,*))", "op": "güven>=", "değer": 0.5, "zorunlu": true }
-{ "alan": "yay.kasaba_gerginliği", "op": "aralık", "değer": [2, 4] }
+{ "alan": "fikir(dinleyen)", "op": "<", "değer": -10, "ağırlık": 2 }
+{ "alan": "inanc(borclu(Mehmet,*,*))", "op": ">=", "değer": 0.5, "zorunlu": true }
+{ "alan": "yay(kasaba_gerginligi)", "op": "aralik", "değer": [2, 4] }
 ```
 
 - **alan:** zihin, dünya, hafıza ve yay değişkenleri üzerinde tanımlı bir sorgu fonksiyonu.
@@ -29,7 +29,7 @@ Bir kriter JSON nesnesidir:
 
 ## Sorgu fonksiyonu sözlüğü
 
-v0.1'de sabit, belgelenmiş küçük bir set (yaklaşık 15 fonksiyon). **Bu tablo Yusuf'un tasarım alanıdır; boş bırakıldı.**
+v0.1'de sabit, belgelenmiş küçük bir set (yaklaşık 15 fonksiyon). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
 İpuçları: ruh hali, stres, mekan, zaman, kimden duydu, kaç kişi biliyor, yalan söylendi mi, bir eylemi en son ne zaman yaptı.
 
 | # | Fonksiyon | Ne sorar | Döndürdüğü | Örnek kriter |
