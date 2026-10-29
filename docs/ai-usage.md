@@ -1,27 +1,28 @@
 # AI kullanımı
 
-Bu projede AI kod araçlarını açıkça ve bilinçli olarak kullanıyorum. Bu sayfa iş bölümünü şeffaf tutmak için var.
+Bu projede AI kod aracını (Claude Code) açıkça ve bilinçli olarak kullanıyorum. Bu sayfa iş bölümünü şeffaf tutmak için var.
 
-## Kim ne yapıyor
+## Rol dağılımı
 
-| Alan | Yusuf | AI araçları (Claude, Claude Code) |
+| Alan | Yusuf | Claude Code |
 |---|---|---|
-| Problem tanımı ve hedefler | ✅ | Araştırma ve karşılaştırma desteği |
-| Mimari kararlar (ADR'ler) | ✅ Karar | Seçeneklerin ve ödünleşimlerin taslağı |
-| Kriter dili sözlüğü, kişilik eksenleri | ✅ | Tutarlılık kontrolü |
-| Demo senaryosu içeriği (Kasaba Hanı) | ✅ Ağırlıklı | Şablon ve doğrulama |
-| Test senaryoları (neyi test edeceğiz) | ✅ | Test kodunun gövdesi |
-| Uygulama kodu, CI, araçlar | İnceleme ve onay | ✅ Yazım |
-| Dokümantasyon | Son hal, modül notları | İlk taslak |
+| Sistem tasarımı ve kurallar | Karar verir, onaylar, ADR'nin "neden" kısmını yazar | Seçenek ve taslak önerir, alternatifleri listeler |
+| Kişilik / ilişki / stres modeli, denge sayıları | Belirler, coverage ve diff araçlarıyla deneyerek ayarlar | Ayar araçlarını yazar |
+| Kriter dili sözlüğü (hangi sorgu fonksiyonları var) | Belirler | Ayrıştırıcı, doğrulayıcı ve testleri yazar |
+| Demo senaryosu, NPC'ler, şablon metinleri (Türkçe ve İngilizce) | Yazar | Biçim, doğrulama, eksik varyant raporu |
+| Kod | Okur, anlar, PR olarak inceler | Yazar |
+| Testler | Senaryoları, değişmezleri ve golden oturumları tanımlar | Test kodunu yazar |
+| Blazor demo arayüzü | Ekran akışını ve neyin gösterileceğini belirler | Yazar |
+| Playtest | Düzenler, gözlemler, notları yazar | Sonuç tablosunu biçimlendirir |
+| Dokümantasyon ve devlog | ADR gerekçeleri, devlog yazıları, README tanıtım metni | Biçim, taslak, API dokümanı |
 
 ## Kurallar
 
-- Birleştirilen her değişikliği okudum ve anlattığımda anlayabileceğim düzeyde anlıyorum.
+- Birleştirilen her değişikliği okuyorum ve anlatabilecek düzeyde anlıyorum.
 - Her modül için `docs/notes/` altında kendi cümlelerimle bir not var.
 - NPC kararları kural ve utility AI ile veriliyor; motorun içinde LLM karar vermiyor ([ADR-002](adr/0002-utility-ai-ve-iactionselector.md)).
-- AI ile yazılmış commit'lerde `Co-Authored-By` satırı bulunur.
+- İş PR üzerinden ilerler; AI'nin yazdığı commit'ler `Co-Authored-By` satırı taşır.
 
-## Araçlar
+## Çıktı nasıl doğrulanıyor
 
-- Claude (sohbet): araştırma, plan, ADR taslakları
-- Claude Code: uygulama, test, refactor
+Testler (xUnit), golden replay hash'leri, benchmark'lar ve PR incelemesi.
