@@ -8,14 +8,14 @@ Tek ayrıştırıcı, tek doğrulayıcı, tek kapsama aracı üç kullanım içi
 Bir kriter JSON nesnesidir:
 
 ```json
-{ "alan": "fikir(dinleyen)", "op": "<", "değer": -10, "ağırlık": 2 }
-{ "alan": "inanc(borclu(Mehmet,*,*))", "op": ">=", "değer": 0.5, "zorunlu": true }
-{ "alan": "yay(kasaba_gerginligi)", "op": "aralik", "değer": [2, 4] }
+{ "alan": "fikir(dinleyen)", "op": "<", "deger": -10, "agirlik": 2 }
+{ "alan": "inanc(borclu(Mehmet,*,*))", "op": ">=", "deger": 0.5, "zorunlu": true }
+{ "alan": "yay(kasaba_gerginligi)", "op": "aralik", "deger": [2, 4] }
 ```
 
 - **alan:** zihin, dünya, hafıza ve yay değişkenleri üzerinde tanımlı bir sorgu fonksiyonu.
-- **op / değer:** karşılaştırma.
-- **ağırlık:** kriter tutarsa puana eklenen değer.
+- **op / deger:** karşılaştırma.
+- **agirlik:** kriter tutarsa puana eklenen değer.
 - **zorunlu:** tutmazsa aday elenir.
 
 **Puan** = tutan kriterlerin ağırlıklarının toplamı.
@@ -26,6 +26,7 @@ Bir kriter JSON nesnesidir:
 - Operatörler: `<`, `<=`, `>`, `>=`, `==`, `!=`, `aralik [a, b]`.
 - `*` joker karakterdir: `borclu(Mehmet, *, *)` = "Mehmet'in herhangi birine borçlu olduğu önerme".
 - Fonksiyon adları ASCII'dir (Türkçe karakter yok), böylece JSON ve C# tarafında kodlama sorunu çıkmaz.
+- Fonksiyon adları ve JSON anahtarları ASCII'dir; Türkçe karakter yalnızca açıklama metinlerinde ve diyalog metinlerinde kullanılır.
 
 ## Sorgu fonksiyonu sözlüğü
 
