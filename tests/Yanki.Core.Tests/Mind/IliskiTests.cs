@@ -149,16 +149,43 @@ namespace Yanki.Core.Tests.Mind
         }
 
         [Fact]
-        public void Sinirdan_fazla_kopya_eskisi_dolunca_devreye_girer()
+        public void Sinir_asilinca_en_yeni_kopyalar_sayilir()
         {
             var z = Yeni(new ZihinAyarlari { ModifierBirikmeSiniri = 1 });
             var u = new ZihinOlayUretici { Tick = 0 };
-            z.Uygula(u.Modifier("Can", "oyuncu", "minnet", 20m, sure: 10));
+            z.Uygula(u.Modifier("Can", "oyuncu", "minnet", 10m, sure: 100));
             u.Tick = 5;
-            z.Uygula(u.Modifier("Can", "oyuncu", "minnet", 20m, sure: 100));
+            z.Uygula(u.Modifier("Can", "oyuncu", "minnet", 30m, sure: 100));
 
-            Assert.Equal(20m, z.Fikir("oyuncu", 6));
-            Assert.Equal(20m, z.Fikir("oyuncu", 12));
+            Assert.Equal(30m, z.Fikir("oyuncu", 6)); // en eski (10) değil, en yeni (30) sayılır
+        }
+
+        [Fact]
+        public void Sinir_asilinca_sayilan_kopyalar_baslangic_sirasiyla_carpanla_birikir()
+        {
+            var z = Yeni(new ZihinAyarlari { ModifierBirikmeSiniri = 2 });
+            var u = new ZihinOlayUretici();
+            foreach (var deger in new[] { 100m, 10m, 20m })
+            {
+                z.Uygula(u.Modifier("Can", "oyuncu", "minnet", deger, sure: 100));
+                u.Tick++;
+            }
+
+            // en yeni 2: 10 ve 20 → 10 + 20 * 0.9 = 28 (100 sayılmaz)
+            Assert.Equal(28m, z.Fikir("oyuncu", 5));
+        }
+
+        [Fact]
+        public void Sinirdan_fazla_eski_kopya_yeniler_dolunca_yeniden_sayilir()
+        {
+            var z = Yeni(new ZihinAyarlari { ModifierBirikmeSiniri = 1 });
+            var u = new ZihinOlayUretici { Tick = 0 };
+            z.Uygula(u.Modifier("Can", "oyuncu", "minnet", 10m, sure: 100));
+            u.Tick = 5;
+            z.Uygula(u.Modifier("Can", "oyuncu", "minnet", 30m, sure: 10));
+
+            Assert.Equal(30m, z.Fikir("oyuncu", 6));
+            Assert.Equal(10m, z.Fikir("oyuncu", 20));
         }
 
         [Fact]

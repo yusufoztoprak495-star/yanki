@@ -26,7 +26,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - Saf sönme fonksiyonları (`Sonumleme`, `ZihinAyarlari`) ve altı zihin olayı; zihin durum hash'e giriyor, dünya altın hash'i değişmedi.
 - Doğrudan algı: `acik`/`sessiz`/`gizli`, `gordu` kanıtı + hafıza olayı (`KuralId: algi`).
 - `ZihinSorguCozucusu`: kriter dili sözlüğünün 13/15 fonksiyonu gerçek veriye bağlı (`yalan_soyledi` 6., `yay` 7. hafta).
-- ADR-008, `docs/notes/zihin.md`, `docs/notes/algi.md`; 475 test (iki hedefte derleniyor, 0 uyarı).
+- ADR-008, `docs/notes/zihin.md`, `docs/notes/algi.md`; 480 test (iki hedefte derleniyor, 0 uyarı).
 
 ## Ertelenenler (Yusuf'un işi)
 
@@ -37,8 +37,10 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 ## Açık kararlar (Yusuf'u bekleyen)
 
-- 3. haftanın açık noktaları (eksen ağırlıkları, sönme oranları, hafıza eşikleri, çelişkide eşitlik kuralı, algı gücü/önemi vb.):
-  `docs/notes/zihin.md` ve `docs/notes/algi.md` sonlarındaki "Açık noktalar" bölümleri; özeti PR #4 açıklamasında.
+- 3. haftanın büyük kararları PR #4 incelemesinde verildi (eksen ağırlıkları, sönme oranları, hafıza eşikleri, birikme, çelişki eşitliği, duygu eşitliği, algı değerleri); notlarda **Karar (Yusuf)** olarak işli.
+- Hâlâ açık (küçük): `degil(p)` inançlarının kriter dilinde sorgulanması (sözlük değişikliği gerekir), `gordu` kanıt kaynağının NPC'nin kendisi olması,
+  kanıt gücü sönünce çelişki kararının değişmesi, tekrar eden gözlemin kanıtı biriktirmesi, boş `Mekan`'lı `acik` olayda failın algılaması,
+  bilinmeyen görünürlüğün hata sayılması. Hepsi `docs/notes/zihin.md` ve `docs/notes/algi.md` "Açık noktalar" bölümlerinde.
 
 ## Sıradaki hafta
 

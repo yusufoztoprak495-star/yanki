@@ -61,16 +61,37 @@ namespace Yanki.Core.Tests.Mind
         }
 
         [Fact]
-        public void Daha_zayif_ya_da_esit_yeni_duygu_baskin_olmaz()
+        public void Daha_zayif_yeni_duygu_baskin_olmaz()
         {
             var z = Yeni();
             var u = new ZihinOlayUretici();
             z.Uygula(u.Duygu("Can", "ofke", 0.5m, "oyuncu"));
             z.Uygula(u.Duygu("Can", "korku", 0.3m, "Ali"));
-            z.Uygula(u.Duygu("Can", "huzun", 0.5m));
 
             Assert.Equal("ofke", z.Duygu!.Tur);
             Assert.Null(z.OncekiDuygu);
+        }
+
+        [Fact]
+        public void Esit_siddetteki_yeni_duygu_baskin_olur_eskisi_onceki_kalir()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Duygu("Can", "ofke", 0.5m, "oyuncu"));
+            z.Uygula(u.Duygu("Can", "huzun", 0.5m));
+
+            Assert.Equal("huzun", z.Duygu!.Tur);
+            Assert.Equal("ofke", z.OncekiDuygu!.Tur);
+        }
+
+        [Fact]
+        public void Sifir_siddetli_duygu_hic_baskin_olmaz()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici();
+            z.Uygula(u.Duygu("Can", "huzun", 0m));
+
+            Assert.Null(z.Duygu);
         }
 
         [Fact]

@@ -57,17 +57,28 @@ namespace Yanki.Core.Tests.Perception
         }
 
         [Fact]
-        public void Sessiz_olayi_yalniz_fail_ve_hedef_algilar_mekan_farki_onemsizdir()
+        public void Sessiz_olayi_olayin_mekanindaki_fail_ve_hedef_algilar()
         {
-            var sonuc = Algi(Gozlem("fisildadi", "Mehmet", "Ali", "han", "sessiz"));
-
-            Assert.Equal(new[] { "Ali", "Mehmet" }, sonuc);
+            Assert.Equal(new[] { "Ali", "Ayse" }, Algi(Gozlem("fisildadi", "Ali", "Ayse", "han", "sessiz")));
         }
 
         [Fact]
-        public void Sessiz_olayda_ayni_mekandaki_ucuncu_kisi_algilamaz()
+        public void Sessiz_olayda_hedef_olayin_mekaninda_degilse_algilamaz()
         {
-            Assert.DoesNotContain("Ayse", Algi(Gozlem("fisildadi", "Ali", "Mehmet", "han", "sessiz")));
+            // Mehmet pazar'da, olay han'da.
+            Assert.Equal(new[] { "Ali" }, Algi(Gozlem("fisildadi", "Ali", "Mehmet", "han", "sessiz")));
+        }
+
+        [Fact]
+        public void Sessiz_olayda_fail_mekandan_bagimsiz_algilar()
+        {
+            Assert.Equal(new[] { "Ali", "Mehmet" }, Algi(Gozlem("fisildadi", "Mehmet", "Ali", "han", "sessiz")));
+        }
+
+        [Fact]
+        public void Mekani_olmayan_sessiz_olayi_hedef_algilamaz()
+        {
+            Assert.Equal(new[] { "Ali" }, Algi(Gozlem("fisildadi", "Ali", "Ayse", "", "sessiz")));
         }
 
         [Fact]

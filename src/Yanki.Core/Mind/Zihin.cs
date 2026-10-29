@@ -122,7 +122,7 @@ namespace Yanki.Core.Mind
 
         /// <summary>
         /// Hedef hakkındaki fikir: eksenlerin ağırlıklı toplamı + aktif modifier'ların toplamı, −100..100'e kırpılmış.
-        /// Aynı türden kopyalar birikir: n'inci kopyanın etkisi <c>deger × çarpan^(n−1)</c>, tür başına en fazla birikme sınırı kadar.
+        /// Aynı türden kopyalar birikir: n'inci kopyanın etkisi <c>deger × çarpan^(n−1)</c>; tür başına en yeni birikme sınırı kadar kopya sayılır.
         /// </summary>
         public decimal Fikir(string hedef, long simdikiTick) => FikirDokumu(hedef, simdikiTick).Toplam;
 
@@ -153,26 +153,25 @@ namespace Yanki.Core.Mind
 
                 aktif.Sort(ModifierSirasi);
 
-                string? sonTur = null;
-                var kopya = 0;
-                var carpan = 1m;
-                foreach (var m in aktif)
+                // Aynı türün kopyaları ardışıktır; sınırı aşan fazlalıkta en eskiler sayılmaz, en yeni kopyalar sayılır.
+                var bas = 0;
+                while (bas < aktif.Count)
                 {
-                    if (!string.Equals(m.Tur, sonTur, StringComparison.Ordinal))
+                    var son = bas;
+                    while (son < aktif.Count && string.Equals(aktif[son].Tur, aktif[bas].Tur, StringComparison.Ordinal))
                     {
-                        sonTur = m.Tur;
-                        kopya = 0;
-                        carpan = 1m;
+                        son++;
                     }
 
-                    kopya++;
-                    if (kopya > Ayarlar.ModifierBirikmeSiniri)
+                    var carpan = 1m;
+                    for (var i = Math.Max(bas, son - Ayarlar.ModifierBirikmeSiniri); i < son; i++)
                     {
-                        continue;
+                        var m = aktif[i];
+                        katkilar.Add(new FikirKatkisi("modifier:" + m.Tur, m.Deger * carpan, m.NedenOlayId, _sonumleme.ModifierKalan(m, simdikiTick)));
+                        carpan *= Ayarlar.ModifierKopyaCarpani;
                     }
 
-                    katkilar.Add(new FikirKatkisi("modifier:" + m.Tur, m.Deger * carpan, m.NedenOlayId, _sonumleme.ModifierKalan(m, simdikiTick)));
-                    carpan *= Ayarlar.ModifierKopyaCarpani;
+                    bas = son;
                 }
             }
 
@@ -486,7 +485,7 @@ namespace Yanki.Core.Mind
             }
 
             var yeni = new Duygu(tur, siddet, hedef, olay.Tick, olay.Id);
-            if (siddet > BaskinDuyguSiddeti(olay.Tick))
+            if (siddet > 0m && siddet >= BaskinDuyguSiddeti(olay.Tick))
             {
                 _onceki = _duygu;
                 _duygu = yeni;

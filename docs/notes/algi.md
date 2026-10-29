@@ -32,14 +32,19 @@ diğer türler → `<tur>(fail, hedef)`.
 
 Dedikodu (`anlat`, `duydu` kanıtı aktarımı), konu sınırı, yalan kaydı: 6. hafta. Tick döngüsünde algının hangi olayları alacağı (zihin olaylarının kendisinin algılanıp algılanmayacağı dahil): 4. hafta.
 
-## Açık noktalar (Yusuf karar versin)
+## Açık noktalar
+
+Kararlı olanlar **Karar (Yusuf)** satırıyla işaretli (PR #4 incelemesinde verildi); işaretsizler hâlâ açık.
 
 1. **`gordu` kanıt gücü `0.9`.** Aynı olay türü tekrarlanırsa (aynı önerme) kanıtlar birikir (`1 − 0.1 × 0.1 = 0.99`). Tekrar eden gözlem inancı bu kadar mı güçlendirsin?
 2. **Hafıza önemi `0.5` (herkes için aynı).** Kalıcılık eşiğinin (0.7) altında, yani algılanan her şey zamanla unutulur. Fail ve hedefin önemi daha yüksek (kalıcı) olsun mu?
    Önem olayın türüne ya da görünürlüğüne göre mi değişsin?
+   - **Karar (Yusuf):** Hafıza önemi `0.5`, herkese aynı (mevcut davranış); `gordu` gücü `0.9`.
 3. **`sessiz` olayda mekan aranmaz:** fail ve hedef, başka mekanda olsa bile algılar. Aynı mekanda olmaları şart mı?
+   - **Karar (Yusuf):** `sessiz` olayda `Hedef`, olayın `Mekan`'ında bulunmalıdır (`Fail` mekandan bağımsız algılar; `Mekan` boşsa hedef algılamaz). Testler: `Sessiz_olayda_hedef_olayin_mekaninda_degilse_algilamaz`, `Mekani_olmayan_sessiz_olayi_hedef_algilamaz`.
 4. **`acik` olayda `Mekan` boşsa kimse algılamaz.** Fail bile. Failın kendi eylemini her zaman algıladığı varsayımı gerekli mi?
 5. **Oyuncu bir NPC değil.** `oyuncu` varlığı dünyada `npc` türünde kayıtlıysa algılar ve zihni olması gerekir; değilse algılamaz. Oyuncunun varlık türü nedir?
+   - **Karar (Yusuf):** Oyuncu NPC değildir, algılamaz, zihni yoktur.
 6. **Önerme türetmede boş fail/hedef atlanır** (`selamladi(Ali)`); ikisi de boşsa kanıt üretilmez, yalnızca hafıza yazılır. Yeterli mi?
 7. **Önerme adı olay türünden gelir** (`yardim_etti(oyuncu,Can)`). Olay türleri ASCII kimlik olmalı; kimlik olmayan bir tür `Gercek` doğrulamasında hata verir.
 8. **Bilinmeyen görünürlük değeri hata** (`yari_acik` gibi). Sessizce `acik` sayılsın mı?

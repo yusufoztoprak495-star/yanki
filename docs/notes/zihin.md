@@ -35,26 +35,35 @@ Her NPC'nin zihni `Zihin` nesnesidir; hepsi `ZihinDeposu`'nda kimliğe göre sı
 - **Kanıt ve çelişki sorgu anında değerlendirilir.** "İnanılan" bir bayrak olarak saklanmaz; kanıt gücü sönünce kazanan değişebilir. Böylece bayrak güncellemek için olay gerekmez.
 - **Hepsi sıralı koleksiyon, hepsi `decimal`.** Yasaklı API taraması (determinizm testi) `Mind/` ve `Perception/` için de çalışır.
 
-## Açık noktalar (Yusuf karar versin)
+## Açık noktalar
 
-Hepsi varsayılan olarak bir öneri; `ZihinAyarlari` ya da ilgili kod yerinden değişir.
+Kararlı olanlar **Karar (Yusuf)** satırıyla işaretli (PR #4 incelemesinde verildi); işaretsizler hâlâ açık ve varsayılan olarak öneri. `ZihinAyarlari` ya da ilgili kod yerinden değişir.
 
 1. **Eksen ağırlıkları:** `guven 0.4`, `sevgi 0.4`, `korku −0.2` (korku fikri düşürür). Toplam ağırlık 1.0 olduğundan eksenler tek başına ±100'ü aşmaz.
    Korku işareti: korkulan kişiye "soğuk" mu olunmalı?
+   - **Karar (Yusuf):** `0.4 / 0.4 / −0.2` (mevcut davranış).
 2. **Fikir kırpma:** toplam fikir (eksen + modifier) −100..100'e kırpılıyor, döküm katkıları kırpılmamış. Modifier'lar tek başına kırpmayı aşabilir; böyle olsun mu?
+   - **Karar (Yusuf):** Toplam fikir −100..100'e kırpılır (mevcut davranış).
 3. **Birikme sınırı aşılınca:** tür başına en çok 3 kopya sayılıyor; fazlası **en eskilerden sonra gelenler** olarak sayılmıyor (eskisi dolunca devreye girer).
    Alternatif: en yeni 3 kopya sayılır ya da en güçlü 3. Hangisi?
+   - **Karar (Yusuf):** **En yeni** birikme-sınırı kadar kopya sayılır (eski kopyalar atlanır, yeniler dolunca eskiler yeniden sayılır). Sayılan kopyalar başlangıç sırasıyla `1, 0.9, 0.81…` çarpanı alır. Testler: `Sinir_asilinca_en_yeni_kopyalar_sayilir`, `Sinir_asilinca_sayilan_kopyalar_baslangic_sirasiyla_carpanla_birikir`, `Sinirdan_fazla_eski_kopya_yeniler_dolunca_yeniden_sayilir`.
 4. **Modifier süresi sert biter.** Sürenin sonunda aniden düşer (solma yok). Planda böyle ("süresi dolunca düşer"); doğrusal solma ister misin?
+   - **Karar (Yusuf):** Sert biter (mevcut davranış).
 5. **Tick = ne kadar oyun içi zaman?** Plandaki örnekler (`minnet 14 gün`, `hafiza_var(..., 168)`) 1 tick = 1 saat gibi duruyor; kod bunu varsaymıyor, ama oranlar buna göre seçildi.
 6. **Sönme oranları (tick başına, doğrusal):**
    duygu şiddeti `0.05` (şiddet 1 → 20 tick), stres `0.2` (100 → 500 tick), kanıt gücü `0.001` (0.9 → ≈900 tick), hafıza önemi `0.002`.
    Üstel (yarı ömür) sönme istersen ADR gerekir (ADR-008 "yeniden bakılacak").
+   - **Karar (Yusuf):** Önerilen oranlar (duygu 0.05, stres 0.2, kanıt 0.001, hafıza 0.002), 1 tick = 1 saat varsayımıyla.
 7. **Duygu eşitliği:** yeni duygu baskın olmak için eskisinden **kesin** daha şiddetli olmalı (eşitse eskisi kalır). Eski duygu sönmüşse (şiddet 0) herhangi bir yeni duygu baskın olur.
    `OncekiDuygu` sönmüş olsa da tutulur. Doğru mu?
+   - **Karar (Yusuf):** Eşit şiddette yeni duygu **baskın olur**, eskisi `OncekiDuygu` kalır; şiddeti 0 olan duygu hiç baskın olmaz. Testler: `Esit_siddetteki_yeni_duygu_baskin_olur_eskisi_onceki_kalir`, `Sifir_siddetli_duygu_hic_baskin_olmaz`.
 8. **Hafıza eşikleri:** kalıcılık eşiği `0.7` (**üstü** kalıcı; tam 0.7 kalıcı değil). Planda "silikleşip eşik altına düşünce çıkar" der ama hangi eşik olduğunu söylemez;
    ben ayrı bir **unutma eşiği** ekledim, `0.1` (**≤ 0.1** olunca sorgudan çıkar). Tek eşik mi olsun?
+   - **Karar (Yusuf):** İki eşik: kalıcılık `0.7` (üstü), unutma `0.1` (mevcut davranış).
 9. **Çelişkide eşitlik kuralı:** güven eşitse **en yeni kanıtı olan** önerme inanılır; o da eşitse **hiçbiri** inanılmaz (`inanc(...)` 0 döner). Alternatif: eskisi kalsın, ya da ikisi de yarım güvenle.
+   - **Karar (Yusuf):** Eşitlikte en yeni kanıt kazanır, o da eşitse hiçbiri (mevcut davranış). Testler: `Esit_guvende_en_yeni_kanitli_olan_inanilir`, `Tam_esitlikte_hicbiri_inanilmaz`.
 10. **Çelişkide kaybeden `inanc()` 0 döner** (ham güven `Zihin.Guven` ile hâlâ okunur). Kriter dilinde kaybedenin ham güveni görünmüyor; görünsün mü?
+   - **Karar (Yusuf):** Kaybeden için `inanc()` 0 döner (mevcut davranış).
 11. **`degil(p)` kriter dilinde sorgulanamaz:** sözlük kuralı önerme içinde önerme yasaklıyor. Zihin `degil(p)` inançlarını tutuyor ve çelişkiyi çözüyor, ama `inanc(degil(...))` yazılamaz.
     Sözlük Yusuf'un alanı olduğundan dokunmadım; istenirse ayrı bir karar.
 12. **`degil` yüklem adı olarak ayrıldı:** `degil(Ali)` gibi bir gerçek yazılamaz.
