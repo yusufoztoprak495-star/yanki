@@ -39,6 +39,7 @@ dotnet run --project src/Yanki.Cli -- --version
 - AI'nin yazdığı commit'lerin sonuna `Co-Authored-By` satırı eklenir.
 - Uyarılar hata sayılır (`TreatWarningsAsErrors`). Uyarıyı bastırma, düzelt.
 - Paket sürümleri yalnızca `Directory.Packages.props` içinde. Planda olmayan paket ekleme (önce sor).
+- **Her PR'da `docs/DURUM.md` güncellenir. PR bunsuz açılmaz.**
 - **Karar değişirse yeni ADR** yaz (`docs/adr/`, şablon: `0000-sablon.md`). Eski ADR'yi silme, durumunu "Yerini aldı" yap.
   ADR'lerdeki "Gerekçe (Yusuf)" bölümünü Yusuf yazar; sen doldurma.
   ADR'ler Yusuf gerekçeyi yazana kadar "Önerildi" kalır; kararlar yine de bağlayıcıdır.
