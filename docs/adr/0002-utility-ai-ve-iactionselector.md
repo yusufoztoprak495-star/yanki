@@ -2,6 +2,8 @@
 
 **Durum:** Önerildi
 **Tarih:** 2026-10-29
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 NPC'ler doğal davranmalı ama kişiliklerine tutarlı kalmalı; aynı seed ile aynı kararı vermeli; her kararın gerekçesi

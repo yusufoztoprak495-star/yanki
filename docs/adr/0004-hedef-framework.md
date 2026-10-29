@@ -2,6 +2,8 @@
 
 **Durum:** Önerildi
 **Tarih:** 2026-10-29
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 Kütüphane hem Unity'de (Türk mobil oyun stüdyolarının ana motoru) hem güncel .NET'te (CLI, Blazor demo, testler)
@@ -9,7 +11,7 @@ Kütüphane hem Unity'de (Türk mobil oyun stüdyolarının ana motoru) hem gün
 bitiyor; güncel LTS .NET 10.
 
 ## Karar
-- `Yanki.Core` ve `Yanki.Dialogue`: `netstandard2.1;net10.0` çoklu hedef.
+- `Yanki.Core` ve `Yanki.Dialogue`: `netstandard2.1;net10.0` çoklu hedef, `LangVersion` 9.0 (Unity sınırı; yalnızca bu iki proje için geçerli, Cli ve test projeleri `latest` kullanır).
 - `Yanki.Cli`, testler ve demo: yalnızca `net10.0`.
 - **Çekirdek hiçbir NuGet paketine bağımlı değildir.** Bu bir mimari testle CI'da korunur.
 - `netstandard2.1`'de eksik olan dil destek tipleri (ör. `IsExternalInit`) çekirdek içinde polyfill olarak tutulur.
@@ -47,5 +49,5 @@ A, küçük bir `#if` maliyetiyle hem Unity hem modern .NET'i kapsıyor.
 - Yeniden bakılacak: Unity CoreCLR'a geçtiğinde `netstandard2.1` hedefi bırakılabilir.
 
 ## Yapılacaklar
-1. [x] Çoklu hedefli projeler, C# 9.0 ve `global.json` (1. hafta).
+1. [x] Çoklu hedefli projeler, `Yanki.Core` ve `Yanki.Dialogue` için C# 9.0 ve `global.json` (1. hafta).
 2. [x] "Çekirdek yalnızca çerçeveye bağlı" mimari testleri, iki hedefte (1. hafta).

@@ -2,6 +2,8 @@
 
 **Durum:** Önerildi
 **Tarih:** 2026-10-29
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 İki yerde "şu koşullar sağlanıyorsa" demek gerekiyor: sonuç kuralları (oyuncu hancıya yalan söyledi ve hancı bunu

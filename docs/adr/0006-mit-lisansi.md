@@ -2,6 +2,8 @@
 
 **Durum:** Önerildi
 **Tarih:** 2026-10-29
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 Proje portfolyo amaçlı ve "Love/Hate'in açık, motordan bağımsız alternatifi" olarak konumlanıyor. Stüdyoların

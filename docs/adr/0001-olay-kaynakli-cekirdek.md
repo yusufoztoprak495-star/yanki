@@ -2,6 +2,8 @@
 
 **Durum:** Önerildi
 **Tarih:** 2026-10-29
+**Kabul eden:** —
+**Kabul tarihi:** —
 
 ## Bağlam
 Yankı'nın ana iddiası "her karar yankılanır ve motor nedenini gösterebilir". Bunun için üç şey gerekiyor:

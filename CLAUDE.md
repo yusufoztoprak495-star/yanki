@@ -41,6 +41,7 @@ dotnet run --project src/Yanki.Cli -- --version
 - Paket sürümleri yalnızca `Directory.Packages.props` içinde. Planda olmayan paket ekleme (önce sor).
 - **Karar değişirse yeni ADR** yaz (`docs/adr/`, şablon: `0000-sablon.md`). Eski ADR'yi silme, durumunu "Yerini aldı" yap.
   ADR'lerdeki "Gerekçe (Yusuf)" bölümünü Yusuf yazar; sen doldurma.
+  ADR'ler Yusuf gerekçeyi yazana kadar "Önerildi" kalır; kararlar yine de bağlayıcıdır.
 - **Her modül bittiğinde** `docs/notes/` altına "bu modül ne yapıyor, neden böyle" taslak notu bırak; Yusuf kendi
   cümleleriyle yeniden yazar.
 - Kod yorumları ve dokümanlar Türkçe; tip ve üye adları İngilizce, alan terimleri gerektiğinde Türkçe kalabilir
