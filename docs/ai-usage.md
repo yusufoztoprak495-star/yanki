@@ -23,6 +23,10 @@ Bu projede AI kod aracını (Claude Code) açıkça ve bilinçli olarak kullanı
 - NPC kararları kural ve utility AI ile veriliyor; motorun içinde LLM karar vermiyor ([ADR-002](adr/0002-utility-ai-ve-iactionselector.md)).
 - İş PR üzerinden ilerler; AI'nin yazdığı commit'ler `Co-Authored-By` satırı taşır.
 
+## Görev metinleri
+
+Her haftanın Claude Code'a verilen görev metni [`docs/prompts/`](prompts/) altında duruyor. Metinleri Yusuf hazırlar ve birebir kaydedilir; Claude Code görev metni yazmaz. Böylece hangi işin AI'ye nasıl tarif edildiği açıkça görülebiliyor.
+
 ## Çıktı nasıl doğrulanıyor
 
 Testler (xUnit), golden replay hash'leri, benchmark'lar ve PR incelemesi.
