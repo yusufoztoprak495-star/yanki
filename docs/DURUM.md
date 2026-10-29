@@ -4,8 +4,8 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 ## Son güncelleme
 
-- **Tarih:** 2026-10-29
-- **PR:** [PR #4](https://github.com/yusufoztoprak495-star/yanki/pull/4) (3. hafta: Zihin ve doğrudan algı)
+- **Tarih:** 2026-10-30
+- **PR:** [PR #6](https://github.com/yusufoztoprak495-star/yanki/pull/6) (CLAUDE.md: merge sonrası dal temizliği kuralı; kod değişikliği yok)
 
 ## Biten haftalar
 
