@@ -32,7 +32,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 - [ ] **ADR-001..008 "Gerekçe (Yusuf)" bölümleri:** sekiz ADR'nin hepsinde boş.
 - [ ] **`docs/notes/` taslaklarını kendi cümlelerimle yeniden yazmak:** `dunya.md`, `olay-kaydi.md`, `kriter-dili.md`, `zihin.md`, `algi.md`.
-- [ ] **`CODECOV_TOKEN` secret'ı:** GitHub repo ayarlarına eklenecek.
+- [x] **`CODECOV_TOKEN` secret'ı:** GitHub repo ayarlarına eklendi.
 - [ ] **Kasaba Hanı NPC'leri:** 4. haftada 3, 9. haftada 8.
 
 ## Açık kararlar (Yusuf'u bekleyen)
