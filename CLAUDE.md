@@ -44,6 +44,7 @@ dotnet run --project src/Yanki.Cli -- --version
   ADR'lerdeki "Gerekçe (Yusuf)" bölümünü Yusuf yazar; sen doldurma.
   ADR'ler Yusuf gerekçeyi yazana kadar "Önerildi" kalır; kararlar yine de bağlayıcıdır.
 - **`docs/prompts/` altına yalnızca Yusuf'un verdiği görev metinleri birebir kaydedilir. Claude Code görev metni yazmaz veya tamamlamaz. Yeni bir haftanın görev metni verildiğinde onu `docs/prompts/hafta-NN.md` olarak kaydet.**
+- **Yusuf bir PR'ın merge edildiğini söylediğinde `main`'e geç, pull et ve o PR'ın yerel dalını sil.**
 - **Her modül bittiğinde** `docs/notes/` altına "bu modül ne yapıyor, neden böyle" taslak notu bırak; Yusuf kendi
   cümleleriyle yeniden yazar.
 - Kod yorumları ve dokümanlar Türkçe; tip ve üye adları İngilizce, alan terimleri gerektiğinde Türkçe kalabilir
