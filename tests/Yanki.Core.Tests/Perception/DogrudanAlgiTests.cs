@@ -78,7 +78,7 @@ namespace Yanki.Core.Tests.Perception
         {
             var u = new OlayUretici();
             var dunya = OlayUretici.SabitDunya();
-            dunya.Uygula(u.Varlik("oyuncu", "esya"));
+            dunya.Uygula(u.Varlik("oyuncu", "oyuncu"));
             dunya.Uygula(u.GercekEkle("konum!(oyuncu,han)"));
             var depo = new ZihinDeposu();
             foreach (var id in new[] { "Ali", "Ayse" })

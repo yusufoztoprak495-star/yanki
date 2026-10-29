@@ -12,6 +12,10 @@
   çağrı sırasından etkilenmiyor.
 - **Durum hash'i:** dünya durumunun kanonik metni üzerinden 64 bit hash. İki koşunun nerede ayrıştığını bulmak için.
 
+## Varlık türleri
+
+`npc`, `mekan`, `esya` ve `oyuncu`. Oyuncu ayrı bir türdür: `konum!` gerçeği taşıyabilir, olayda fail/hedef olabilir, başkalarının fikir hedefi olabilir; zihni ve algısı yoktur. Eşya sorguları (`Varliklar(Esya)`) oyuncuyu döndürmez; mekanlara bağlanamaz.
+
 ## Kimlikler ASCII'dir
 
 Varlık kimlikleri, yüklem adları ve gerçek argümanları ASCII'dir (`[A-Za-z_][A-Za-z0-9_]*`). Türkçe karakterli, oyuncuya görünen

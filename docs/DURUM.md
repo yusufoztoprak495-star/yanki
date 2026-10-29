@@ -26,20 +26,21 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - Saf sönme fonksiyonları (`Sonumleme`, `ZihinAyarlari`) ve altı zihin olayı; zihin durum hash'e giriyor, dünya altın hash'i değişmedi.
 - Doğrudan algı: `acik`/`sessiz`/`gizli`, `gordu` kanıtı + hafıza olayı (`KuralId: algi`).
 - `ZihinSorguCozucusu`: kriter dili sözlüğünün 13/15 fonksiyonu gerçek veriye bağlı (`yalan_soyledi` 6., `yay` 7. hafta).
-- ADR-008, `docs/notes/zihin.md`, `docs/notes/algi.md`; 505 test (iki hedefte derleniyor, 0 uyarı).
+- ADR-008, `docs/notes/zihin.md`, `docs/notes/algi.md`; 508 test (iki hedefte derleniyor, 0 uyarı).
 
 ## Ertelenenler (Yusuf'un işi)
 
-- ADR-001..008 "Gerekçe (Yusuf)" bölümleri.
-- `docs/notes/` taslaklarını (dunya, olay-kaydi, kriter-dili, zihin, algi) kendi cümleleriyle yeniden yazmak.
-- `CODECOV_TOKEN` secret'ı.
-- Kasaba Hanı NPC'leri: 4. haftada 3, 9. haftada 8.
+- [ ] **ADR-001..008 "Gerekçe (Yusuf)" bölümleri:** sekiz ADR'nin hepsinde boş.
+- [ ] **`docs/notes/` taslaklarını kendi cümlelerimle yeniden yazmak:** `dunya.md`, `olay-kaydi.md`, `kriter-dili.md`, `zihin.md`, `algi.md`.
+- [ ] **`CODECOV_TOKEN` secret'ı:** GitHub repo ayarlarına eklenecek.
+- [ ] **Kasaba Hanı NPC'leri:** 4. haftada 3, 9. haftada 8.
 
 ## Açık kararlar (Yusuf'u bekleyen)
 
 - 3. haftanın büyük kararları PR #4 incelemesinde verildi (eksen ağırlıkları, sönme oranları, hafıza eşikleri, birikme, çelişki eşitliği, duygu eşitliği, algı değerleri); notlarda **Karar (Yusuf)** olarak işli.
 - İkinci inceleme turunda kalan küçük noktalar da karara bağlandı ve koda işlendi: `inanc(degil(...))`, tekrar eden kanıtın tazelenmesi, failın her zaman algılaması,
   `FikirDokumu` kırpma satırı; `gordu` kaynağı ve bilinmeyen görünürlük hatası olduğu gibi kaldı.
+- `oyuncu` artık ayrı bir varlık türü (`VarlikTuru.Oyuncu`), eşya değil.
 - 3. hafta için Yusuf'u bekleyen açık karar kalmadı (yalnızca ADR-008 "Gerekçe (Yusuf)" yazımı).
 
 ## Sıradaki hafta

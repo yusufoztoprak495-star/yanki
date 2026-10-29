@@ -11,5 +11,8 @@ namespace Yanki.Core.World
 
         /// <summary>Taşınabilir ya da yerinde duran nesne.</summary>
         Esya,
+
+        /// <summary>Oyuncu: <c>konum!</c> gerçeği, fail/hedef ve fikir hedefi olabilir; zihni ve algısı yoktur, eşya sorgularında görünmez.</summary>
+        Oyuncu,
     }
 }

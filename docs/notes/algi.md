@@ -46,7 +46,7 @@ Kararlı olanlar **Karar (Yusuf)** satırıyla işaretli (PR #4 incelemesinde ve
 4. **`acik` olayda `Mekan` boşsa kimse algılamaz.** Fail bile. Failın kendi eylemini her zaman algıladığı varsayımı gerekli mi?
    - **Karar (Yusuf):** Fail her görünürlükte ve `Mekan` boş olsa bile kendi olayını algılar. Testler: `Fail_her_gorunurlukte_ve_mekan_bos_olsa_bile_kendi_olayini_algilar`, `Fail_olayin_mekaninda_degilse_bile_acik_olayi_algilar`.
 5. **Oyuncu bir NPC değil.** `oyuncu` varlığı dünyada `npc` türünde kayıtlıysa algılar ve zihni olması gerekir; değilse algılamaz. Oyuncunun varlık türü nedir?
-   - **Karar (Yusuf):** Oyuncu NPC değildir, algılamaz, zihni yoktur.
+   - **Karar (Yusuf):** Oyuncu NPC değildir, algılamaz, zihni yoktur. Dünyada ayrı bir `oyuncu` varlık türü vardır (eşya değil); `konum!`, fail/hedef ve fikir hedefi olabilir. `Varliklar(Esya)` oyuncuyu döndürmez (`Oyuncu_ayri_bir_varlik_turudur_ve_esya_npc_mekan_listelerinde_gorunmez`).
 6. **Önerme türetmede boş fail/hedef atlanır** (`selamladi(Ali)`); ikisi de boşsa kanıt üretilmez, yalnızca hafıza yazılır. Yeterli mi?
 7. **Önerme adı olay türünden gelir** (`yardim_etti(oyuncu,Can)`). Olay türleri ASCII kimlik olmalı; kimlik olmayan bir tür `Gercek` doğrulamasında hata verir.
 8. **Bilinmeyen görünürlük değeri hata** (`yari_acik` gibi). Sessizce `acik` sayılsın mı?

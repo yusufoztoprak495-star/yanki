@@ -83,5 +83,5 @@ Kararlı olanlar **Karar (Yusuf)** satırıyla işaretli (PR #4 incelemesinde ve
   (`kanit_eklendi` olay kimliği de yenisi). Farklı kaynak ya da tür birikmeye devam eder. Testler: `Ayni_tur_ve_kaynaktan_tekrar_eden_kanit_mevcut_kaniti_tazeler` ve komşuları.
 - **`FikirDokumu` kırpmayı gösterir:** toplam kırpıldıysa sonda `kirpma` katkısı (`HamToplam → Toplam`) ve `KirpmaMetni` ("kırpıldı: 130 → 100") bulunur.
 - **Duygu karşılaştırması** mevcut duygunun şimdiki tick'teki sönmüş şiddetiyle yapılır (testli).
-- **Oyuncu** (`esya` türünde kayıtlı): `konum!`, fail, hedef ve fikir hedefi olabilir; zihni ve algısı yoktur (testli).
+- **Oyuncu** (ayrı `oyuncu` varlık türü; eşya sorgularında görünmez): `konum!`, fail, hedef ve fikir hedefi olabilir; zihni ve algısı yoktur (testli).
 

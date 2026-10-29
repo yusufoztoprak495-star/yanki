@@ -37,6 +37,50 @@ namespace Yanki.Core.Tests.World
         }
 
         [Fact]
+        public void Oyuncu_ayri_bir_varlik_turudur_ve_esya_npc_mekan_listelerinde_gorunmez()
+        {
+            var u = new OlayUretici();
+            var dunya = new Dunya();
+            dunya.Uygula(u.Varlik("han", "mekan"));
+            dunya.Uygula(u.Varlik("Ali", "npc"));
+            dunya.Uygula(u.Varlik("kilic", "esya"));
+            dunya.Uygula(u.Varlik("oyuncu", "oyuncu"));
+            dunya.Uygula(u.GercekEkle("konum!(oyuncu,han)"));
+
+            Assert.Equal(VarlikTuru.Oyuncu, dunya.TurOf("oyuncu"));
+            Assert.Equal(new[] { "oyuncu" }, dunya.Varliklar(VarlikTuru.Oyuncu).ToArray());
+            Assert.Equal(new[] { "kilic" }, dunya.Varliklar(VarlikTuru.Esya).ToArray());
+            Assert.Equal(new[] { "Ali" }, dunya.Varliklar(VarlikTuru.Npc).ToArray());
+            Assert.Equal(new[] { "han" }, dunya.Varliklar(VarlikTuru.Mekan).ToArray());
+            Assert.Equal("han", dunya.TekDeger("konum!", "oyuncu"));
+        }
+
+        [Fact]
+        public void Oyuncu_mekanlara_baglanamaz_ve_kimligi_tekrar_eklenemez()
+        {
+            var u = new OlayUretici();
+            var dunya = new Dunya();
+            dunya.Uygula(u.Varlik("han", "mekan"));
+            dunya.Uygula(u.Varlik("oyuncu", "oyuncu"));
+
+            Assert.Throws<InvalidOperationException>(() => dunya.Uygula(u.Bagla("han", "oyuncu")));
+            Assert.Throws<InvalidOperationException>(() => dunya.Uygula(u.Varlik("oyuncu", "esya")));
+        }
+
+        [Fact]
+        public void Oyuncu_kanonik_metinde_ve_hashte_kendi_turuyle_yazilir()
+        {
+            var u = new OlayUretici();
+            var oyuncu = new Dunya();
+            oyuncu.Uygula(u.Varlik("x", "oyuncu"));
+            var esya = new Dunya();
+            esya.Uygula(new OlayUretici().Varlik("x", "esya"));
+
+            Assert.Contains("V|x|oyuncu\n", oyuncu.KanonikMetin());
+            Assert.NotEqual(esya.DurumHash(), oyuncu.DurumHash());
+        }
+
+        [Fact]
         public void Bilinmeyen_varlik_turu_hata_verir()
         {
             var u = new OlayUretici();
