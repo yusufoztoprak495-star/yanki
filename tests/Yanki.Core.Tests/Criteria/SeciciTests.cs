@@ -155,6 +155,131 @@ namespace Yanki.Core.Tests.Criteria
             Assert.Equal(new[] { "a", "b", "c" }, secilenler.ToArray());
         }
 
+        // Karar (Yusuf): puan eşitse daha çok kriteri tutan (daha özgül) aday kazanır; o da eşitse anahtarlı RNG (ADR-003).
+        [Fact]
+        public void Ayni_puan_farkli_kriter_sayisi_ozgul_olan_kazanir()
+        {
+            for (var tick = 0; tick < 20; tick++)
+            {
+                var adaylar = new[]
+                {
+                    Aday("genel", Buyuk("stres()", 0, 2m)),                                   // puan 2, 1 kriter
+                    Aday("ozgul", Buyuk("stres()", 0, 1m), Buyuk("yay(a)", 0, 1m)),           // puan 2, 2 kriter
+                };
+
+                var sonuc = Secici.EnIyiSec(adaylar, Cozucu(), Baglam, AnahtarliRng.Icin(3UL, tick, "sec"));
+
+                Assert.Equal("ozgul", sonuc.Secilen!.Id);
+                Assert.False(sonuc.EsitlikVardi);   // RNG gerekmedi
+            }
+        }
+
+        [Fact]
+        public void Ozgul_olan_listede_nerede_olursa_olsun_kazanir()
+        {
+            var ozgul = Aday("a", Buyuk("stres()", 0, 1m), Buyuk("yay(a)", 0, 1m), Buyuk("kisilik(x)", 0, 1m));
+            var genel = Aday("z", Buyuk("stres()", 0, 3m));
+
+            var ileri = Secici.EnIyiSec(new[] { ozgul, genel }, Cozucu(), Baglam, AnahtarliRng.Icin(3UL, 0, "sec"));
+            var geri = Secici.EnIyiSec(new[] { genel, ozgul }, Cozucu(), Baglam, AnahtarliRng.Icin(3UL, 0, "sec"));
+
+            Assert.Equal("a", ileri.Secilen!.Id);
+            Assert.Equal("a", geri.Secilen!.Id);
+        }
+
+        [Fact]
+        public void Puan_ozguluktan_once_gelir()
+        {
+            var adaylar = new[]
+            {
+                Aday("yuksek_puan", Buyuk("stres()", 0, 5m)),                                                         // puan 5, 1 kriter
+                Aday("cok_kriter", Buyuk("stres()", 0, 1m), Buyuk("yay(a)", 0, 1m), Buyuk("kisilik(x)", 0, 1m)),      // puan 3, 3 kriter
+            };
+
+            var sonuc = Secici.EnIyiSec(adaylar, Cozucu(), Baglam, AnahtarliRng.Icin(3UL, 0, "sec"));
+
+            Assert.Equal("yuksek_puan", sonuc.Secilen!.Id);
+        }
+
+        [Fact]
+        public void Ozgulluk_yalnizca_tutan_kriterleri_sayar()
+        {
+            // "b" 3 kriter taşır ama yalnızca 1'i tutar; "a" 1 kriter taşır ve o tutar → özgüllük eşit, RNG devreye girer.
+            var adaylar = new[]
+            {
+                Aday("a", Buyuk("stres()", 0, 2m)),
+                Aday("b", Buyuk("stres()", 0, 2m), Buyuk("yay(a)", 100, 0m), Buyuk("kisilik(x)", 100, 0m)),
+            };
+
+            var secilenler = new SortedSet<string>(StringComparer.Ordinal);
+            for (var tick = 0; tick < 60; tick++)
+            {
+                var sonuc = Secici.EnIyiSec(adaylar, Cozucu(), Baglam, AnahtarliRng.Icin(3UL, tick, "sec"));
+                Assert.True(sonuc.EsitlikVardi);
+                secilenler.Add(sonuc.Secilen!.Id);
+            }
+
+            Assert.Equal(new[] { "a", "b" }, secilenler.ToArray());
+        }
+
+        [Fact]
+        public void Elenmis_aday_cok_kriter_tutsa_da_kazanmaz()
+        {
+            var adaylar = new[]
+            {
+                Aday("elenen", Buyuk("stres()", 0, 1m), Buyuk("yay(a)", 0, 1m), Buyuk("kisilik(x)", 100, 1m, zorunlu: true)),
+                Aday("kalan", Buyuk("stres()", 0, 1m)),
+            };
+
+            var sonuc = Secici.EnIyiSec(adaylar, Cozucu(), Baglam, AnahtarliRng.Icin(3UL, 0, "sec"));
+
+            Assert.Equal("kalan", sonuc.Secilen!.Id);
+        }
+
+        [Fact]
+        public void Puan_ve_ozgulluk_ikisi_de_esitse_anahtarli_rng_secer()
+        {
+            // İki kriterli, eşit puanlı üç aday: farklı kriterlerle ama aynı puan ve aynı tutan sayısı.
+            List<Aday<string>> Uc() => new List<Aday<string>>
+            {
+                Aday("c", Buyuk("stres()", 0, 1m), Buyuk("yay(a)", 0, 1m)),
+                Aday("a", Buyuk("stres()", 0, 1m), Buyuk("kisilik(x)", 0, 1m)),
+                Aday("b", Buyuk("yay(a)", 0, 1m), Buyuk("kisilik(x)", 0, 1m)),
+            };
+
+            var secilenler = new SortedSet<string>(StringComparer.Ordinal);
+            for (var tick = 0; tick < 60; tick++)
+            {
+                var duz = Secici.EnIyiSec(Uc(), Cozucu(), Baglam, AnahtarliRng.Icin(3UL, tick, "sec"));
+                var ters = Secici.EnIyiSec(Uc().AsEnumerable().Reverse().ToList(), Cozucu(), Baglam, AnahtarliRng.Icin(3UL, tick, "sec"));
+
+                Assert.True(duz.EsitlikVardi);
+                Assert.Equal(duz.Secilen!.Id, ters.Secilen!.Id);   // girdi sırasından bağımsız
+                secilenler.Add(duz.Secilen.Id);
+            }
+
+            Assert.Equal(new[] { "a", "b", "c" }, secilenler.ToArray());
+        }
+
+        [Fact]
+        public void Ozgulluk_esitligi_cozerse_rng_cekilmez()
+        {
+            var rng = AnahtarliRng.Icin(3UL, 0, "sec");
+            var adaylar = new[] { Aday("genel", Buyuk("stres()", 0, 2m)), Aday("ozgul", Buyuk("stres()", 0, 1m), Buyuk("yay(a)", 0, 1m)) };
+
+            Secici.EnIyiSec(adaylar, Cozucu(), Baglam, rng);
+
+            Assert.Equal(AnahtarliRng.Icin(3UL, 0, "sec").SonrakiUlong(), rng.SonrakiUlong());
+        }
+
+        [Fact]
+        public void Iz_tutan_kriter_sayisini_verir()
+        {
+            var iz = Secici.Puanla(Aday("a", Buyuk("stres()", 0), Buyuk("yay(a)", 100), Buyuk("kisilik(x)", 0)), Cozucu(), Baglam);
+
+            Assert.Equal(2, iz.TutanKriterSayisi);
+        }
+
         [Fact]
         public void Esitlik_yoksa_rng_cekilmez()
         {

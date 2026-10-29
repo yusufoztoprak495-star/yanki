@@ -11,8 +11,8 @@ Bir kriter, "şu sorgunun cevabı şu karşılaştırmayı sağlıyor mu?" sorus
 3. `Kriter.Olustur` operatörün ve değerin dönüş türüne uyduğunu doğrular (mantıksal değerde `<` olmaz).
 4. Bir `ISorguCozucu` ile kriteri değerlendirir. Bu hafta yalnızca dünyaya dayanan `gercek` ve `ayni_mekanda` gerçekten çözülüyor;
    diğer 13 fonksiyonun çözümü zihin gelince (3. hafta).
-5. Adayları puanlar (tutan kriterlerin ağırlık toplamı), zorunlu kriteri tutmayanı eler, en iyiyi seçer; eşitlikte anahtarlı
-   RNG kullanır ve her adayın **eşleşme izini** (hangi kriter tuttu/tutmadı) saklar.
+5. Adayları puanlar (tutan kriterlerin ağırlık toplamı), zorunlu kriteri tutmayanı eler, en iyiyi seçer; puan eşitse daha çok
+   kriteri tutanı (daha özgül), o da eşitse anahtarlı RNG kullanır ve her adayın **eşleşme izini** (hangi kriter tuttu/tutmadı) saklar.
 
 ## Neden böyle?
 
@@ -25,7 +25,8 @@ Bir kriter, "şu sorgunun cevabı şu karşılaştırmayı sağlıyor mu?" sorus
   zihin gelince motor değişmeden yeni çözücü takılıyor, testlerde sahte çözücü kullanılıyor.
 - **Tüm kriterler değerlendirilir, kısa devre yok.** Zorunlu bir kriter tutmasa bile diğerlerinin sonucu iz için lazım
   (`yanki why` ve kapsama raporu).
-- **Eşitlikte adaylar kimliğe göre sıralanır, sonra RNG seçer.** Böylece sonuç, adayların listeye hangi sırayla verildiğinden
+- **Puan eşitse özgül olan kazanır; o da eşitse adaylar kimliğe göre sıralanır, sonra RNG seçer.** (ADR-003: "en çok kriteri
+  sağlayan en özgül kazanır; eşitlikte anahtarlı RNG".) Özgüllük = tutan kriter sayısı; tutmayan kriterler sayılmaz. Böylece sonuç, adayların listeye hangi sırayla verildiğinden
   bağımsız; yalnızca (seed, tick, anahtar) belirliyor. Eşitlik yoksa RNG'den değer çekilmiyor.
 
 ## Benim (Claude'un) verdiğim kararlar — Yusuf onaylasın
@@ -53,3 +54,7 @@ Bir kriter, "şu sorgunun cevabı şu karşılaştırmayı sağlıyor mu?" sorus
 - `ayni_mekanda(hedef)`: iki tarafın da `konum!` gerçeği yoksa `false` döndürüyorum; "bilinmiyor" ayrı bir durum olmalı mı?
   - **Karar (Yusuf):** Konum bilinmiyorsa `false`, hata yok. Mevcut davranış bu; `AyniMekanda_konumu_olmayan_varlik_icin_false` testi korur.
 - Puan eşitliğinde RNG yerine ikinci bir kriter (öncelik) istenir mi?
+  - **Karar (Yusuf):** Puan eşitse daha çok kriteri tutan aday (daha özgül olan) kazanır; o da eşitse anahtarlı RNG. ADR-003'ün
+    "en özgül kazanır, eşitlikte RNG" kuralıyla uyumlu (puan birincil, özgüllük ikinci, RNG üçüncü); yeni ADR gerekmedi.
+    Testler: `Ayni_puan_farkli_kriter_sayisi_ozgul_olan_kazanir`, `Puan_ozguluktan_once_gelir`,
+    `Puan_ve_ozgulluk_ikisi_de_esitse_anahtarli_rng_secer`, `Ozgulluk_yalnizca_tutan_kriterleri_sayar`.

@@ -50,13 +50,24 @@ namespace Yanki.Core.Criteria
         /// <summary>Her kriterin sonucu, adayın kriter sırasıyla (kısa devre yok).</summary>
         public IReadOnlyList<KriterSonucu> Sonuclar { get; }
 
+        /// <summary>Tutan kriter sayısı; puan eşitliğinde "daha özgül" olanı seçmek için kullanılır (ADR-003).</summary>
+        public int TutanKriterSayisi { get; }
+
         /// <summary>Yeni iz.</summary>
         public EslesmeIzi(string adayId, bool elendi, decimal puan, IEnumerable<KriterSonucu> sonuclar)
         {
             AdayId = adayId;
             Elendi = elendi;
             Puan = puan;
-            Sonuclar = new ReadOnlyCollection<KriterSonucu>(new List<KriterSonucu>(sonuclar));
+            var liste = new List<KriterSonucu>(sonuclar);
+            Sonuclar = new ReadOnlyCollection<KriterSonucu>(liste);
+            foreach (var s in liste)
+            {
+                if (s.Tuttu)
+                {
+                    TutanKriterSayisi++;
+                }
+            }
         }
     }
 
@@ -116,9 +127,9 @@ namespace Yanki.Core.Criteria
         }
 
         /// <summary>
-        /// Elenmemiş adaylar arasından en yüksek puanlıyı seçer. Eşitlikte eşit adaylar kimliğe göre ordinal
-        /// sıralanır ve <paramref name="rng"/> ile biri seçilir; böylece sonuç girdi sırasından bağımsızdır.
-        /// Eşitlik yoksa RNG'den değer çekilmez.
+        /// Elenmemiş adaylar arasından seçer: önce en yüksek puan; puan eşitse daha çok kriteri tutan (daha özgül)
+        /// aday kazanır (ADR-003); o da eşitse eşit adaylar kimliğe göre ordinal sıralanır ve <paramref name="rng"/> ile
+        /// biri seçilir, böylece sonuç girdi sırasından bağımsızdır. RNG'den yalnızca bu son durumda değer çekilir.
         /// </summary>
         /// <exception cref="ArgumentException">Aday kimlikleri tekil değilse.</exception>
         public static SecimSonucu<T> EnIyiSec<T>(IReadOnlyList<Aday<T>> adaylar, ISorguCozucu cozucu, SorguBaglami baglam, AnahtarliRng rng)
@@ -146,6 +157,7 @@ namespace Yanki.Core.Criteria
             var izler = new List<EslesmeIzi>(sirali.Count);
             var enIyi = new List<Aday<T>>();
             var enYuksek = 0m;
+            var enCokTutan = 0;
             foreach (var aday in sirali)
             {
                 var iz = Puanla(aday, cozucu, baglam);
@@ -155,13 +167,17 @@ namespace Yanki.Core.Criteria
                     continue;
                 }
 
-                if (enIyi.Count == 0 || iz.Puan > enYuksek)
+                var daha = enIyi.Count == 0
+                    || iz.Puan > enYuksek
+                    || (iz.Puan == enYuksek && iz.TutanKriterSayisi > enCokTutan);
+                if (daha)
                 {
                     enIyi.Clear();
                     enYuksek = iz.Puan;
+                    enCokTutan = iz.TutanKriterSayisi;
                     enIyi.Add(aday);
                 }
-                else if (iz.Puan == enYuksek)
+                else if (iz.Puan == enYuksek && iz.TutanKriterSayisi == enCokTutan)
                 {
                     enIyi.Add(aday);
                 }
