@@ -419,6 +419,26 @@ namespace Yanki.Core.Tests.Simulation
             Assert.True(secimler.Count > 1, "farklı seed'ler farklı seçim üretmeli: " + string.Join(",", secimler));
         }
 
+        // ---- çelişen özellikler (5. hafta: yalnızca görünür, stres yazılmaz) ----
+
+        [Fact]
+        public void Celisen_ozellikler_izde_gorunur_ama_stres_degismez()
+        {
+            var sim = Kur(Senaryo1(), new[] { Selam("\"celisen_ozellikler\": [ \"durustluk\", \"merhamet\" ]"), Git() });
+            sim.Tick(3);
+
+            var karar = Tek(sim, "karar_verildi", "Ali", 1);
+            var iz = Yanki.Core.Json.JsonAyristirici.Ayristir(karar.Deger("iz"));
+            var celisen = iz.Al("secilen")!.Al("celisen_ozellikler")!.Elemanlar.Select(e => e.MetinDeger).ToArray();
+
+            Assert.Equal(new[] { "durustluk", "merhamet" }, celisen);
+            Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur == "stres_degisti");
+            foreach (var npc in new[] { "Ali", "Can", "Veli" })
+            {
+                Assert.Equal(0m, sim.Zihinler[npc].Stres(sim.SimdikiTick));
+            }
+        }
+
         // ---- dış API ----
 
         [Fact]

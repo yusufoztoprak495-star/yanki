@@ -45,6 +45,9 @@ namespace Yanki.Core.Tests.Determinizm
             new Kural("float", @"\bfloat\b", "yüzer nokta yasak; decimal kullan (ADR-007)"),
             new Kural("Dictionary<", @"\bDictionary\s*<", "sırasız gezinti yasak; SortedDictionary(StringComparer.Ordinal)"),
             new Kural("HashSet<", @"\bHashSet\s*<", "sırasız gezinti yasak; SortedSet(StringComparer.Ordinal)"),
+            new Kural(
+                "Math.Pow/Exp/Log/Sqrt/Trig", @"\bMath\.(Pow|Exp|Log|Log10|Log2|Sqrt|Cbrt|Sin|Cos|Tan|Asin|Acos|Atan|Atan2|Sinh|Cosh|Tanh)\b",
+                "kayan noktalı matematik yasak; elle yazılmış decimal serisi kullan (DecimalMat, ADR-007)"),
         };
 
         // Bilinçli istisnalar: (src/Yanki.Core'a göre göreli yol, kural adı, GEREKÇE). Boş tutmak hedeftir.
@@ -194,6 +197,11 @@ namespace Yanki.Core.Tests.Determinizm
         [InlineData("float x = 1f;", "float")]
         [InlineData("var d = new Dictionary<string, int>();", "Dictionary<")]
         [InlineData("var s = new HashSet<string>();", "HashSet<")]
+        [InlineData("var p = Math.Pow(2, 3);", "Math.Pow/Exp/Log/Sqrt/Trig")]
+        [InlineData("var e = System.Math.Exp(1);", "Math.Pow/Exp/Log/Sqrt/Trig")]
+        [InlineData("var l = Math.Log(2);", "Math.Pow/Exp/Log/Sqrt/Trig")]
+        [InlineData("var r = Math.Sqrt(2);", "Math.Pow/Exp/Log/Sqrt/Trig")]
+        [InlineData("var t = Math.Tanh(2);", "Math.Pow/Exp/Log/Sqrt/Trig")]
         public void Tarayici_yasakli_kalibi_yakalar(string kod, string beklenenKural)
         {
             var bulunan = Tara(kod);
@@ -201,7 +209,28 @@ namespace Yanki.Core.Tests.Determinizm
             Assert.Contains(bulunan, b => b.KuralAdi == beklenenKural);
         }
 
+        [Fact]
+        public void Tarama_karar_klasorunu_ve_5_hafta_dosyalarini_kapsar()
+        {
+            var kok = RepoRoot.Combine("src", "Yanki.Core");
+            var taranan = Directory.EnumerateFiles(kok, "*.cs", SearchOption.AllDirectories)
+                .Select(f => Path.GetRelativePath(kok, f).Replace('\\', '/'))
+                .Where(f => !f.StartsWith("obj/", StringComparison.Ordinal) && !f.StartsWith("bin/", StringComparison.Ordinal))
+                .ToList();
+
+            foreach (var beklenen in new[]
+            {
+                "Decision/UtilitySelector.cs", "Decision/Egriler.cs", "Decision/DecimalMat.cs", "Decision/Puanlayici.cs",
+                "Decision/AdayUretici.cs", "Decision/EylemYukleyici.cs", "Decision/KararIziYazici.cs", "Simulation/Simulasyon.cs",
+            })
+            {
+                Assert.Contains(beklenen, taranan);
+            }
+        }
+
         [Theory]
+        [InlineData("var x = Math.Round(1.5m, 6, MidpointRounding.ToEven);")]
+        [InlineData("var x = Math.Max(1m, 2m); var y = Math.Min(1m, 2m); var z = Math.Abs(-1m);")]
         [InlineData("var d = new SortedDictionary<string, int>(StringComparer.Ordinal);")]
         [InlineData("var s = new SortedSet<string>(StringComparer.Ordinal);")]
         [InlineData("decimal x = 1m; // double ve float burada yalnızca yorum")]
