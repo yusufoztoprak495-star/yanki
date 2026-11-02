@@ -95,3 +95,32 @@ for _ in range(2):
     ilk.append(mix(d0))
 assert ilk == [0xE220A8397B1DCDAF, 0x6E789E6AA1B965F4]
 print("referans vektörleri tamam")
+
+
+# ---- 5. hafta: e^y ve eğriler (Decision/Egriler, Decision/DecimalMat) ----
+# Bağımsız doğrulama: Python `decimal` modülünün 60 haneli `exp()` hesabı. C# tarafı elle yazılmış seriyle hesaplar;
+# testteki altın değerler buradan üretilir.
+from decimal import getcontext
+
+getcontext().prec = 60
+ES_ALT, ES_UST = Decimal(-30), Decimal(30)  # DecimalMat.UsAltSinir / UsUstSinir
+
+
+def us_ref(y: Decimal) -> Decimal:
+    y = max(ES_ALT, min(ES_UST, y))
+    return y.exp()
+
+
+def yuvarla6(d: Decimal) -> Decimal:
+    return d.quantize(Decimal("0.000001"), rounding=ROUND_HALF_EVEN)
+
+
+def lojistik_ref(x: Decimal, k: Decimal, m: Decimal) -> Decimal:
+    x = max(Decimal(0), min(Decimal(1), x))
+    return yuvarla6(max(Decimal(0), min(Decimal(1), 1 / (1 + us_ref(-k * (x - m))))))
+
+
+print("us", " ".join(f"{y}={us_ref(Decimal(y)):.40f}" for y in ["0", "1", "-1", "0.5", "10", "-10", "30", "-30", "2.5", "-0.25"]))
+print("lojistik(k=10,m=0.5)", " ".join(f"{x}={lojistik_ref(Decimal(x), Decimal(10), Decimal('0.5'))}" for x in ["0", "0.25", "0.5", "0.75", "1"]))
+print("lojistik(k=4,m=0.3)", " ".join(f"{x}={lojistik_ref(Decimal(x), Decimal(4), Decimal('0.3'))}" for x in ["0", "0.1", "0.3", "0.6", "1"]))
+print("lojistik(k=50,m=0.5)", " ".join(f"{x}={lojistik_ref(Decimal(x), Decimal(50), Decimal('0.5'))}" for x in ["0", "0.4", "0.5", "0.6", "1"]))

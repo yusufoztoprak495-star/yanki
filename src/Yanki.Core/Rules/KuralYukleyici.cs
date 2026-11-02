@@ -20,7 +20,7 @@ namespace Yanki.Core.Rules
         private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler" };
 
         // Sözlükte olup çözücüsü henüz bağlı olmayan fonksiyonlar (ZihinSorguCozucusu): çalışma anında patlamasınlar diye baştan reddedilir.
-        private static readonly string[] BagliOlmayanFonksiyonlar = { "yalan_soyledi", "yay" };
+        internal static readonly string[] BagliOlmayanFonksiyonlar = { "yalan_soyledi", "yay" };
 
         /// <summary>
         /// Çekirdeğin bildiği olay türleri: dünya ve zihin olayları. Oyuncu eylem türlerini senaryo tanımlar ve
@@ -31,6 +31,7 @@ namespace Yanki.Core.Rules
             Dunya.VarlikEklendi, Dunya.GercekEklendi, Dunya.GercekKaldirildi, Dunya.MekanBaglandi,
             ZihinOlaylari.ModifierEklendiTuru, ZihinOlaylari.EksenDegistiTuru, ZihinOlaylari.DuyguDegistiTuru,
             ZihinOlaylari.StresDegistiTuru, ZihinOlaylari.KanitEklendiTuru, ZihinOlaylari.HafizaEklendiTuru,
+            Decision.YerlesikTurler.Ayrildi, Decision.YerlesikTurler.Geldi,
         }.AsReadOnly();
 
         /// <summary>Kural bağlamında çözülebilen roller.</summary>
@@ -160,6 +161,10 @@ namespace Yanki.Core.Rules
             {
                 Hata(oge.Satir, "Kuralda metin olarak \"ne_zaman\" alanı gerekli");
             }
+            else if (nzDugumu.MetinDeger == Decision.YerlesikTurler.KararVerildi)
+            {
+                Hata(nzDugumu.Satir, $"\"{Decision.YerlesikTurler.KararVerildi}\" ne_zaman olamaz: karar izi olayları algılanmaz ve kural tetiklemez (ADR-011)");
+            }
             else if (!bilinen.Contains(nzDugumu.MetinDeger))
             {
                 Hata(nzDugumu.Satir, $"Bilinmeyen olay türü: \"{nzDugumu.MetinDeger}\" (çekirdek olayları ya da senaryonun tanımladığı eylem türleri)");
@@ -190,7 +195,7 @@ namespace Yanki.Core.Rules
                             continue;
                         }
 
-                        KriterRolleriniDenetle(kriter, kd.Satir, i + 1, roller, Hata);
+                        KriterRolleriniDenetle(kriter, kd.Satir, i + 1, roller, Hata, RolKumesi.Kural);
                         if (kd.Al("agirlik") != null)
                         {
                             uyarilar.Add(new KuralHatasi(
@@ -229,8 +234,14 @@ namespace Yanki.Core.Rules
             {
                 for (var i = 0; i < etkiDugumu.Elemanlar.Count; i++)
                 {
-                    var etki = EtkiOku(etkiDugumu.Elemanlar[i], i + 1, roller, Hata);
-                    if (etki != null)
+                    var etki = EtkiOku(etkiDugumu.Elemanlar[i], i + 1, roller, Hata, RolKumesi.Kural);
+                    if (etki != null && HareketOlayindaMekanaKisiEtkisi(neZaman, etki))
+                    {
+                        Hata(
+                            etkiDugumu.Elemanlar[i].Satir,
+                            $"Etki #{i + 1}: 'olay.hedef' {neZaman} olaylarında bir mekandır; {EtkiAdi(etki.Tur)} etkisinin hedefi kişi bekler (olay.fail kullan)");
+                    }
+                    else if (etki != null)
                     {
                         etkiler.Add(etki);
                     }
@@ -245,6 +256,15 @@ namespace Yanki.Core.Rules
             return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir);
         }
 
+        // ayrildi/geldi olaylarının Hedef alanı karşı mekandır; mekana modifier/eksen/duygu yazılamaz.
+        private static bool HareketOlayindaMekanaKisiEtkisi(string neZaman, KuralEtkisi etki) =>
+            (neZaman == Decision.YerlesikTurler.Ayrildi || neZaman == Decision.YerlesikTurler.Geldi)
+            && etki.Hedef == "olay.hedef"
+            && (etki.Tur == EtkiTuru.Modifier || etki.Tur == EtkiTuru.Eksen || etki.Tur == EtkiTuru.Duygu);
+
+        private static string EtkiAdi(EtkiTuru tur) =>
+            tur == EtkiTuru.Modifier ? "modifier" : tur == EtkiTuru.Eksen ? "eksen" : "duygu";
+
         private static Kriter? KriterOku(JsonDegeri kd, int sira, Action<int, string> hata)
         {
             try
@@ -258,27 +278,31 @@ namespace Yanki.Core.Rules
             }
         }
 
-        private static void KriterRolleriniDenetle(Kriter kriter, int satir, int sira, SortedSet<Rol> roller, Action<int, string> hata)
+        internal static void KriterRolleriniDenetle(Kriter kriter, int satir, int sira, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume) =>
+            AlanRolleriniDenetle(kriter.Alan, satir, $"kriter #{sira}: ", roller, hata, kume);
+
+        // Bağlı olmayan fonksiyonları ve bağlamda tanımsız rolleri bulur (kriterler ve eylem ölçütleri ortak kullanır).
+        internal static void AlanRolleriniDenetle(SorguCagrisi alan, int satir, string onek, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume)
         {
             foreach (var bagli in BagliOlmayanFonksiyonlar)
             {
-                if (string.Equals(kriter.Alan.Ad, bagli, StringComparison.Ordinal))
+                if (string.Equals(alan.Ad, bagli, StringComparison.Ordinal))
                 {
-                    hata(satir, $"kriter #{sira}: '{bagli}' fonksiyonu henüz bağlı değil (yalan_soyledi 6. hafta, yay 7. hafta)");
+                    hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yalan_soyledi 6. hafta, yay 7. hafta)");
                 }
             }
 
             var bulunan = new List<Rol>();
-            RolleriTopla(kriter.Alan, bulunan);
+            RolleriTopla(alan, bulunan);
             foreach (var rol in bulunan)
             {
-                if (KuralRoluMu(rol))
+                if (kume.Gecerli(rol))
                 {
                     roller.Add(rol);
                 }
                 else
                 {
-                    hata(satir, $"kriter #{sira}: '{RolAdlari.Ad(rol)}' rolü sonuç kurallarında tanımsız (ben, oyuncu, olay.fail, olay.hedef)");
+                    hata(satir, $"{onek}'{RolAdlari.Ad(rol)}' rolü {kume.Baglam} tanımsız ({kume.Aciklama})");
                 }
             }
         }
@@ -298,7 +322,7 @@ namespace Yanki.Core.Rules
             }
         }
 
-        private static KuralEtkisi? EtkiOku(JsonDegeri d, int sira, SortedSet<Rol> roller, Action<int, string> hata)
+        internal static KuralEtkisi? EtkiOku(JsonDegeri d, int sira, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume)
         {
             var onek = $"Etki #{sira}: ";
             if (d.Tur != JsonTuru.Nesne)
@@ -346,7 +370,7 @@ namespace Yanki.Core.Rules
             {
                 case "modifier":
                 {
-                    var hedef = Hedef(d, "hedef", true, onek, roller, hata);
+                    var hedef = Hedef(d, "hedef", true, onek, roller, hata, kume);
                     var ad = Metin(d, "modifier", onek, hata);
                     var deger = Sayi(d, "deger", onek, hata);
                     var sure = Sayi(d, "sure", onek, hata);
@@ -369,7 +393,7 @@ namespace Yanki.Core.Rules
 
                 case "eksen":
                 {
-                    var hedef = Hedef(d, "hedef", true, onek, roller, hata);
+                    var hedef = Hedef(d, "hedef", true, onek, roller, hata, kume);
                     var ad = Metin(d, "eksen", onek, hata);
                     var delta = Sayi(d, "delta", onek, hata);
                     if (ad != null && ad != Eksenler.Guven && ad != Eksenler.Sevgi && ad != Eksenler.Korku)
@@ -385,7 +409,7 @@ namespace Yanki.Core.Rules
                 {
                     var ad = Metin(d, "duygu", onek, hata);
                     var siddet = Sayi(d, "siddet", onek, hata);
-                    var hedef = Hedef(d, "hedef", false, onek, roller, hata);
+                    var hedef = Hedef(d, "hedef", false, onek, roller, hata, kume);
                     if (ad != null && !Kimlik.GecerliKimlikMi(ad))
                     {
                         hata(d.Al("duygu")!.Satir, onek + $"duygu türü geçersiz kimlik: \"{ad}\"");
@@ -429,7 +453,7 @@ namespace Yanki.Core.Rules
                     }
 
                     var sablonRolleri = new List<Rol>();
-                    var hataMesaji = GercekSablonu.Denetle(gercek, sablonRolleri);
+                    var hataMesaji = GercekSablonu.Denetle(gercek, sablonRolleri, kume);
                     if (hataMesaji != null)
                     {
                         hata(d.Al("gercek")!.Satir, onek + hataMesaji);
@@ -447,7 +471,7 @@ namespace Yanki.Core.Rules
         }
 
         // Rol adı ya da varlık kimliği; zorunluysa eksikliği hatadır. Boş (isteğe bağlı) hedef için "" döner.
-        private static string? Hedef(JsonDegeri d, string anahtar, bool zorunlu, string onek, SortedSet<Rol> roller, Action<int, string> hata)
+        private static string? Hedef(JsonDegeri d, string anahtar, bool zorunlu, string onek, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume)
         {
             var dugum = d.Al(anahtar);
             if (dugum == null)
@@ -470,9 +494,9 @@ namespace Yanki.Core.Rules
             var deger = dugum.MetinDeger;
             if (RolAdlari.TryCoz(deger, out var rol))
             {
-                if (!KuralRoluMu(rol))
+                if (!kume.Gecerli(rol))
                 {
-                    hata(dugum.Satir, onek + $"'{deger}' rolü sonuç kurallarında tanımsız (ben, oyuncu, olay.fail, olay.hedef)");
+                    hata(dugum.Satir, onek + $"'{deger}' rolü {kume.Baglam} tanımsız ({kume.Aciklama})");
                     return null;
                 }
 
@@ -521,7 +545,7 @@ namespace Yanki.Core.Rules
     internal static class GercekSablonu
     {
         /// <summary>Şablonu denetler; geçerliyse <c>null</c> döner ve kullanılan rolleri <paramref name="roller"/>'e ekler.</summary>
-        public static string? Denetle(string sablon, List<Rol> roller)
+        public static string? Denetle(string sablon, List<Rol> roller, RolKumesi? kume = null)
         {
             string doldurulmus;
             try
@@ -530,7 +554,7 @@ namespace Yanki.Core.Rules
                 {
                     roller.Add(rol);
                     return "x_" + ((int)rol).ToString(CultureInfo.InvariantCulture);
-                });
+                }, kume);
             }
             catch (FormatException e)
             {
@@ -551,8 +575,9 @@ namespace Yanki.Core.Rules
 
         /// <summary>Yer tutucuları verilen çözücüyle doldurur.</summary>
         /// <exception cref="FormatException">Yer tutucu bilinmiyorsa ya da kapanmıyorsa.</exception>
-        public static string Doldur(string sablon, Func<Rol, string> coz)
+        public static string Doldur(string sablon, Func<Rol, string> coz, RolKumesi? kume = null)
         {
+            kume ??= RolKumesi.Kural;
             var sb = new System.Text.StringBuilder();
             var i = 0;
             while (i < sablon.Length)
@@ -572,9 +597,9 @@ namespace Yanki.Core.Rules
                 }
 
                 var ad = sablon.Substring(i + 1, son - i - 1);
-                if (!RolAdlari.TryCoz(ad, out var rol) || !KuralYukleyici.KuralRoluMu(rol))
+                if (!RolAdlari.TryCoz(ad, out var rol) || !kume.Gecerli(rol))
                 {
-                    throw new FormatException($"\"gercek\" şablonunda bilinmeyen yer tutucu {{{ad}}} (ben, oyuncu, olay.fail, olay.hedef)");
+                    throw new FormatException($"\"gercek\" şablonunda bilinmeyen yer tutucu {{{ad}}} ({kume.Aciklama})");
                 }
 
                 sb.Append(coz(rol));
@@ -582,6 +607,35 @@ namespace Yanki.Core.Rules
             }
 
             return sb.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Bir bağlamda (sonuç kuralı, eylem) çözülebilen roller. Doğrulayıcı hata mesajlarını ve etki/şablon okuyucusunu
+    /// bağlamdan bağımsız tutar: aynı etki biçimi hem kurallarda hem eylemlerde okunur (ayrı bir etki sistemi yok).
+    /// </summary>
+    internal sealed class RolKumesi
+    {
+        /// <summary>Sonuç kuralı bağlamı: ben, oyuncu, olay.fail, olay.hedef.</summary>
+        public static readonly RolKumesi Kural = new RolKumesi(KuralYukleyici.KuralRoluMu, "sonuç kurallarında", "ben, oyuncu, olay.fail, olay.hedef");
+
+        /// <summary>Çalışma anı: doğrulama başka yerde yapılmıştır, her rol çözülmeyi dener.</summary>
+        public static readonly RolKumesi Hepsi = new RolKumesi(_ => true, "bu bağlamda", "tüm roller");
+
+        /// <summary>Rol bu bağlamda geçerli mi.</summary>
+        public Func<Rol, bool> Gecerli { get; }
+
+        /// <summary>Hata mesajındaki bağlam ("sonuç kurallarında", "eylemlerde").</summary>
+        public string Baglam { get; }
+
+        /// <summary>Hata mesajındaki geçerli rol listesi.</summary>
+        public string Aciklama { get; }
+
+        public RolKumesi(Func<Rol, bool> gecerli, string baglam, string aciklama)
+        {
+            Gecerli = gecerli;
+            Baglam = baglam;
+            Aciklama = aciklama;
         }
     }
 }

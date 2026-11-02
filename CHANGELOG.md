@@ -22,3 +22,13 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/), sürümleme [Se
 - 3. hafta: `ZihinSorguCozucusu`: sözlükteki 15 fonksiyonun 13'ü gerçek veriye bağlandı (`yalan_soyledi` 6., `yay` 7. hafta).
 - 3. hafta: `VarlikTuru.Oyuncu` (`oyuncu` varlık türü; eşya değil). `inanc`/`kaynak` içinde `degil(...)`, tekrar eden kanıtın tazelenmesi, `FikirDokumu` kırpma satırı.
 - ADR-008: zihin olaylardan türetilir; süreli değerler sorgu anında hesaplanır (durum: önerildi). `docs/notes/zihin.md`, `docs/notes/algi.md` taslakları. `docs/DURUM.md` proje durum dosyası (her PR'da güncellenir).
+- 5. hafta: `Yanki.Core.Decision` — eylem tanımları (JSON, `EylemYukleyici` doğrulayıcı, `dosya:satir: eylem "id": mesaj`), `eylem.hedef` rolü (yalnızca eylem bağlamı), aday üretimi (`AdayUretici`), puanlama (`taban × Π(eğri) × kişilik × fikir × ruh hali`), decimal eğriler (`dogrusal`, `ustel`, `lojistik`, `basamak`; elle yazılmış `e^y`), `IActionSelector` ve `UtilitySelector` (ilk 3, %70, anahtarlı RNG), karar izi.
+- 5. hafta: tick adımları 5 ve 6 (tek durum görüntüsü, eş zamanlı algı), NPC ve oyuncu hareketi (`ayrildi`, `geldi`, ayrılmış `hareket` eylemi), `karar_verildi` olayı (günlükte kısa iz; tam iz replay ile yeniden üretilir, `KararIziYenidenUretici`).
+- 5. hafta: `yanki why` karar izine ve puan bileşenlerine iner, `yanki query` son kararı gösterir, `yanki run --eylem hareket:<mekan>`; CLI çıkış kodu 4 (iz uyuşmazlığı).
+- 5. hafta: `samples/MiniKarar` senaryosu ve golden replay #2 (`tests/golden/mini-karar-1.json`); `tools/olcum` karar ölçüm düzeneği (çözüm ve CI dışı).
+- ADR-011 (karar modeli, durum: önerildi), `docs/notes/karar.md`, `docs/authoring-guide.md` eylem yazımı ve `dinlen` önerisi, `docs/criteria-language.md` eylem bağlamı.
+
+### Değişti
+- 5. hafta: `Zihin.HafizaVar` olay kimliğine göre sıralı dizinle erken durur; hedefe bağlı olmayan eylem ön koşulları eylem başına bir kez hesaplanır (davranış ve durum hash'i değişmedi).
+- 5. hafta: `RolAdlari.Ad` ve `SorguBaglami` tanımsız rolde sessizce `olay.hedef` dönmez; yasaklı API testi `Math.Pow/Exp/Log/Sqrt/Trig` kullanımını da yakalar.
+- 5. hafta: `ayrildi` ve `geldi` yerleşik olay türleridir; `ayrildi`/`geldi` ve hedefi mekan olan olaylarda kural, kişi olmayan hedefe modifier/eksen/duygu yazmaz.

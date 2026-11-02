@@ -30,6 +30,17 @@ namespace Yanki.Core.Criteria
             }
         }
 
+        /// <summary>
+        /// Bir <c>alan</c> ifadesini ayrıştırır ve sözlüğe göre doğrular. Kriterler ve eylem ölçütleri aynı yolu kullanır (ikinci sorgu yolu yoktur).
+        /// </summary>
+        /// <exception cref="KriterHatasi">İfade ya da çağrı geçersizse.</exception>
+        public static SorguCagrisi AlanOku(string alan)
+        {
+            var cagri = IfadeAyristirici.Ayristir(alan);
+            SorguSozlugu.Dogrula(cagri);
+            return cagri;
+        }
+
         /// <summary>Kriter nesnesini okur ve doğrular.</summary>
         /// <exception cref="KriterHatasi">Şema, ifade, operatör ya da değer geçersizse. Mesajda kaynak konumu yoktur; çağıran <see cref="JsonDegeri.Satir"/> ile ekler.</exception>
         public static Kriter Oku(JsonDegeri nesne)

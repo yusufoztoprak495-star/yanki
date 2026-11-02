@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Karar ölçüm düzeneği (5. hafta): NPC kararlarının olay günlüğünü ve tick süresini ne kadar büyüttüğünü ölçer.
+    Yanki.slnx İÇİNDE DEĞİLDİR: çözüm derlemesine, CI'a ve dotnet test koşusuna girmez. Elle çalıştırılır (bkz. README.md).
+    Çıktı bir BENCHMARK DEĞİLDİR (BenchmarkDotNet'in ısınma ve istatistik titizliği yok); yalnızca karar girdisidir.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Yanki.Olcum</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Yanki.Core\Yanki.Core.csproj" />
+  </ItemGroup>
+
+</Project>

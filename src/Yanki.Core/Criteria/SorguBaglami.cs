@@ -4,7 +4,7 @@ namespace Yanki.Core.Criteria
 {
     /// <summary>
     /// Bir kriterin hangi varlıklar için değerlendirildiği: <c>ben</c>, <c>oyuncu</c>, <c>konusan</c>, <c>dinleyen</c>,
-    /// <c>olay.fail</c>, <c>olay.hedef</c> rollerinin varlık kimlikleri. Tanımsız roller boş bırakılır.
+    /// <c>olay.fail</c>, <c>olay.hedef</c> rollerinin ve yalnızca eylem bağlamındaki <c>eylem.hedef</c> rolünün varlık kimlikleri. Tanımsız roller boş bırakılır.
     /// </summary>
     public sealed class SorguBaglami
     {
@@ -14,6 +14,7 @@ namespace Yanki.Core.Criteria
         private readonly string _dinleyen;
         private readonly string _olayFail;
         private readonly string _olayHedef;
+        private readonly string _eylemHedef;
 
         /// <summary>Bağlam kurar. <paramref name="ben"/> zorunludur; diğer roller yoksa boş bırakılır.</summary>
         /// <exception cref="ArgumentException"><paramref name="ben"/> boşsa.</exception>
@@ -23,7 +24,8 @@ namespace Yanki.Core.Criteria
             string konusan = "",
             string dinleyen = "",
             string olayFail = "",
-            string olayHedef = "")
+            string olayHedef = "",
+            string eylemHedef = "")
         {
             if (string.IsNullOrEmpty(ben))
             {
@@ -36,6 +38,7 @@ namespace Yanki.Core.Criteria
             _dinleyen = dinleyen ?? string.Empty;
             _olayFail = olayFail ?? string.Empty;
             _olayHedef = olayHedef ?? string.Empty;
+            _eylemHedef = eylemHedef ?? string.Empty;
         }
 
         /// <summary>Rol bu bağlamda tanımlı mı.</summary>
@@ -48,7 +51,9 @@ namespace Yanki.Core.Criteria
                 case Rol.Konusan: return _konusan.Length > 0;
                 case Rol.Dinleyen: return _dinleyen.Length > 0;
                 case Rol.OlayFail: return _olayFail.Length > 0;
-                default: return _olayHedef.Length > 0;
+                case Rol.OlayHedef: return _olayHedef.Length > 0;
+                case Rol.EylemHedef: return _eylemHedef.Length > 0;
+                default: throw new ArgumentOutOfRangeException(nameof(rol), rol, "Bilinmeyen rol.");
             }
         }
 
@@ -64,7 +69,9 @@ namespace Yanki.Core.Criteria
                 case Rol.Konusan: kimlik = _konusan; break;
                 case Rol.Dinleyen: kimlik = _dinleyen; break;
                 case Rol.OlayFail: kimlik = _olayFail; break;
-                default: kimlik = _olayHedef; break;
+                case Rol.OlayHedef: kimlik = _olayHedef; break;
+                case Rol.EylemHedef: kimlik = _eylemHedef; break;
+                default: throw new ArgumentOutOfRangeException(nameof(rol), rol, "Bilinmeyen rol.");
             }
 
             if (kimlik.Length == 0)

@@ -65,8 +65,7 @@ namespace Yanki.Core.Criteria
         /// <exception cref="KriterHatasi">İfade, operatör ya da değer geçersizse.</exception>
         public static Kriter Olustur(string alan, KriterOperatoru op, SorguDegeri deger, decimal agirlik = 1m, bool zorunlu = false)
         {
-            var cagri = IfadeAyristirici.Ayristir(alan);
-            SorguSozlugu.Dogrula(cagri);
+            var cagri = KriterOkuyucu.AlanOku(alan);
             var tanim = SorguSozlugu.Bul(cagri.Ad)!;
             TurDogrula(tanim, op, deger);
             return new Kriter(cagri, op, deger, agirlik, zorunlu);

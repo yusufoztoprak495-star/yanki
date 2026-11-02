@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Yanki.Core.Decision;
 using Yanki.Core.Mind;
 using Yanki.Core.Simulation;
 using Yanki.Core.World;
@@ -8,7 +9,7 @@ using Yanki.Core.World;
 namespace Yanki.Cli
 {
     /// <summary>
-    /// <c>yanki query</c> çıktısı: bir NPC'nin durumu, ilişkileri (fikir dökümü ve modifier'lar), inançları ve hafızası.
+    /// <c>yanki query</c> çıktısı: bir NPC'nin durumu, ilişkileri (fikir dökümü ve modifier'lar), inançları, hafızası ve son kararı (karar izi).
     /// Her katkının yanında neden olayının kimliği yazar; <c>yanki why &lt;olayId&gt;</c> ile zincire inilir.
     /// </summary>
     internal static class NpcDurumu
@@ -99,6 +100,16 @@ namespace Yanki.Cli
             {
                 var tur = sim.Gunluk.Var(h.OlayId) ? sim.Gunluk[h.OlayId].Tur : "?";
                 w.WriteLine($"#{Sayi(h.OlayId)} {tur} (önem {Sayi(h.Onem)}, tick {Sayi(h.Tick)})");
+            }
+
+            var sonKarar = sim.SonKararOlayi(npc);
+            if (sonKarar != null)
+            {
+                w.WriteLine($"-- son karar (#{Sayi(sonKarar.Id)}, tick {Sayi(sonKarar.Tick)}) --");
+                foreach (var satir in KararIziOzeti.Satirlar(sonKarar, sim.KararIzi(npc)))
+                {
+                    w.WriteLine(satir);
+                }
             }
         }
 

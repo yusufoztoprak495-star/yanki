@@ -158,19 +158,23 @@ namespace Yanki.Core.Rules
         /// <summary>Hata açıklaması.</summary>
         public string Mesaj { get; }
 
+        /// <summary>Kimliğin türü: <c>kural</c> (varsayılan) ya da <c>eylem</c>.</summary>
+        public string Etiket { get; }
+
         /// <summary>Hata kurar.</summary>
-        public KuralHatasi(string kaynak, int satir, string kuralId, string mesaj)
+        public KuralHatasi(string kaynak, int satir, string kuralId, string mesaj, string etiket = "kural")
         {
             Kaynak = kaynak ?? string.Empty;
             Satir = satir;
             KuralId = kuralId ?? string.Empty;
             Mesaj = mesaj ?? string.Empty;
+            Etiket = etiket ?? "kural";
         }
 
-        /// <summary><c>dosya:satır: kural "id": mesaj</c></summary>
+        /// <summary><c>dosya:satır: kural "id": mesaj</c> (eylemlerde <c>eylem "id"</c>).</summary>
         public override string ToString() =>
             Kaynak + ":" + Satir.ToString(System.Globalization.CultureInfo.InvariantCulture) + ": "
-            + (KuralId.Length > 0 ? "kural \"" + KuralId + "\": " : string.Empty) + Mesaj;
+            + (KuralId.Length > 0 ? Etiket + " \"" + KuralId + "\": " : string.Empty) + Mesaj;
     }
 
     /// <summary>Kural dosyasının yükleme sonucu: hata yoksa kurallar (kimliğe göre ordinal sıralı), varsa yalnızca hatalar.</summary>

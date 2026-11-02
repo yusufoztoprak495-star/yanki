@@ -10,7 +10,7 @@ namespace Yanki.Core.Simulation
     /// <summary>
     /// Senaryo dosyasını (JSON metni) okur ve doğrular. Çekirdek dosya sistemine dokunmaz; metni ve kaynak adını çağıran verir.
     /// Biçim: <c>surum</c> (1), <c>ad</c>, <c>mekanlar</c>, <c>baglantilar</c> (çiftler), <c>oyuncu</c> (<c>id</c>, <c>konum</c>),
-    /// <c>npcler</c> (<c>id</c>, <c>konum</c>, <c>kisilik</c>), <c>gercekler</c>, <c>olay_turleri</c>, <c>kural_dosyalari</c>.
+    /// <c>npcler</c> (<c>id</c>, <c>konum</c>, <c>kisilik</c>), <c>gercekler</c>, <c>olay_turleri</c>, <c>kural_dosyalari</c>, <c>eylem_dosyalari</c> (isteğe bağlı).
     /// </summary>
     public static class SenaryoYukleyici
     {
@@ -19,7 +19,7 @@ namespace Yanki.Core.Simulation
 
         private static readonly string[] KokAnahtarlari =
         {
-            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari",
+            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari",
         };
 
         /// <summary>Senaryo metnini okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -199,7 +199,7 @@ namespace Yanki.Core.Simulation
                         continue;
                     }
 
-                    if (yerlesik.Contains(id))
+                    if (yerlesik.Contains(id) || Decision.YerlesikTurler.AyrilmisMi(id))
                     {
                         Hata(t.Satir, $"Olay türü çekirdek olayıyla çakışıyor: \"{id}\"");
                     }
@@ -231,13 +231,30 @@ namespace Yanki.Core.Simulation
                 }
             }
 
+            var eylemDosyalari = new List<string>();
+            var eylemDizisi = Dizi(kok, "eylem_dosyalari", false, Hata);
+            if (eylemDizisi != null)
+            {
+                foreach (var d in eylemDizisi.Elemanlar)
+                {
+                    if (d.Tur != JsonTuru.Metin || d.MetinDeger.Length == 0)
+                    {
+                        Hata(d.Satir, "Eylem dosyası adı boş olmayan metin olmalı");
+                    }
+                    else
+                    {
+                        eylemDosyalari.Add(d.MetinDeger);
+                    }
+                }
+            }
+
             if (hatalar.Count > 0)
             {
                 return new SenaryoYuklemeSonucu(null, hatalar);
             }
 
             return new SenaryoYuklemeSonucu(
-                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar),
+                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari),
                 hatalar);
         }
 

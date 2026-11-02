@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Yanki.Core.Decision;
 using Yanki.Core.Rules;
 using Yanki.Core.Simulation;
 
 namespace Yanki.Cli
 {
     /// <summary>
-    /// Senaryo ve kural dosyalarını diskten okuyup simülasyon kurar. Çekirdek dosya sistemine dokunmaz; bu iş CLI'dadır.
-    /// Kural dosyaları senaryonun <c>kural_dosyalari</c> listesindendir ve senaryo dosyasına göre göreli çözülür.
+    /// Senaryo, eylem ve kural dosyalarını diskten okuyup simülasyon kurar. Çekirdek dosya sistemine dokunmaz; bu iş CLI'dadır.
+    /// Kural ve eylem dosyaları senaryonun <c>kural_dosyalari</c> ve <c>eylem_dosyalari</c> listelerindendir ve senaryo dosyasına göre göreli
+    /// çözülür. Eylem dosyaları kurallardan ÖNCE okunur: kurallar NPC eylemlerinin olay türlerini <c>ne_zaman</c> olarak kullanabilir.
     /// </summary>
     internal static class SenaryoDosyasi
     {
@@ -34,6 +36,58 @@ namespace Yanki.Cli
 
             var senaryo = senaryoSonucu.Senaryo!;
             var klasor = Path.GetDirectoryName(Path.GetFullPath(senaryoYolu))!;
+
+            var eylemler = new List<EylemTanimi>();
+            var eylemHatali = false;
+            foreach (var ad in senaryo.EylemDosyalari)
+            {
+                var yol = Path.Combine(klasor, ad);
+                if (!File.Exists(yol))
+                {
+                    hata.WriteLine($"{senaryoYolu}: eylem dosyası bulunamadı: {yol}");
+                    eylemHatali = true;
+                    continue;
+                }
+
+                var sonuc = EylemYukleyici.Yukle(File.ReadAllText(yol), yol);
+                if (!sonuc.Basarili)
+                {
+                    eylemHatali = true;
+                    foreach (var h in sonuc.Hatalar)
+                    {
+                        hata.WriteLine(h.ToString());
+                    }
+
+                    continue;
+                }
+
+                foreach (var u in sonuc.Uyarilar)
+                {
+                    hata.WriteLine("uyarı: " + u);
+                }
+
+                eylemler.AddRange(sonuc.Eylemler);
+            }
+
+            if (eylemHatali)
+            {
+                return null;
+            }
+
+            EylemKatalogu katalog;
+            try
+            {
+                katalog = new EylemKatalogu(eylemler);
+            }
+            catch (ArgumentException e)
+            {
+                hata.WriteLine($"{senaryoYolu}: {e.Message}");
+                return null;
+            }
+
+            var kuralTurleri = new List<string>(senaryo.OlayTurleri);
+            kuralTurleri.AddRange(katalog.OlayTurleri);
+
             var kurallar = new List<KuralTanimi>();
             var hatali = false;
             foreach (var ad in senaryo.KuralDosyalari)
@@ -46,7 +100,7 @@ namespace Yanki.Cli
                     continue;
                 }
 
-                var sonuc = KuralYukleyici.Yukle(File.ReadAllText(yol), yol, senaryo.OlayTurleri);
+                var sonuc = KuralYukleyici.Yukle(File.ReadAllText(yol), yol, kuralTurleri);
                 if (!sonuc.Basarili)
                 {
                     hatali = true;
@@ -73,7 +127,7 @@ namespace Yanki.Cli
 
             try
             {
-                return Simulasyon.Olustur(senaryo, kurallar, seed);
+                return Simulasyon.Olustur(senaryo, kurallar, seed, eylemler: katalog.Eylemler);
             }
             catch (ArgumentException e)
             {

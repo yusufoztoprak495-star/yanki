@@ -22,7 +22,7 @@ Bir kriter JSON nesnesidir:
 
 ## Roller ve operatörler
 
-- Roller: `ben` (kuralı/şablonu değerlendiren NPC), `oyuncu`, diyalogda `konusan` ve `dinleyen`, sonuç kurallarında `olay.fail` ve `olay.hedef`.
+- Roller: `ben` (kuralı/şablonu değerlendiren NPC), `oyuncu`, diyalogda `konusan` ve `dinleyen`, sonuç kurallarında `olay.fail` ve `olay.hedef`, eylemlerde `eylem.hedef` (bkz. "Eylem bağlamı" bölümü).
 - Operatörler: `<`, `<=`, `>`, `>=`, `==`, `!=`, `aralik [a, b]`.
 - `*` joker karakterdir: `borclu(Mehmet, *, *)` = "Mehmet'in herhangi birine borçlu olduğu önerme".
 - Fonksiyon adları ASCII'dir (Türkçe karakter yok), böylece JSON ve C# tarafında kodlama sorunu çıkmaz.
@@ -33,24 +33,24 @@ Bir kriter JSON nesnesidir:
 v0.1'de sabit, belgelenmiş küçük bir set (16 fonksiyon; 15'i v0.1 listesi, `olay_rolu` 4. haftada Yusuf'un kararıyla eklendi). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
 İpuçları: ruh hali, stres, mekan, zaman, kimden duydu, kaç kişi biliyor, yalan söylendi mi, bir eylemi en son ne zaman yaptı.
 
-| # | Fonksiyon | Ne sorar | Döndürdüğü | Örnek kriter |
-|---|---|---|---|---|
-| 1 | `kisilik(ozellik)` | Bu NPC'nin kişilik özelliği ne kadar güçlü | sayı 0..1 | `kisilik(acgozluluk) > 0.7` |
-| 2 | `eksen(hedef, guven\|sevgi\|korku)` | Hedefe karşı kalıcı ilişki eksenlerinden biri | sayı −100..100 | `eksen(oyuncu, guven) < -20` |
-| 3 | `fikir(hedef)` | Hedef hakkındaki toplam fikir (eksenler + aktif modifier'lar) | sayı −100..100 | `fikir(dinleyen) < -10` |
-| 4 | `fikir_bandi(hedef)` | Fikrin bandı | `dusman` / `soguk` / `notr` / `yakin` / `dost` | `fikir_bandi(oyuncu) == soguk` |
-| 5 | `modifier_var(hedef, tur)` | Hedefe karşı bu türde aktif bir fikir modifier'ı var mı | doğru/yanlış | `modifier_var(oyuncu, yalanini_yakaladim)` |
-| 6 | `duygu(tur)` | Baskın duygu bu türse şiddeti, değilse 0 | sayı 0..1 | `duygu(ofke) >= 0.5` |
-| 7 | `duygu_hedefi()` | Baskın duygunun yöneldiği varlık | varlık kimliği | `duygu_hedefi() == oyuncu` |
-| 8 | `stres()` | Kişiliğe aykırı davranışlardan biriken stres | sayı 0..100 | `stres() >= 50` |
-| 9 | `inanc(onerme)` | Önermeye inanma derecesi (kanıt listesinden hesaplanır) | sayı 0..1 | `inanc(borclu(Mehmet, *, *)) >= 0.5` |
-| 10 | `kaynak(onerme, kisi)` | Bu önerme için bu kişiden gelen bir kanıt var mı ("kimden duydu?") | doğru/yanlış | `kaynak(borclu(Mehmet, *, *), Ayse)` |
-| 11 | `hafiza_var(olay_turu, fail, son_n_tick)` | Son n tick içinde bu kişinin bu türde bir eylemini hatırlıyor mu | doğru/yanlış | `hafiza_var(yardim_etti, oyuncu, 168)` |
-| 12 | `yalan_soyledi(kime)` | Bu NPC o kişiye yalan söylediğini biliyor mu (kendi yalan kaydı) | doğru/yanlış | `yalan_soyledi(olay.hedef)` |
-| 13 | `ayni_mekanda(hedef)` | Hedefle aynı mekanda mı | doğru/yanlış | `ayni_mekanda(oyuncu)` |
-| 14 | `gercek(onerme)` | Önerme dünyada nesnel olarak doğru mu (yalnızca sonuç kuralları ve yazar koşulları için; NPC zihni bunu göremez) | doğru/yanlış | `gercek(konum!(Ali, han))` |
-| 15 | `olay_rolu(rol)` | Sonuç kuralında mevcut olay bağlamında bu NPC `fail` (olayı yapan), `hedef` (olayın yöneldiği) ya da `tanik` (olayı algılayan, ama ikisi de olmayan) mı. Olay bağlamı yoksa her rol yanlış | doğru/yanlış | `olay_rolu(hedef)` |
-| 16 | `yay(degisken)` | Senaryo düzeyindeki dramatik yay değişkeninin değeri | sayı | `yay(kasaba_gerginligi) aralik [2, 4]` |
+| #   | Fonksiyon                                 | Ne sorar                                                                                                                                                                                   | Döndürdüğü                                     | Örnek kriter                               |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------ |
+| 1   | `kisilik(ozellik)`                        | Bu NPC'nin kişilik özelliği ne kadar güçlü                                                                                                                                                 | sayı 0..1                                      | `kisilik(acgozluluk) > 0.7`                |
+| 2   | `eksen(hedef, guven\|sevgi\|korku)`       | Hedefe karşı kalıcı ilişki eksenlerinden biri                                                                                                                                              | sayı −100..100                                 | `eksen(oyuncu, guven) < -20`               |
+| 3   | `fikir(hedef)`                            | Hedef hakkındaki toplam fikir (eksenler + aktif modifier'lar)                                                                                                                              | sayı −100..100                                 | `fikir(dinleyen) < -10`                    |
+| 4   | `fikir_bandi(hedef)`                      | Fikrin bandı                                                                                                                                                                               | `dusman` / `soguk` / `notr` / `yakin` / `dost` | `fikir_bandi(oyuncu) == soguk`             |
+| 5   | `modifier_var(hedef, tur)`                | Hedefe karşı bu türde aktif bir fikir modifier'ı var mı                                                                                                                                    | doğru/yanlış                                   | `modifier_var(oyuncu, yalanini_yakaladim)` |
+| 6   | `duygu(tur)`                              | Baskın duygu bu türse şiddeti, değilse 0                                                                                                                                                   | sayı 0..1                                      | `duygu(ofke) >= 0.5`                       |
+| 7   | `duygu_hedefi()`                          | Baskın duygunun yöneldiği varlık                                                                                                                                                           | varlık kimliği                                 | `duygu_hedefi() == oyuncu`                 |
+| 8   | `stres()`                                 | Kişiliğe aykırı davranışlardan biriken stres                                                                                                                                               | sayı 0..100                                    | `stres() >= 50`                            |
+| 9   | `inanc(onerme)`                           | Önermeye inanma derecesi (kanıt listesinden hesaplanır)                                                                                                                                    | sayı 0..1                                      | `inanc(borclu(Mehmet, *, *)) >= 0.5`       |
+| 10  | `kaynak(onerme, kisi)`                    | Bu önerme için bu kişiden gelen bir kanıt var mı ("kimden duydu?")                                                                                                                         | doğru/yanlış                                   | `kaynak(borclu(Mehmet, *, *), Ayse)`       |
+| 11  | `hafiza_var(olay_turu, fail, son_n_tick)` | Son n tick içinde bu kişinin bu türde bir eylemini hatırlıyor mu                                                                                                                           | doğru/yanlış                                   | `hafiza_var(yardim_etti, oyuncu, 168)`     |
+| 12  | `yalan_soyledi(kime)`                     | Bu NPC o kişiye yalan söylediğini biliyor mu (kendi yalan kaydı)                                                                                                                           | doğru/yanlış                                   | `yalan_soyledi(olay.hedef)`                |
+| 13  | `ayni_mekanda(hedef)`                     | Hedefle aynı mekanda mı                                                                                                                                                                    | doğru/yanlış                                   | `ayni_mekanda(oyuncu)`                     |
+| 14  | `gercek(onerme)`                          | Önerme dünyada nesnel olarak doğru mu (yalnızca sonuç kuralları ve yazar koşulları için; NPC zihni bunu göremez)                                                                           | doğru/yanlış                                   | `gercek(konum!(Ali, han))`                 |
+| 15  | `olay_rolu(rol)`                          | Sonuç kuralında mevcut olay bağlamında bu NPC `fail` (olayı yapan), `hedef` (olayın yöneldiği) ya da `tanik` (olayı algılayan, ama ikisi de olmayan) mı. Olay bağlamı yoksa her rol yanlış | doğru/yanlış                                   | `olay_rolu(hedef)`                         |
+| 16  | `yay(degisken)`                           | Senaryo düzeyindeki dramatik yay değişkeninin değeri                                                                                                                                       | sayı                                           | `yay(kasaba_gerginligi) aralik [2, 4]`     |
 
 ## Bağlama durumu (3. hafta)
 
@@ -68,3 +68,28 @@ Sözlüğe **yeni fonksiyon eklenmedi**. Sonuç kurallarında geçerli roller `b
 `olay_rolu(rol)` (4. hafta, Yusuf'un kararı) hedef/tanık ayrımını yapar: önceki geçici `inanc(<tür>(olay.fail, ben))` yöntemi kaldırıldı, çünkü NPC'nin geçmişte benzer bir olayın hedefi olması
 onu sonraki olaylarda yanlışlıkla hedef sayıyordu. Rol yalnızca o olaydaki fail/hedef alanlarından belirlenir; olay bağlamı (`olay.fail`) yoksa her rol yanlıştır.
 Kural kriterleri hakkında: bir kural yalnızca **tüm** kriterleri tutunca çalışır; `agirlik` kural tetiklenmesini etkilemez (doğrulayıcı uyarı verir), bkz. ADR-010.
+
+## Eylem bağlamı (5. hafta)
+
+NPC eylemlerinin `on_kosullar`, `olcutler` ve `etkiler` alanları aynı kriter dilini kullanır (ADR-003, ADR-011); ikinci bir sorgu yolu yoktur. Sözlüğe **yeni fonksiyon eklenmedi** (16 fonksiyon), yalnızca yeni bir rol eklendi.
+
+**Roller:** `ben` (karar veren NPC), `oyuncu` ve `eylem.hedef` (adayın hedefi). `eylem.hedef` yalnızca eylem bağlamında geçerlidir; kural ve diyalog bağlamında doğrulayıcı reddeder, hedefsiz (`hedef: yok`) eylemde de reddedilir. Hedef türüne göre anlamı:
+
+| `hedef`       | `eylem.hedef`                                                                                                                                                                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npc`         | aynı mekandaki başka bir NPC                                                                                                                                                                                                                                                                           |
+| `oyuncu`      | oyuncu (aynı mekandaysa)                                                                                                                                                                                                                                                                               |
+| `komsu_mekan` | bağlı bir komşu **mekan**; kişi bekleyen sorgularda (`fikir`, `eksen`, `modifier_var`, `ayni_mekanda`, ...) ve kişi bekleyen etkilerde (modifier, eksen, duygu) reddedilir; yalnızca önerme içinde (`inanc(tehlikeli(eylem.hedef))`) ve `gercek` etkisinin şablonunda (`{eylem.hedef}`) kullanılabilir |
+
+**Eylem bağlamında yasak olanlar** (doğrulayıcı `dosya:satir: eylem "id": mesaj` ile reddeder):
+
+| Yasak                                                    | Neden                                                                                     |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `olay.fail`, `olay.hedef`, `konusan`, `dinleyen` rolleri | Eylemin tetikleyici olayı yoktur; diyalog 8. haftada.                                     |
+| `olay_rolu(...)`                                         | Sonuç kuralı bağlamıdır (olay.fail / hedef / tanık).                                      |
+| `gercek(...)`                                            | Nesnel dünya sorgusudur, NPC'nin bilgisini aşar; NPC'nin inancı için `inanc(...)` kullan. |
+| `yay(...)`, `yalan_soyledi(...)`                         | Çözücüleri henüz bağlı değil (7. ve 6. hafta).                                            |
+
+**Ölçütler** (`olcutler[].alan`) yalnızca sayısal ya da doğru/yanlış (1/0) sonuç veren fonksiyonlardır; `fikir_bandi` ve `duygu_hedefi` ölçüt olamaz (ön koşul olarak kullanılabilir).
+
+**Sonuç kuralları** NPC eylemlerinin `olay_turu` türüne `ne_zaman` ile bağlanabilir; `ayrildi` ve `geldi` yerleşik türlerdir ve olayın `Hedef` alanı karşı **mekandır** (kural `olay.hedef`'e modifier/eksen/duygu yazamaz). `karar_verildi` `ne_zaman` olamaz. Ayrıntı: [ADR-011](adr/0011-karar-modeli.md), [`notes/karar.md`](notes/karar.md).

@@ -380,6 +380,24 @@ namespace Yanki.Core.Simulation
         /// <exception cref="InvalidOperationException">Simülasyon tick 0'dan ilerlemişse ya da eylem bekliyorsa.</exception>
         public static OynatmaSonucu Oynat(Simulasyon sim, OturumKaydi kayit)
         {
+            if (kayit == null)
+            {
+                throw new ArgumentNullException(nameof(kayit));
+            }
+
+            TickeKadarOynat(sim, kayit, kayit.TickSayisi);
+            return new OynatmaSonucu(kayit.SonHash, sim.DurumHash());
+        }
+
+        /// <summary>
+        /// Kaydı yeni kurulmuş (tick 0) simülasyon üzerinde yalnızca <paramref name="tick"/>'e kadar oynatır. Geçmiş bir kararın tam izini
+        /// yeniden üretmek için kullanılır (<c>KararIziYenidenUretici</c>); oynatma deterministiktir.
+        /// </summary>
+        /// <exception cref="ArgumentException">Simülasyonun seed'i kayıttakinden farklıysa.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="tick"/> 0'dan küçükse ya da kaydın tick sayısından büyükse.</exception>
+        /// <exception cref="InvalidOperationException">Simülasyon tick 0'dan ilerlemişse ya da eylem bekliyorsa.</exception>
+        public static void TickeKadarOynat(Simulasyon sim, OturumKaydi kayit, long tick)
+        {
             if (sim == null)
             {
                 throw new ArgumentNullException(nameof(sim));
@@ -401,8 +419,13 @@ namespace Yanki.Core.Simulation
                 throw new InvalidOperationException("Oynatma yeni kurulmuş (tick 0) bir simülasyon gerektirir.");
             }
 
+            if (tick < 0 || tick > kayit.TickSayisi)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tick), tick, $"Tick 0..{kayit.TickSayisi.ToString(CultureInfo.InvariantCulture)} aralığında olmalı.");
+            }
+
             var sira = 0;
-            for (long t = 1; t <= kayit.TickSayisi; t++)
+            for (long t = 1; t <= tick; t++)
             {
                 while (sira < kayit.Eylemler.Count && kayit.Eylemler[sira].Tick == t)
                 {
@@ -412,8 +435,6 @@ namespace Yanki.Core.Simulation
 
                 sim.Tick(1);
             }
-
-            return new OynatmaSonucu(kayit.SonHash, sim.DurumHash());
         }
     }
 }
