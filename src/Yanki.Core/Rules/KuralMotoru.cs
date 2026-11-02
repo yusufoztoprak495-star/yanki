@@ -233,7 +233,7 @@ namespace Yanki.Core.Rules
             {
                 case EtkiTuru.Gercek:
                 {
-                    var g = Gercek.Ayristir(GercekSablonu.Doldur(etki.GercekSablonu, rol => baglam.Coz(rol)));
+                    var g = Gercek.Ayristir(GercekSablonu.Doldur(etki.GercekSablonu, rol => baglam.Coz(rol), RolKumesi.Hepsi));
                     var metin = g.ToString();
                     var varMi = dunya.Var(g);
 
