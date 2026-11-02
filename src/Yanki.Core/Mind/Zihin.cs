@@ -244,6 +244,9 @@ namespace Yanki.Core.Mind
             return en;
         }
 
+        /// <summary>Zihinde kanıtı olan önermeler (kanonik metin), ordinal sıralı; silikleşmiş kanıtlar dahil.</summary>
+        public IReadOnlyList<string> Onermeler => new ReadOnlyCollection<string>(new List<string>(_inanclar.Keys));
+
         /// <summary>Tam bir önermenin tüm kanıtları (silikleşenler dahil), eklenme sırasıyla.</summary>
         public IReadOnlyList<Kanit> Kanitlar(string onerme) =>
             _inanclar.TryGetValue(Onerme.Ayristir(onerme).ToString(), out var kayit)
