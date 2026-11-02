@@ -198,6 +198,14 @@ namespace Yanki.Core.Rules
                                 $"kriter #{i + 1}: kural yalnızca tüm kriterleri tutunca çalışır; \"agirlik\" sonucu etkilemez (ADR-010), kaldırılabilir"));
                         }
 
+                        var zorunlu = kd.Al("zorunlu");
+                        if (zorunlu != null && zorunlu.Tur == JsonTuru.Mantiksal && !zorunlu.MantiksalDeger)
+                        {
+                            uyarilar.Add(new KuralHatasi(
+                                kaynak, zorunlu.Satir, kimlik,
+                                $"kriter #{i + 1}: \"zorunlu\": false anlamsız, tüm kriterler zaten zorunludur (ADR-010); alan kaldırılabilir"));
+                        }
+
                         kriterler.Add(kriter);
                     }
                 }

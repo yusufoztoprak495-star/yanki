@@ -59,8 +59,8 @@ Kural dosyası (`kurallar.json`):
 - **Kural dosyası kodu değiştirmeden genişler:** yeni davranış = yeni JSON; motor yalnızca beş etki türünü bilir.
 - **Çekirdek JSON okur, dosya okumaz.** Çekirdekte JSON okuyucu yoktu; paket eklemek ADR-004'e aykırı olurdu. Küçük, bağımlılıksız bir okuyucu yazıldı (`Yanki.Core.Json`: sayılar `decimal`,
   nesne sırası korunur, satır/sütun bilgisi doğrulayıcı hatalarına akar). Bkz. ADR-009. Dosya okuma CLI'dadır (`SenaryoDosyasi`).
-- **Tek durum görüntüsü:** bir adımdaki bütün kurallar adım başındaki durumu görür. Sıra (tetikleyici → kural kimliği → NPC) sonucu değiştirmesin diye, bir kuralın ürettiği olay aynı adımda başka kuralın kriterine yansımaz.
-- **Gerçek etkisi değişiklik yapmıyorsa üretilmez** (var olanı eklemek, olmayanı kaldırmak) ve aynı adımda iki NPC için aynı gerçek tek kez yazılır; böylece günlükte kopya olay birikmez.
+- **Karar (Yusuf):** Tek durum görüntüsü kalır: bir adımdaki bütün kurallar adım başındaki durumu görür. Sıra (tetikleyici → kural kimliği → NPC) sonucu değiştirmesin diye, bir kuralın ürettiği olay aynı adımda başka kuralın kriterine yansımaz.
+- **Karar (Yusuf):** Gerçek etkisi tekrarsız yazılır: **değişiklik yapmıyorsa üretilmez** (var olanı eklemek, olmayanı kaldırmak) ve aynı adımda iki NPC için aynı gerçek tek kez yazılır; böylece günlükte kopya olay birikmez.
 
 ## Bu hafta yazılmayanlar
 

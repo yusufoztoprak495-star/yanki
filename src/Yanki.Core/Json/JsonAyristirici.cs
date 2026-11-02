@@ -32,6 +32,9 @@ namespace Yanki.Core.Json
     {
         private const int EnFazlaDerinlik = 64;
 
+        /// <summary>Okunabilecek en büyük metin uzunluğu (karakter). Kural, senaryo ve oturum dosyaları bunun çok altındadır.</summary>
+        public const int EnFazlaBoyut = 8 * 1024 * 1024;
+
         /// <summary>Metni ayrıştırır.</summary>
         /// <exception cref="JsonHatasi">Metin geçerli JSON değilse.</exception>
         public static JsonDegeri Ayristir(string metin)
@@ -39,6 +42,11 @@ namespace Yanki.Core.Json
             if (metin == null)
             {
                 throw new ArgumentNullException(nameof(metin));
+            }
+
+            if (metin.Length > EnFazlaBoyut)
+            {
+                throw new JsonHatasi($"JSON boyutu en fazla {EnFazlaBoyut} karakter olabilir, {metin.Length} verildi", 1, 1);
             }
 
             var okuyucu = new Okuyucu(metin);

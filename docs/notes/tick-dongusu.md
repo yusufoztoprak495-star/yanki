@@ -33,6 +33,6 @@ Bir tick (plan 6) — **bu hafta yalnızca şu adımlar**:
 
 ## Açık noktalar
 
-1. **Oyuncu hareketi yok.** Oyuncunun mekanı senaryodan gelir, v0'da değişmez (konum değişimi oyuncu eylemi değil, gelecekteki bir dünya olayı).
+1. **Oyuncu hareketi yok.** **Karar (Yusuf):** 5. haftaya kaldı. Oyuncunun mekanı senaryodan gelir, v0'da değişmez.
 2. **Eylemler tick sınırında işlenir:** `Submit` ile `Tick` arasında beklerler; `Tick(n)` ilk adımda hepsini işler.
 3. **`Tick(n)` ortasında eylem gönderilemez.** Parçalı ilerletme (`Tick(1); Tick(4)`) ile tek seferde ilerletme aynı durumu verir (testle korunuyor).

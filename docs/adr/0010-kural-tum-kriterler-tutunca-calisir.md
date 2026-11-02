@@ -14,7 +14,7 @@ bu, "kriterlerden biri tutunca çalış" gibi okunabilen belirsiz bir davranış
 ## Karar
 
 Bir sonuç kuralı **yalnızca tüm kriterleri tutunca** çalışır. Kriteri olmayan kural, her tetikleyici olayda (olayı algılayan her NPC için) çalışır.
-`agirlik` bu kullanımda sonucu etkilemez; doğrulayıcı `agirlik` kullanan kural için **uyarı** verir (hata değil; kural yüklenir). `zorunlu` da anlamsızdır (tüm kriterler zaten zorunludur) ve yok sayılır.
+`agirlik` bu kullanımda sonucu etkilemez; doğrulayıcı `agirlik` kullanan kural için **uyarı** verir (hata değil; kural yüklenir). `zorunlu` da anlamsızdır (tüm kriterler zaten zorunludur) ve yok sayılır; `"zorunlu": false` yazan kriter için doğrulayıcı ayrıca **uyarı** verir ("tüm kriterler zaten zorunludur"), kural yüklenmeye devam eder. `"zorunlu": true` uyarı vermez.
 Ağırlıklı puanlama eylem seçimi ve diyalog şablonu için aynen kalır (5. ve 8. hafta).
 
 ## Değerlendirilen seçenekler
@@ -52,5 +52,5 @@ Ağırlıklı puanlama eylem seçimi ve diyalog şablonu için aynen kalır (5. 
 
 ## Yapılacaklar
 
-1. [x] `KuralMotoru` ve doğrulayıcı uyarısı (4. hafta).
+1. [x] `KuralMotoru` ve doğrulayıcı uyarıları (`agirlik`, `zorunlu: false`) (4. hafta).
 2. [ ] Yusuf gerekçeyi yazınca durum "Kabul edildi" yapılır.

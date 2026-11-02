@@ -35,7 +35,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - **CLI:** `yanki run | query | why | replay` (`replay --guncelle` golden hash'i tek komutla günceller).
 - **Mini senaryo `samples/MiniHan`** (Yusuf'un seçimi: seçenek A + hedef/tanık düzeltmesi) ve **golden replay #1** (`tests/golden/mini-han-1.json`); CI her push'ta tekrar oynatır.
 - Uçtan uca test: oyuncu eylemi fikri değiştirir, `why` zinciri modifier'dan oyuncu eylemine iner. Notlar: `docs/notes/kural-motoru.md`, `docs/notes/tick-dongusu.md`; devlog iskeleti `docs/devlog/01-taslak.md`.
-- Testler: 637 (Core) + 24 (senaryo/CLI/golden) = 661; iki hedef derleniyor, 0 uyarı. Golden hash değişti (hafıza tekilleştirme): `504f3142d1dc15dd` → `cee9956ef06df17f`.
+- Testler: 649 (Core) + 24 (senaryo/CLI/golden) = 673; iki hedef derleniyor, 0 uyarı. Golden hash değişti (hafıza tekilleştirme): `504f3142d1dc15dd` → `cee9956ef06df17f`.
 
 ## Ertelenenler (Yusuf'un işi)
 
@@ -62,11 +62,13 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - [x] **Tanımsız rol:** mevcut davranış kalır (kural o olay için sessizce atlanır). **7. hafta notu:** bu durum için fren olayı yazılmalı (atlanan kural günlükte iz bırakmalı).
 - [x] **MiniHan:** `olay_rolu` kullanıyor. `cesaret` dışındaki kişilik değerleri 0.5 kalıyor; **11. hafta denge turunda ayarlanacak.**
 
-**4. hafta: Claude'un varsayılan seçtikleri, hâlâ Yusuf'un onayını bekleyenler (ayrıntı `docs/notes/kural-motoru.md`, `tick-dongusu.md`):**
-- **Tek durum görüntüsü:** bir adımdaki bütün kurallar adım başındaki durumu görür; aynı adımdaki başka kuralın çıktısı görünmez.
-- **Gerçek etkisi** durumu değiştirmiyorsa üretilmez ve aynı adımda aynı gerçek tek kez yazılır; `hafiza` etkisi her zaman tetikleyici olayı hatırlatır.
-- **Oyuncu hareketi yok** (oyuncunun mekanı senaryodan gelir, v0'da değişmez).
-- **1 tick = 1 saat** zaten `docs/notes/zihin.md` madde 5'te **Karar (Yusuf)** olarak kayıtlı; yeni karar gerekmedi.
+**4. hafta: ikinci inceleme turunda kapatılanlar (Yusuf):**
+- [x] **Tek durum görüntüsü:** bir adımdaki bütün kurallar adım başındaki durumu görür; aynı adımdaki başka kuralın çıktısı görünmez. Kalıyor.
+- [x] **Gerçek etkisi tekrarsız yazılır:** durumu değiştirmeyen etki üretilmez, aynı adımda aynı gerçek tek kez yazılır.
+- [x] **Oyuncu hareketi 5. haftaya kaldı** (v0'da oyuncunun mekanı senaryodan gelir ve değişmez).
+- [x] **1 tick = 1 saat** `docs/notes/zihin.md` madde 5'te **Karar (Yusuf)** olarak kayıtlı.
+- Açık kalan tek ayrıntı: `hafiza` etkisi her zaman tetikleyici olayı hatırlatır (başka olay seçme yok); etki hedefi senaryoda yoksa `Simulasyon.Olustur` reddeder.
+- Doğrulayıcı uyarıları: `agirlik` ve `zorunlu: false` uyarı verir (ADR-010). JSON okuyucuya 8 MiB boyut sınırı eklendi (sınır testleri sırasında eksik bulundu).
 
 ## Sıradaki hafta
 

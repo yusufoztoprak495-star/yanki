@@ -221,6 +221,26 @@ namespace Yanki.Core.Tests.Rules
         }
 
         [Fact]
+        public void Zorunlu_false_olan_kriter_icin_uyari_verir_ama_yuklenir()
+        {
+            var sonuc = Yukle(Tek("\"kriterler\": [ { \"alan\": \"olay_rolu(hedef)\", \"op\": \"==\", \"deger\": true, \"zorunlu\": false } ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ]"));
+
+            Assert.True(sonuc.Basarili, string.Join("\n", sonuc.Hatalar));
+            Assert.Single(sonuc.Kurallar);
+            var uyari = Assert.Single(sonuc.Uyarilar);
+            Assert.Equal("k1", uyari.KuralId);
+            Assert.Contains("zorunlu", uyari.Mesaj);
+            Assert.Contains("zaten zorunlu", uyari.Mesaj);
+        }
+
+        [Fact]
+        public void Zorunlu_true_uyari_vermez()
+        {
+            var sonuc = Yukle(Tek("\"kriterler\": [ { \"alan\": \"olay_rolu(hedef)\", \"op\": \"==\", \"deger\": true, \"zorunlu\": true } ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ]"));
+            Assert.Empty(sonuc.Uyarilar);
+        }
+
+        [Fact]
         public void Agirliksiz_kural_uyari_vermez()
         {
             var sonuc = Yukle(Tek("\"kriterler\": [ { \"alan\": \"olay_rolu(hedef)\", \"op\": \"==\", \"deger\": true } ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ]"));
