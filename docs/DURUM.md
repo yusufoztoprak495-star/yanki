@@ -10,18 +10,21 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Biten haftalar
 
 ### 1. hafta: kurulum ve iskelet ([PR #1](https://github.com/yusufoztoprak495-star/yanki/pull/1), [PR #2](https://github.com/yusufoztoprak495-star/yanki/pull/2))
+
 - .NET çözümü (`netstandard2.1;net10.0`), CI ve Codecov adımı.
 - README iskeleti, `CLAUDE.md`, `docs/ai-usage.md`.
 - ADR-001..006.
 - Kriter dili sözlüğü v0.1 (15 fonksiyon).
 
 ### 2. hafta: olay kaydı, dünya, kriter dili ([PR #3](https://github.com/yusufoztoprak495-star/yanki/pull/3))
+
 - Olay kaydı (`NedenOlaylar`, `KuralId`) ve dünya (gerçekler, mekan grafiği).
 - Anahtarlı RNG ve dünya durum hash'i.
 - Kriter ayrıştırıcı, doğrulayıcı ve seçici (eşitlikte özgül olan kazanır, sonra RNG).
 - ADR-007 (`decimal`), `tools/golden_ref.py`, 318 test.
 
 ### 3. hafta: zihin ve doğrudan algı ([PR #4](https://github.com/yusufoztoprak495-star/yanki/pull/4))
+
 - Zihin: kişilik, 3 eksen + süreli fikir modifier'ları (`FikirDokumu`), tek duygulu ruh hali, stres, kanıtlı inançlar (çelişki kuralı, `KimdenDuydu`), hafıza.
 - Saf sönme fonksiyonları (`Sonumleme`, `ZihinAyarlari`) ve altı zihin olayı; zihin durum hash'e giriyor, dünya altın hash'i değişmedi.
 - Doğrudan algı: `acik`/`sessiz`/`gizli`, `gordu` kanıtı + hafıza olayı (`KuralId: algi`).
@@ -29,6 +32,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - ADR-008, `docs/notes/zihin.md`, `docs/notes/algi.md`; 508 test (iki hedefte derleniyor, 0 uyarı).
 
 ### 4. hafta: sonuç kuralları ve ince dikey dilim ([PR #7](https://github.com/yusufoztoprak495-star/yanki/pull/7))
+
 - **JSON okuyucu/yazıcı** (`Yanki.Core.Json`, bağımlılıksız, sayılar `decimal`, satır/sütun bilgili hata); ADR-009. `KriterOkuyucu` kriterleri JSON'dan okur (ikinci kriter yolu yok).
 - **Kural motoru** (`Rules`): `ne_zaman` + kriterler (hepsi tutmalı, ADR-010) → etkiler; v0 etkileri modifier, eksen, ruh hali, hafıza, dünya gerçeği; etkiler yeni olay (`KuralId` + `NedenOlaylar`). Doğrulayıcı v0 `dosya:satır: kural "id": mesaj` verir, `agirlik` için uyarır. Sözlüğe `olay_rolu` eklendi (16 fonksiyon).
 - **Tick döngüsü v0 ve dış API** (`Simulation`): `Submit(PlayerAction)`, `Tick(n)`, sorgular, `Neden(olayId)`; adımlar 1, 2, 3, 4, 7. Kaskad v0: kural çıktıları sıradaki tick'e kalır.
@@ -55,6 +59,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - 3. hafta için Yusuf'u bekleyen açık karar kalmadı (yalnızca ADR-008 "Gerekçe (Yusuf)" yazımı).
 
 **4. hafta: karara bağlananlar (Yusuf, PR #7 incelemesi):**
+
 - [x] **Hedef/tanık ayrımı:** sözlüğe `olay_rolu(fail|hedef|tanik)` eklendi (16. fonksiyon); `inanc(...)` yöntemi kaldırıldı. Regresyon: daha önce tehdit edilmiş NPC, başkasına yapılan tehdidi görünce tanıktır.
 - [x] **Kural tetiklenmesi:** kural yalnızca tüm kriterleri tutunca çalışır; kriteri olmayan kural her tetikleyici olayda çalışır; `agirlik` etkilemez, doğrulayıcı uyarır (ADR-010, gerekçe boş).
 - [x] **Algı kapsamı (KAPANDI):** algı yalnızca dış (zihin olmayan) olayları alır; algı olayları (`KuralId: algi`) kural tetiklemez.
@@ -65,12 +70,20 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 **PR #8 (Yusuf):** `RepoStructureTests` içindeki "ADR-007 gerekçesi boş olmalı" kontrolü kaldırıldı; durum kontrolleri kalıyor. `CLAUDE.md` kuralı henüz değişmedi.
 
 **4. hafta: ikinci inceleme turunda kapatılanlar (Yusuf):**
+
 - [x] **Tek durum görüntüsü:** bir adımdaki bütün kurallar adım başındaki durumu görür; aynı adımdaki başka kuralın çıktısı görünmez. Kalıyor.
 - [x] **Gerçek etkisi tekrarsız yazılır:** durumu değiştirmeyen etki üretilmez, aynı adımda aynı gerçek tek kez yazılır.
 - [x] **Oyuncu hareketi 5. haftaya kaldı** (v0'da oyuncunun mekanı senaryodan gelir ve değişmez).
 - [x] **1 tick = 1 saat** `docs/notes/zihin.md` madde 5'te **Karar (Yusuf)** olarak kayıtlı.
 - Açık kalan tek ayrıntı: `hafiza` etkisi her zaman tetikleyici olayı hatırlatır (başka olay seçme yok); etki hedefi senaryoda yoksa `Simulasyon.Olustur` reddeder.
 - Doğrulayıcı uyarıları: `agirlik` ve `zorunlu: false` uyarı verir (ADR-010). JSON okuyucuya 8 MiB boyut sınırı eklendi (sınır testleri sırasında eksik bulundu).
+
+**5. hafta: ölçüm durağında karara bağlananlar ve 7. haftaya bırakılanlar (Yusuf):**
+
+- [x] **K3:** `karar_verildi` günlükte kısa iz taşır; tam iz replay ile yeniden üretilir ve günlükteki kısa izle doğrulanır (ADR-011).
+- [x] **Z1 / Z2:** `HafizaVar` olay kimliğine göre sıralı dizinle erken durur; hedefe bağlı olmayan ön koşullar eylem başına bir kez hesaplanır.
+- [ ] **Z3 (7. hafta):** durum hash'i zihin başına önbellekli yazılacak. CsCheck değişmezleri ve tam hash karşılaştırmasıyla bayat önbellek aranacak. Çıktı birebir aynı kalacak, altın hash değişmeyecek. (Ölçüm: 50 NPC stres fikstüründe hash tek başına tick süresinin büyük bölümü; 5 ms hedefi bunsuz tutmaz.)
+- [ ] **Z4 (7. hafta):** algı başına iki olay (kanıt + hafıza) ve sınırsız büyüyen hafıza maliyeti gerçek senaryoyla ölçülecek (stres fikstüründe olayların %89'u algı olayı). Seçenekler: kanıt ve hafıza olaylarının birleşmesi, önem eşiği, silik hafızanın durumdan düşmesi. Olay biçimi değişecekse karar Yusuf'un.
 
 ## Sıradaki hafta
 
