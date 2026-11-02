@@ -5,7 +5,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-02
-- **PR:** `belgeler-1-4-hafta` dalı (ADR gerekçeleri, modül notları ve Devlog #1, Yusuf'un incelemesini bekliyor)
+- **PR:** [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) (ADR gerekçeleri, modül notları ve Devlog #1, Yusuf'un incelemesini bekliyor)
 
 ## Biten haftalar
 
