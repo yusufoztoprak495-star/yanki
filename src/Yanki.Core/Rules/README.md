@@ -16,4 +16,4 @@ Etkiler doğrudan durumu değiştirmez; `KuralId` ve `NedenOlaylar` taşıyan ye
 
 Bir kural yalnızca tüm kriterleri tutunca çalışır, kriteri olmayan kural her tetikleyicide çalışır; `agirlik` etkilemez ve uyarı verir ([ADR-010](../../../docs/adr/0010-kural-tum-kriterler-tutunca-calisir.md)). `KuralYuklemeSonucu.Uyarilar` uyarıları taşır.
 
-Kriterler `Criteria/KriterOkuyucu` ile okunur (ikinci bir kriter yolu yoktur). Taslak not ve açık noktalar: [`docs/notes/kural-motoru.md`](../../../docs/notes/kural-motoru.md).
+Kriterler `Criteria/KriterOkuyucu` ile okunur (ikinci bir kriter yolu yoktur). Not ve açık noktalar: [`docs/notes/kural-motoru.md`](../../../docs/notes/kural-motoru.md).

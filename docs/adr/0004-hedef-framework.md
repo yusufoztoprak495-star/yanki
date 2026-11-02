@@ -43,6 +43,10 @@ A, küçük bir `#if` maliyetiyle hem Unity hem modern .NET'i kapsıyor.
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Motorun iddiası motordan bağımsızlık ve hedef kitlede Unity kullanan stüdyolar var; `netstandard2.1` olmadan bu iddia tutmuyor. `net10.0` hedefi de CLI, test ve demo için güncel LTS'yi veriyor. Sıfır bağımlılık, kütüphaneyi Unity'ye ve WASM'a sürtünmesiz sokuyor. `#if` disiplini ve C# 9.0 sınırı, iki dünyayı tek kod tabanında tutmanın kabul edilen bedeli.
+
 ## Sonuçlar
 - Kolaylaşan: Unity'ye paket olarak girmek (OpenUPM, v0.2 sonrası), NuGet yayını.
 - Zorlaşan: Yeni API kullanırken her iki hedefi de derlemek; CI ikisini de derler.

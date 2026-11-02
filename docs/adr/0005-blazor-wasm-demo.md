@@ -39,6 +39,10 @@ A, 12 haftalık takvimde motoru göstermenin en ucuz yolu. **Unity WebGL reddedi
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Oyunu olmayan motor yarım iş gibi görünüyor, kurulum isteyen demoya da kimse bakmıyor. Blazor WebAssembly aynı dille, sunucusuz ve ücretsiz barındırmayla bu sorunu çözüyor; demo ile hata ayıklama ekranı tek uygulama oluyor. Unity WebGL'in Unity sinyali değerli ama 12 haftaya sığmıyor, bu yüzden v0.2 sonrasına küçük bir örnek olarak kaldı. Godot C# ise web'e çıkamadığı için baştan elendi.
+
 ## Sonuçlar
 - Kolaylaşan: Repodaki README'den tek tıkla demo; mülakatta canlı gösterim.
 - Zorlaşan: Çekirdeğin WASM'da çalışması (çoklu iş parçacığı yok, dosya sistemi yok) — ADR-0004 ile zaten uyumlu.

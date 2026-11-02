@@ -25,6 +25,10 @@ Amaç benimsenme ve görünürlük; korumacı lisans bunun önüne geçer.
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Proje görünürlük ve benimsenme için açık. Hedef, stüdyoların ticari projelerde bile hukuki sürtünme olmadan deneyebilmesi. Türevlerin açık kalmasını zorlamamak, bu amaç için kabul edilen bedel. Apache-2.0'ın patent maddesi bu ölçekte gerekli görülmedi, GPL ailesi ise oyun stüdyolarını uzaklaştırırdı.
+
 ## Sonuçlar
 - Kolaylaşan: NuGet/OpenUPM yayını, stüdyoların denemesi.
 - Zorlaşan: Yok denecek kadar az.

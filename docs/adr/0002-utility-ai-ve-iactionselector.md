@@ -48,6 +48,10 @@ yerine arayüz arkasına alıyoruz.
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+NPC doğal davranmalı ama kişiliğinden kopmamalı: açgözlü biri tek bir iyilikle cömertleşmemeli. Üstelik aynı seed aynı kararı vermeli ve her karar açıklanabilmeli. LLM bu şartlardan determinizmi ve açıklanabilirliği bozuyor, GOAP ve davranış ağaçları sosyal durumları tartmada zayıf ve zaten olgun kütüphaneleri var. Utility AI hepsini karşılıyor. `IActionSelector` ise başka yaklaşımlara kapıyı kapatmadan bu seçimi sabitliyor.
+
 ## Sonuçlar
 - Kolaylaşan: Karar izi, sıra etkisi testleri, kişilik tutarlılığı.
 - Zorlaşan: Eğri ve çarpan dengesi; içerik yazım yükü.

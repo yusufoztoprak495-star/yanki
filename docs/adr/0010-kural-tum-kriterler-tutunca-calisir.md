@@ -44,6 +44,10 @@ Ağırlıklı puanlama eylem seçimi ve diyalog şablonu için aynen kalır (5. 
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+PR #7 incelemesinde sorun çıktı: "zorunlu elenmedi ve puan > 0" koşulu, kural yazarının "hepsi tutmalı" beklentisiyle çelişiyordu. Sonuç kuralında yarışan aday yok, tek soru var: çalışsın mı? Bu yüzden Yusuf "tüm kriterler tutmalı" kararını verdi. Ağırlıklı puan, adayların yarıştığı eylem seçimi ve diyalogda kalıyor. Yerine "ya da" için ayrı kural yazmak gerekiyor; okunabilirlik ve test edilebilirlik bu bedele değiyor.
+
 ## Sonuçlar
 
 - Kolaylaşan: Kuralın neden çalıştığını okumak ve test etmek.

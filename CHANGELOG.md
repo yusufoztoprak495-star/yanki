@@ -5,6 +5,7 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/), sürümleme [Se
 ## [Yayınlanmadı]
 
 ### Eklendi
+- ADR-001..010 gerekçeleri, yeniden yazılmış modül notları ve Devlog #1 (Claude Code yazdı; ADR'ler Yusuf'un onayına kadar "Önerildi").
 - 1. hafta iskeleti: `Yanki.Core` (modül klasörleri), `Yanki.Dialogue`, `Yanki.Cli` (`--version`), test projeleri, `Yanki.Benchmarks`.
 - `netstandard2.1;net10.0` çoklu hedef, `Core` ve `Dialogue` için C# 9.0, merkezi paket yönetimi, deterministik derleme.
 - GitHub Actions CI: derleme, test, trx artifact'ı, coverage ve Codecov yüklemesi.

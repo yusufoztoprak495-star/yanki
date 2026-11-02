@@ -20,4 +20,4 @@ Durum yalnızca zihin olaylarıyla ilerler; süreli değerler sorgu anında tick
 | `DurumHashu` | Dünya + zihin birleşik durum hash'i. Zihin yokken dünya hash'iyle aynıdır. |
 
 Kriter diliyle bağlantı: [`Criteria/ZihinSorguCozucusu`](../Criteria/ZihinSorguCozucusu.cs).
-Taslak not ve açık noktalar: [`docs/notes/zihin.md`](../../../docs/notes/zihin.md).
+Not ve açık noktalar: [`docs/notes/zihin.md`](../../../docs/notes/zihin.md).
