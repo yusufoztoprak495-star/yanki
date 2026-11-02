@@ -5,7 +5,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-02
-- **PR:** [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) (ADR gerekçeleri, modül notları ve Devlog #1, Yusuf'un incelemesini bekliyor)
+- **PR:** [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta: utility AI, NPC'lerin kendi eylemleri, hareket, karar izi; Yusuf'un incelemesini bekliyor). [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) (ADR gerekçeleri, modül notları, Devlog #1) merge edildi.
 
 ## Biten haftalar
 
@@ -41,8 +41,20 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - Uçtan uca test: oyuncu eylemi fikri değiştirir, `why` zinciri modifier'dan oyuncu eylemine iner. Notlar: `docs/notes/kural-motoru.md`, `docs/notes/tick-dongusu.md`; Devlog #1 `docs/devlog/01-ilk-dikey-dilim.md`.
 - Testler: 649 (Core) + 24 (senaryo/CLI/golden) = 673; iki hedef derleniyor, 0 uyarı. Golden hash değişti (hafıza tekilleştirme): `504f3142d1dc15dd` → `cee9956ef06df17f`.
 
+### 5. hafta: utility AI ve NPC'lerin kendi eylemleri ([PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9))
+- **Eylem tanımları** JSON ile (`eylem_dosyalari`), doğrulayıcı `dosya:satir: eylem "id": mesaj`; kriterler ve etkiler mevcut okuyucularla (ikinci yol yok). Yeni rol `eylem.hedef` (yalnızca eylem bağlamında; sözlüğe fonksiyon eklenmedi, 16 fonksiyon).
+- **Karar:** `AdayUretici` (tek nokta), `Puanlayici` (`taban × Π(eğri) × kişilik × fikir × ruh hali`, çarpan sınırları 0.25–2.0 / 0.6–1.5 / 0.8–1.25), decimal eğriler (`dogrusal`, `ustel`, `lojistik`, `basamak`; elle yazılmış `e^y`, altın değerler `tools/golden_ref.py` ile), `IActionSelector` + `UtilitySelector` (ilk 3, %70, `AnahtarliRng.Icin(seed, tick, npc, "karar")`).
+- **Tick adımları 5 ve 6:** tek durum görüntüsü, eş zamanlı algı (aynı tick'te ayrılan tanık görür, varan görmez), algılayanlar saklanıp sıradaki tick'te kurallara taşınır, tetik kuyruğu `Olay.Id` sırasıyla. **Hareket:** `ayrildi` + `geldi` (`Hedef` karşı mekan), oyuncu `hareket` eylemi `Submit`'te komşuluk denetimiyle.
+- **Karar izi:** `karar_verildi` günlükte KISA iz taşır; tam iz replay ile yeniden üretilir ve kısa izle doğrulanır (K3). `yanki why` zinciri modifier'dan algıya, eylem olayına ve karar izinin puan bileşenlerine indirir; `yanki query` son kararı gösterir; çıkış kodu 4 iz uyuşmazlığıdır.
+- **Performans (Z1/Z2):** `HafizaVar` olay kimliğine göre sıralı dizinle erken durur (naif erken durdurmanın yanlış olduğu kırmızı testle gösterildi), hedefe bağlı olmayan ön koşullar bir kez hesaplanır. Ölçüm (benchmark değil, `tools/olcum`): 50 NPC stres fikstüründe tick 321 → 82 ms, `karar_verildi` günlük payı %71 → %10; ayrıntı `docs/notes/karar.md`.
+- **Senaryo `samples/MiniKarar`** (Yusuf'un seçimi: A + C'nin hareketi) ve **golden replay #2** (`tests/golden/mini-karar-1.json`, seed 42, 24 tick, hash `fe29a63d6dfbc307`); uçtan uca `MiniKararTests` (kontrol noktasının yedi koşulu, seed 42/7 farkı).
+- **Hedefler (ayrı hedef zihin katmanı) v0.1'de yok, v0.2 sonrası listesinde** (Yusuf'un kararı); plan 5.4/3'teki "hedefler" ifadesi v0.1 için "kişilik + eylem ölçütleri + hafıza" olarak okunur.
+- ADR-011, notlar (`karar.md`, `tick-dongusu.md`, `algi.md`), `authoring-guide.md` (eylem yazımı, `dinlen`), `criteria-language.md` (eylem bağlamı), `Decision/README.md`. Testler: 1099 (Core) + 50 (senaryo/CLI/golden) = 1149; iki hedef derleniyor, 0 uyarı. `mini-han-1` hash'i değişmedi (`cee9956ef06df17f`, ayrıca testle kilitli).
+- **Plandan sapmalar (ADR-011'de):** hedef katmanı v0.2 sonrası; eylem olayı `KuralId: eylem:<id>`; karar izi günlükte kısa, tam iz replay ile; sonuç kuralları NPC eylemleri için bir sonraki tick'te çalışır (4. haftanın kaskad kararı, plan 6'daki "2. adıma geri besleme" aynı tick'te değil).
+
 ## Ertelenenler (Yusuf'un işi)
 
+- [ ] **ADR-011 "Gerekçe (Yusuf)" bölümü:** boş; Claude Code doldurmaz. Yusuf yazınca durum "Kabul edildi" yapılır (kararlar o zamana kadar da bağlayıcıdır).
 - [ ] **ADR-001..010 "Gerekçe (Yusuf)" onayı:** gerekçeleri Yusuf'un isteğiyle Claude Code yazdı. Yusuf onaylayınca durumlar "Kabul edildi" yapılır.
 - [x] **`docs/notes/` notları:** yedisi Yusuf'un isteğiyle Claude Code tarafından yeniden yazıldı. Açık kalan ve onaylanmamış kararlar notlarda ayrı bölümde.
 - [x] **Devlog #1:** `docs/devlog/01-ilk-dikey-dilim.md` (Claude Code yazdı, çıktılar golden oturumdan).
@@ -67,7 +79,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - [x] **Tanımsız rol:** mevcut davranış kalır (kural o olay için sessizce atlanır). **7. hafta notu:** bu durum için fren olayı yazılmalı (atlanan kural günlükte iz bırakmalı).
 - [x] **MiniHan:** `olay_rolu` kullanıyor. `cesaret` dışındaki kişilik değerleri 0.5 kalıyor; **11. hafta denge turunda ayarlanacak.**
 
-**PR #8 (Yusuf):** `RepoStructureTests` içindeki "ADR-007 gerekçesi boş olmalı" kontrolü kaldırıldı; durum kontrolleri kalıyor. `CLAUDE.md` kuralı henüz değişmedi.
+**PR #8 (Yusuf, merge edildi):** `RepoStructureTests` içindeki "ADR-007 gerekçesi boş olmalı" kontrolü kaldırıldı; durum kontrolleri kalıyor. `CLAUDE.md` kuralı henüz değişmedi.
 
 **4. hafta: ikinci inceleme turunda kapatılanlar (Yusuf):**
 
@@ -85,6 +97,13 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - [ ] **Z3 (7. hafta):** durum hash'i zihin başına önbellekli yazılacak. CsCheck değişmezleri ve tam hash karşılaştırmasıyla bayat önbellek aranacak. Çıktı birebir aynı kalacak, altın hash değişmeyecek. (Ölçüm: 50 NPC stres fikstüründe hash tek başına tick süresinin büyük bölümü; 5 ms hedefi bunsuz tutmaz.)
 - [ ] **Z4 (7. hafta):** algı başına iki olay (kanıt + hafıza) ve sınırsız büyüyen hafıza maliyeti gerçek senaryoyla ölçülecek (stres fikstüründe olayların %89'u algı olayı). Seçenekler: kanıt ve hafıza olaylarının birleşmesi, önem eşiği, silik hafızanın durumdan düşmesi. Olay biçimi değişecekse karar Yusuf'un.
 
+**5. hafta: 6. ve 7. haftaya taşınan açık kararlar (Yusuf):**
+- [ ] **7. hafta:** Z3 ve Z4'ü 50 NPC için 82 ms/tick ölçümünden başlayarak ele al; 5 ms hedefi şu an tutmuyor (`tools/olcum`, `docs/notes/karar.md`).
+- [ ] **7. hafta:** cooldown, `hafiza_var` tekrar sınırının üç eksiğini kapatmalı: hedef bazlı tekrar, 200 tick sonrası unutma (pencere ne olursa olsun), "en fazla k kez".
+- [ ] **6. hafta:** "Gerilim" senaryosu (`tehdit_et`, `celisen_ozellikler`, stres) golden replay #3 adayı. `samples/MiniKarar` tehdit kurallarını yüklü taşır ama tetiklemez.
+- [ ] **7. hafta:** hedefi mekan olan olayda (ör. hedefi mekan olan oyuncu eylemi) atlanan kişi etkisi için fren olayı; korumalı bayrak filtresi `AdayUretici`'ye takılacak.
+- [ ] **11. hafta:** `samples/MiniKarar` kişilik değerleri (merhamet, sosyallik, cesaret, kin_tutma, açgözlülük dışındakiler 0.5) ve taban sayıları yer tutucudur; denge turunda ayarlanacak.
+
 ## Sıradaki hafta
 
-- **5. hafta:** karar/utility AI, `IActionSelector`, eylem JSON'ları, NPC'lerin kendi eylemleri, karar izi (`yanki why` tam sürümü). Tick döngüsünün 5. ve 6. adımları `Simulasyon.TekTick` içinde işaretli yerlere takılır.
+- **6. hafta:** dedikodu ve stres: "anlat" ve "yalan söyle" eylemleri, `duydu` kanıtı aktarımı, konu sınırı, yalan kaydı (`yalan_soyledi`); stres artışı ve kriz olayları (`celisen_ozellikler` bu hafta izde görünür halde bekliyor). Golden replay #3 adayı: "Gerilim" senaryosu.

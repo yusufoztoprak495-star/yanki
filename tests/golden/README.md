@@ -33,4 +33,4 @@ Hash güncellemesi **PR'da gerekçe ister**: PR açıklamasına hangi golden dos
 
 Hedef: 3–5 oturum; biri Blazor WebAssembly çıktısıyla karşılaştırılır (plan bölüm 9).
 
-**Durum:** 4. haftada ilk golden replay eklendi. Yenileri ilerleyen haftalarda.
+**Durum:** `mini-han-1.json` (4. hafta, oyuncu eylemleri) ve `mini-karar-1.json` (5. hafta, NPC kararları + oyuncu hareketi, seed 42, 24 tick; NPC kararları dosyaya yazılmaz, tekrar hesaplanır). Gerilim senaryosu #3 adayıdır (6. hafta). Yenileri ilerleyen haftalarda.

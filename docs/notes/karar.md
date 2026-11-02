@@ -55,6 +55,12 @@ eylem JSON ──► AdayUretici ──► Puanlayici ──► UtilitySelector 
 
 **Hâlâ 5 ms'nin üstünde (50 NPC, ≈82 ms/tick):** kalan maliyetin büyük kısmı bu hafta dokunmadığımız iki yerde: durum hash'inin her tick'te bütün zihin durumunu yazması (Z3) ve algı başına iki olay yazılması ile hafızanın sınırsız büyümesi (Z4; olay sayısının %89'u kanıt + hafıza algı olayı). Bkz. `DURUM.md` açık kararlar.
 
+## Bulgu: bekleme eylemi yoksa NPC'ler sürü halinde dolaşır
+
+Senaryo taslaklarını çalıştırırken görüldü: yardım ve selam `hafiza_var` sınırına takılınca geriye puanı 0'dan büyük **tek aday** olarak `git` kaldı (küçük de olsa pozitif) ve üç NPC de tick 3'ten itibaren her tick birlikte mekan değiştirdi. Seçici yalnızca puanı 0'dan büyük adaylardan seçer; "hiçbir şey yapma" kendiliğinden bir aday değildir.
+
+**Karar (Yusuf):** Her senaryoya puanı 0'dan büyük, hedefsiz, ön koşulsuz küçük bir bekleme eylemi (`dinlen`) yazmak `docs/authoring-guide.md` içinde **şiddetle önerilir**. Motor bunu zorunlu kılmaz ve yerleşik bir bekleme eylemi eklemez: bekleme, senaryonun kişiliğine ve dengesine ait bir yazar kararıdır. `samples/MiniKarar` `dinlen` içerir.
+
 ## Tekrar sınırı: `hafiza_var(olay_turu, ben, n)` yeterli mi?
 
 Aynı eylemin her tick tekrarı cooldown yazmadan `hafiza_var(selam_oldu, ben, 5) == false` ön koşuluyla sınırlanabilir (`TekrarSiniriTests`). Gözlemler ve **sınırlar**:

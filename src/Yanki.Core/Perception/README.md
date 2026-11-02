@@ -2,7 +2,7 @@
 
 Algı: görünürlük seviyelerine göre doğrudan algı (plan 5.3). Dedikodu, top-n konu sınırı ve aktarımda kanıt gücü düşüşü 6. haftada gelecek.
 
-**Durum:** 3. hafta teslimi tamam (yalnızca doğrudan algı).
+**Durum:** 3. hafta teslimi tamam (yalnızca doğrudan algı). 5. haftada NPC eylemleri ve hareketleri de aynı algıdan geçer; algı adım 6.2'de, `konum!` değişiminden önce hesaplanır (`DogrudanAlgi`'ye özel durum eklenmedi).
 
 ## Tipler
 

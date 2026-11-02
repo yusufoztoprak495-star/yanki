@@ -32,6 +32,14 @@
 - **Karar (Yusuf):** Bilinmeyen görünürlük değeri hatadır.
 - **Karar (Yusuf, PR #7):** Algı yalnızca dış (zihin olmayan) olayları alır. Algı olayları kural tetiklemez.
 
+## 5. hafta: algının zamanı, hareket ve NPC eylemleri
+
+- **NPC eylemleri ve hareketleri de dış olaydır** ve aynı doğrudan algıdan geçer. `karar_verildi` olayı ise algılanmaz (zihinsel bir iz, dünyada görünen bir şey değil) ve kural tetiklemez; `konum!` değişimi olayları da algılanmaz (hareketin görünen yüzü `ayrildi`/`geldi`).
+- **Algı zamanı.** NPC eylemlerinin ve hareketlerinin algısı tick adım 6.2'de, `konum!` değişimlerinden ÖNCE hesaplanır; yani algılayan kümesi adım 5 başındaki konum görüntüsüyle belirlenir. Aynı tick'te mekandan ayrılan tanık olayı görür, aynı tick'te varan görmez. `DogrudanAlgi`'ye özel durum eklenmedi: yazım sırası bunu kendiliğinden sağlıyor. Yer değiştiren iki NPC birbirinin `geldi` olayını görür.
+- **Önerme mekanı taşır.** `ayrildi` ve `geldi` olaylarının `Hedef` alanı karşı mekandır; `OnermeUret` bunu `tur(fail, hedef)` olarak yazar: `ayrildi(Can,pazar)` (Can pazara gitti), `geldi(Can,han)` (Can han'dan geldi). Hareket olayları varsayılan olarak `acik` görünürlüktedir; oyuncu hareketine `gorunurluk` yükü verilebilir.
+- **Algılayanlar saklanır.** Kurallar NPC eylemleri için bir sonraki tick'te çalıştığı için 6.2'nin algı sonucundan türetilen algılayan listesi bir tick saklanıp sonra atılır; kurallar konumdan yeniden hesaplamaz ve algı adımı bu olayları ikinci kez işlemez (bkz. `tick-dongusu.md`).
+- **Oyuncu hareketi** adım 1'de işlenir, NPC konumları değişmez; oyuncunun `ayrildi`'sini kalkış mekanındaki, `geldi`'sini varış mekanındaki NPC'ler görür.
+
 ## Sonraki haftalara kalanlar
 
 Dedikodu, `duydu` aktarımı, konu sınırı ve yalan kaydı 6. haftada.

@@ -74,6 +74,14 @@ Oyuncu hareketi ayrılmış `hareket` eylemidir (senaryoda bildirilmez, `ayrildi
 
 `Zihin.HafizaVar` olay kimliğine göre sıralı ayrı bir dizinle erken durur. Pencere hatırlanan olayın tick'ine göre uygulanır; hafıza kayıtlarının ekleniş sırası bu anahtara göre sıralı değildir (kural `hafiza` etkisi bir önceki tick'in olayını sona ekler, mevcut kayıt yerinde güncellenir) ve naif erken durdurmanın yanlış sonuç verdiği kırmızı testle gösterildi. Günlük olay tick'inin kimlikle azalmamasını zorunlu kıldığı için kimliğe göre sıralı dizin doğrudur; eski tam taramayla seed'li rastgele karşılaştırma testi ve değişmeyen hash ile korunur. Z3 (hash önbelleği) ve Z4 (algı hacmi) 7. haftaya bırakıldı.
 
+Z2'nin yanında ölçülen sonuç (benchmark değil, `tools/olcum`; ayrıntı `docs/notes/karar.md`): 50 NPC stres fikstüründe tick başına 321 → 82 ms, `karar_verildi` günlük payı %71 → %10; olay sayıları ve son durum hash'leri K3/Z1/Z2 öncesiyle birebir aynı. 5 ms/tick hedefi 50 NPC'de hâlâ tutmuyor; kalan maliyet durum hash'i (Z3) ve algı hacmi (Z4).
+
+### 13. Bekleme eylemi ve tekrar sınırı
+Seçici yalnızca puanı 0'dan büyük adaylardan seçer. Sınırlı eylemler (`hafiza_var` ile) elenince geriye tek pozitif aday olarak `git` kalırsa bütün NPC'ler her tick sürü halinde dolaşır (senaryo taslaklarında görüldü). Puanı 0'dan büyük, hedefsiz, ön koşulsuz küçük bir bekleme eylemi (`dinlen`) `docs/authoring-guide.md` içinde **şiddetle önerilir**; motor bunu **zorunlu kılmaz** ve yerleşik bir bekleme eylemi eklemez (bekleme senaryonun dengesine ait bir yazar kararıdır). Tekrar sınırı cooldown gelene kadar `hafiza_var(olay_turu, ben, n)` ile yapılır; sınırları (hedefe göre değil eylem türüne göre, hafıza yaklaşık 200 tick sonra unutulur, "en fazla k kez" ifade edilemez) 7. haftada cooldown ile kapatılacak.
+
+### 14. Onaylanan adlar ve uygulama sırası
+Yusuf'un onayıyla: Z1 için `OlayId`'ye göre sıralı ayrı dizin (naif erken durdurma yok; dizin hash'e girmez), CLI çıkış kodu 4 (iz uyuşmazlığı), API adları `TamIziIste`, `YakalananIz`, `TutulanTamIzSayisi`, `GecmisKararKisaIzi`, `KararIziYenidenUretici`, `AnahtarliRng` ile sabit seed'li rastgele testler. Uygulama sırası bağımlılığa göre değişti (aday → puanlama → seçici → karar izi → tick ve hareket); kapsam aynı. Aday yoksa olay yazılmaması, karar kaynaklarının yalnızca seçilen adaydan toplanması, hareket olaylarının `Hedef`'inin karşı mekan olması, mekan hedefli olayda kişi etkisi üretilmemesi ve yasaklı API kapsamı (`Math.Pow/Exp/Log/Sqrt/Trig`) bu ADR'de kaydedilmiştir.
+
 ## Değerlendirilen seçenekler
 
 ### Karar izinin yeri
@@ -109,6 +117,7 @@ K3 ile günlük küçük ve aday sayısından bağımsız kalır, ama günlükte
 
 1. [x] Eylem şeması, yükleyici, doğrulayıcı, `eylem.hedef` rolü (5. hafta).
 2. [x] Aday üretimi, puanlama, `UtilitySelector`, karar izi (kısa iz + tam iz yeniden üretimi), tick adımları 5–6, hareket (5. hafta).
+   `samples/MiniKarar` ve golden replay #2 (`tests/golden/mini-karar-1.json`).
 3. [x] Z1 ve Z2 (5. hafta).
 4. [ ] Z3 ve Z4 (7. hafta, Yusuf'un kararıyla).
 5. [ ] Yusuf gerekçeyi yazınca durum "Kabul edildi" yapılır.
