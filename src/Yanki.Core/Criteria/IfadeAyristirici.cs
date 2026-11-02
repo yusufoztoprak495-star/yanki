@@ -9,7 +9,7 @@ namespace Yanki.Core.Criteria
     /// <code>
     /// cagri := ad ['!'] '(' [arg {',' arg}] ')'
     /// arg   := '*' | sayi | rol | tanimlayici | cagri
-    /// rol   := ben | oyuncu | konusan | dinleyen | olay.fail | olay.hedef
+    /// rol   := ben | oyuncu | konusan | dinleyen | olay.fail | olay.hedef | eylem.hedef
     /// </code>
     /// Boşluklar anlamsızdır. Yalnızca söz dizimine bakar; sözlük denetimi <see cref="SorguSozlugu.Dogrula"/>'dadır.
     /// </summary>
@@ -127,6 +127,11 @@ namespace Yanki.Core.Criteria
                         return OlayRolu(konum);
                     }
 
+                    if (ad == "eylem")
+                    {
+                        return EylemRolu(konum);
+                    }
+
                     if (CagriBasliyorMu())
                     {
                         return new OnermeArgumani(CagriGovdesi(ad, konum));
@@ -162,6 +167,25 @@ namespace Yanki.Core.Criteria
                     case "hedef": return new RolArgumani(Rol.OlayHedef, konum);
                     default: throw Hata("'olay.' sonrasında 'fail' ya da 'hedef' bekleniyor", altKonum);
                 }
+            }
+
+            // "eylem" okundu; eylem.hedef bekleniyor.
+            private Arguman EylemRolu(int konum)
+            {
+                if (Bak() != '.')
+                {
+                    throw Hata("'eylem' tek başına kullanılamaz; eylem.hedef bekleniyor", _i);
+                }
+
+                _i++;
+                var altKonum = _i;
+                var alt = KimlikOku();
+                if (alt == "hedef")
+                {
+                    return new RolArgumani(Rol.EylemHedef, konum);
+                }
+
+                throw Hata("'eylem.' sonrasında 'hedef' bekleniyor", altKonum);
             }
 
             private Arguman SayiOku()

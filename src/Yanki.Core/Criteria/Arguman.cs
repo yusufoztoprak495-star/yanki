@@ -25,6 +25,12 @@ namespace Yanki.Core.Criteria
 
         /// <summary>Sonuç kurallarında olayın hedefi (<c>olay.hedef</c>).</summary>
         OlayHedef,
+
+        /// <summary>
+        /// Yalnızca eylem tanımlarında (<c>on_kosullar</c>, <c>olcutler</c>, <c>etkiler</c>) geçerli: adayın hedefi (<c>eylem.hedef</c>).
+        /// Hedef türü <c>npc</c>/<c>oyuncu</c> ise bir kişi, <c>komsu_mekan</c> ise bir mekandır. Kural ve diyalog bağlamında tanımsızdır (ADR-011).
+        /// </summary>
+        EylemHedef,
     }
 
     /// <summary>Rol adları ile <see cref="Rol"/> değerleri arasında çeviri.</summary>
@@ -40,7 +46,9 @@ namespace Yanki.Core.Criteria
                 case Rol.Konusan: return "konusan";
                 case Rol.Dinleyen: return "dinleyen";
                 case Rol.OlayFail: return "olay.fail";
-                default: return "olay.hedef";
+                case Rol.OlayHedef: return "olay.hedef";
+                case Rol.EylemHedef: return "eylem.hedef";
+                default: throw new ArgumentOutOfRangeException(nameof(rol), rol, "Bilinmeyen rol.");
             }
         }
 
@@ -55,6 +63,7 @@ namespace Yanki.Core.Criteria
                 case "dinleyen": rol = Rol.Dinleyen; return true;
                 case "olay.fail": rol = Rol.OlayFail; return true;
                 case "olay.hedef": rol = Rol.OlayHedef; return true;
+                case "eylem.hedef": rol = Rol.EylemHedef; return true;
                 default: rol = Rol.Ben; return false;
             }
         }
