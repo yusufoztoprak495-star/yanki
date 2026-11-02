@@ -36,6 +36,8 @@ namespace Yanki.Core.Decision
 
             foreach (var eylem in eylemler)
             {
+                // Önbellek yalnızca bu eylem için bu çağrının içinde yaşar (bu NPC'nin bu karar adımı); hiçbir yere taşınmaz.
+                var onbellek = new OnKosulOnbellegi(eylem);
                 var hedefler = Hedefler(eylem, baglam, konum);
                 if (hedefler.Count == 0)
                 {
@@ -45,7 +47,7 @@ namespace Yanki.Core.Decision
 
                 foreach (var hedef in hedefler)
                 {
-                    var neden = OnKosulSonucu(eylem, hedef, baglam);
+                    var neden = OnKosulSonucu(eylem, hedef, baglam, onbellek);
                     if (neden == null)
                     {
                         adaylar.Add(new Aday(eylem, hedef));
@@ -61,19 +63,86 @@ namespace Yanki.Core.Decision
         }
 
         // İlk tutmayan ön koşulun nedeni; hepsi tutuyorsa null.
-        private static string? OnKosulSonucu(EylemTanimi eylem, string hedef, KararBaglami baglam)
+        private static string? OnKosulSonucu(EylemTanimi eylem, string hedef, KararBaglami baglam, OnKosulOnbellegi onbellek)
         {
             var sorguBaglami = baglam.SorguBaglami(hedef);
             for (var i = 0; i < eylem.OnKosullar.Count; i++)
             {
                 var kriter = eylem.OnKosullar[i];
-                if (!KriterDegerlendirici.Degerlendir(kriter, baglam.Cozucu, sorguBaglami).Tuttu)
+                bool tuttu;
+                if (onbellek.Bagimsiz(i) && onbellek.Var(i))
+                {
+                    tuttu = onbellek.Sonuc(i);
+                }
+                else
+                {
+                    tuttu = KriterDegerlendirici.Degerlendir(kriter, baglam.Cozucu, sorguBaglami).Tuttu;
+                    if (onbellek.Bagimsiz(i))
+                    {
+                        onbellek.Yaz(i, tuttu);
+                    }
+                }
+
+                if (!tuttu)
                 {
                     return $"on_kosul #{i + 1} tutmadi: {kriter}";
                 }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Bir eylemin hedefe bağlı OLMAYAN ön koşullarının (<c>eylem.hedef</c> rolünü ne doğrudan ne önerme içinde kullanan) tek çağrılık sonucu.
+        /// Sonuç hedeften bağımsız olduğu için her hedefte aynıdır; ilk gereken anda hesaplanır (kısa devre sırası ve elenme nedeni değişmez).
+        /// </summary>
+        private sealed class OnKosulOnbellegi
+        {
+            private readonly bool[] _bagimsiz;
+            private readonly bool[] _var;
+            private readonly bool[] _sonuc;
+
+            public OnKosulOnbellegi(EylemTanimi eylem)
+            {
+                var n = eylem.OnKosullar.Count;
+                _bagimsiz = new bool[n];
+                _var = new bool[n];
+                _sonuc = new bool[n];
+                for (var i = 0; i < n; i++)
+                {
+                    _bagimsiz[i] = !HedefeBagli(eylem.OnKosullar[i].Alan);
+                }
+            }
+
+            public bool Bagimsiz(int i) => _bagimsiz[i];
+
+            public bool Var(int i) => _var[i];
+
+            public bool Sonuc(int i) => _sonuc[i];
+
+            public void Yaz(int i, bool tuttu)
+            {
+                _var[i] = true;
+                _sonuc[i] = tuttu;
+            }
+
+            private static bool HedefeBagli(SorguCagrisi cagri)
+            {
+                foreach (var a in cagri.Argumanlar)
+                {
+                    if (a is RolArgumani r && r.Rol == Rol.EylemHedef)
+                    {
+                        return true;
+                    }
+
+                    if (a is OnermeArgumani o && HedefeBagli(o.Cagri))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
         }
 
         private static List<string> Hedefler(EylemTanimi eylem, KararBaglami baglam, string? konum)
