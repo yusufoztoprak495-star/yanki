@@ -123,6 +123,23 @@ namespace Yanki.Scenarios.Tests
             Assert.Equal(Calistir((ulong)42).DurumHash(), kayit.Kayit!.SonHash);
         }
 
+        /// <summary>
+        /// 5. hafta kilidi: MiniHan senaryosunda eylem dosyası yoktur, NPC karar adımı hiçbir olay üretmez ve oyuncu hareketi/yeni olay türleri
+        /// durum hash'ini değiştirmez. Bu sabit değişirse dur: nedenini göster, Yusuf'un onayını bekle (docs/prompts/hafta-05.md).
+        /// </summary>
+        [Fact]
+        public void MiniHan_hash_i_5_hafta_boyunca_degismez()
+        {
+            const string beklenen = "cee9956ef06df17f";
+
+            var sim = Calistir();
+
+            Assert.Equal(beklenen, sim.SonHash);
+            Assert.Empty(sim.Eylemler);
+            Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur == "karar_verildi" || o.KuralId.StartsWith("eylem:", StringComparison.Ordinal));
+            Assert.Contains("\"son_hash\": \"" + beklenen + "\"", File.ReadAllText(Path.Combine(RepoKoku(), "tests", "golden", "mini-han-1.json")));
+        }
+
         private static string RepoKoku()
         {
             var dizin = new DirectoryInfo(AppContext.BaseDirectory);

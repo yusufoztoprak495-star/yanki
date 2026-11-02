@@ -7,38 +7,56 @@ using Yanki.Core.Mind;
 using Yanki.Core.Perception;
 using Yanki.Core.Rules;
 using Yanki.Core.World;
+using KararIziVerisi = Yanki.Core.Decision.KararIzi;
 
 namespace Yanki.Core.Simulation
 {
     /// <summary>
-    /// Simülasyonun dış API'si (plan 5.8) ve tick döngüsü v0 (plan 6). Durumun tek kaynağı olay günlüğüdür (ADR-001): dünya ve
+    /// Simülasyonun dış API'si (plan 5.8) ve tick döngüsü (plan 6). Durumun tek kaynağı olay günlüğüdür (ADR-001): dünya ve
     /// zihinler her olay eklenir eklenmez uygulanır. <see cref="Submit"/> oyuncu eylemini bekletir, <see cref="Tick"/> ilerletir.
     /// <para>1 tick = 1 oyun saati (docs/notes/zihin.md, Karar (Yusuf)); çekirdek bunu varsaymaz, sönme oranları böyle seçilmiştir.</para>
     /// <para>
-    /// Bir tick'te çalışan adımlar (plan 6): (1) bekleyen oyuncu eylemleri olay olur, (2) algı: dış olayları görenlere kanıt ve hafıza
-    /// yazılır, (3) sonuç kuralları, (4) sönüm ve süre dolumu, (7) durum hash'i ve olay yayını. 5. ve 6. adımlar (karar ve
-    /// eylem seçimi) sonraki haftalara aittir; ilgili yerler <see cref="TekTick"/> içinde işaretlidir.
+    /// Bir tick'te çalışan adımlar (plan 6): (1) bekleyen oyuncu eylemleri olay olur (oyuncu hareketi dahil: oyuncunun konumu hemen
+    /// değişir), (2) algı: dış olayları görenlere kanıt ve hafıza yazılır, (3) sonuç kuralları, (4) sönüm ve süre dolumu (yazılacak durum yok,
+    /// ADR-008), (5) her NPC için eylem seçimi, (6) seçimlerin olaya dönüşmesi, (7) durum hash'i ve olay yayını.
     /// </para>
     /// <para>
-    /// Kaskad (v0): kuralların ürettiği olaylar aynı tick'te yeniden kural tetiklemez; bir sonraki tick'in başına devredilir
-    /// (algı ve kurallar o tick'te onlar için de çalışır). Zincir derinliği sınırı 7. haftadadır.
+    /// Adım 5: bütün NPC'ler adım başındaki AYNI durumu görür; kararlar NPC kimlik sırasıyla hesaplanır ve hiçbiri yazılmadan önce
+    /// hepsi hesaplanır. Aday yoksa olay yazılmaz; aday var ama seçim yoksa boş seçimli <c>karar_verildi</c> yazılır.
+    /// Adım 6, sırayla: (1) <c>karar_verildi</c>, eylem olayı (hareket eyleminde <c>ayrildi</c> ve <c>geldi</c>) NPC kimlik sırasıyla;
+    /// (2) bu dış olayların algısı, adım 5 başındaki konum görüntüsüyle (<c>konum!</c> henüz değişmedi); (3) eylem etkileri ve <c>konum!</c>
+    /// değişimleri, en son. Böylece aynı tick'te mekandan ayrılan tanık olayı görür, aynı tick'te varan görmez ve sonuç NPC işleme
+    /// sırasına bağlı olmaz.
+    /// </para>
+    /// <para>
+    /// Kaskad (v0): kuralların ve eylem etkilerinin ürettiği olaylar aynı tick'te yeniden kural tetiklemez; bir sonraki tick'in başına
+    /// devredilir. NPC eylem olayları da sonraki tick'te kurallara girer; algılayanları o tick'te adım 6'da yazılan algı olaylarından
+    /// gelir (saklanır, sonra atılır) ve kurallar bunları yeniden hesaplamaz. Sonraki tick'in algı adımı bu olayları ikinci kez işlemez.
+    /// Sonraki tick'in tetik kuyruğu <see cref="Olay.Id"/> artan sırayla kurulur. Zincir derinliği sınırı 7. haftadadır.
     /// </para>
     /// </summary>
     public sealed class Simulasyon
     {
         private readonly KuralMotoru _kuralMotoru;
         private readonly EylemKatalogu _eylemKatalogu;
+        private readonly IActionSelector _secici;
         private readonly AlgiAyarlari _algiAyarlari;
         private readonly List<PlayerAction> _bekleyenEylemler = new List<PlayerAction>();
         private readonly List<EylemKaydi> _eylemGunlugu = new List<EylemKaydi>();
         private readonly List<Olay> _devredilenler = new List<Olay>();
         private readonly SortedSet<string> _eylemTurleri;
+        private readonly SortedDictionary<string, KararIziVerisi> _sonKararlar = new SortedDictionary<string, KararIziVerisi>(StringComparer.Ordinal);
+        private readonly SortedDictionary<string, long> _sonKararOlaylari = new SortedDictionary<string, long>(StringComparer.Ordinal);
+
+        // Adım 6'da yazılan NPC eylem/hareket olayları ve algı sonuçları: yalnızca sıradaki tick'in kural değerlendirmesinde kullanılıp atılır.
+        private List<Olay> _saklananOlaylar = new List<Olay>();
+        private AlgiHaritasi _saklananAlgi = new AlgiHaritasi();
         private long _tick;
 
         /// <summary>Senaryo.</summary>
         public SenaryoTanimi Senaryo { get; }
 
-        /// <summary>Seed. Karar adımı (5. hafta) <see cref="AnahtarliRng"/> ile bunu kullanacak.</summary>
+        /// <summary>Seed. Karar adımı <see cref="AnahtarliRng"/> ile bunu kullanır.</summary>
         public ulong Seed { get; }
 
         /// <summary>Dünya durumu.</summary>
@@ -59,7 +77,7 @@ namespace Yanki.Core.Simulation
         /// <summary>Son tick'in sonunda alınan durum hash'i; hiç tick işlenmediyse kurulum sonrası hash.</summary>
         public string SonHash { get; private set; }
 
-        /// <summary>İşlenmiş oyuncu eylemleri, tick sırasıyla (golden replay ve kayıt satırları).</summary>
+        /// <summary>İşlenmiş oyuncu eylemleri, tick sırasıyla (golden replay ve kayıt satırları). Oyuncu hareketi de buradadır.</summary>
         public IReadOnlyList<EylemKaydi> EylemGunlugu => new ReadOnlyCollection<EylemKaydi>(_eylemGunlugu);
 
         /// <summary>Yüklü kurallar, kimliğe göre ordinal sıralı.</summary>
@@ -73,11 +91,12 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public event Action<Olay>? OlayYayinlandi;
 
-        private Simulasyon(SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, ulong seed, AlgiAyarlari algi)
+        private Simulasyon(SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, IActionSelector secici, ulong seed, AlgiAyarlari algi)
         {
             Senaryo = senaryo;
             _kuralMotoru = motor;
             _eylemKatalogu = katalog;
+            _secici = secici;
             Seed = seed;
             _algiAyarlari = algi;
             _eylemTurleri = new SortedSet<string>(senaryo.OlayTurleri, StringComparer.Ordinal);
@@ -85,7 +104,7 @@ namespace Yanki.Core.Simulation
         }
 
         /// <summary>
-        /// Senaryodan simülasyon kurar: başlangıç dünyası tick 0'da <c>KuralId: senaryo</c> olaylarıyla yazılır, zihinler kurulur.
+        /// Senaryodan simülasyon kurar: başlangıç dünyası tick 0'da <c>KuralId: senaryo</c> olaylarıyla yazılır, zihinler kurulur. Eylem seçici verilmezse varsayılan <see cref="UtilitySelector"/> (ilk 3, %70) kullanılır.
         /// </summary>
         /// <exception cref="ArgumentException">
         /// Bir kuralın <c>ne_zaman</c> türü (senaryonun oyuncu eylem türleri, çekirdek olayları ve <paramref name="eylemler"/>'in olay türleri dışında)
@@ -93,7 +112,7 @@ namespace Yanki.Core.Simulation
         /// </exception>
         public static Simulasyon Olustur(
             SenaryoTanimi senaryo, IEnumerable<KuralTanimi> kurallar, ulong seed, ZihinAyarlari? zihinAyarlari = null, AlgiAyarlari? algiAyarlari = null,
-            IEnumerable<EylemTanimi>? eylemler = null)
+            IEnumerable<EylemTanimi>? eylemler = null, IActionSelector? secici = null)
         {
             if (senaryo == null)
             {
@@ -104,21 +123,30 @@ namespace Yanki.Core.Simulation
             var katalog = new EylemKatalogu(eylemler ?? new EylemTanimi[0]);
             KurallariDenetle(senaryo, motor, katalog);
             EylemleriDenetle(senaryo, katalog);
-            var sim = new Simulasyon(senaryo, motor, katalog, seed, algiAyarlari ?? new AlgiAyarlari());
+            var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari());
             sim.Kur(zihinAyarlari);
             sim.SonHash = sim.DurumHash();
             return sim;
         }
 
         /// <summary>
-        /// Oyuncu eylemini bekletir; bir sonraki <see cref="Tick"/>'te olaya dönüşür.
+        /// Oyuncu eylemini bekletir; bir sonraki <see cref="Tick"/>'te olaya dönüşür. Eylemler <c>Submit</c> sırasıyla işlenir.
+        /// <c>hareket</c> (<see cref="YerlesikTurler.OyuncuHareketi"/>) senaryoda bildirilmeden kullanılır: hedefi oyuncunun mekanına bağlı
+        /// komşu bir mekan olmalıdır ve tick başına bir kez kabul edilir.
         /// </summary>
-        /// <exception cref="ArgumentException">Tür senaryoda tanımlı değilse, hedef yoksa ya da görünürlük bilinmiyorsa.</exception>
+        /// <exception cref="ArgumentException">Tür senaryoda tanımlı değilse, hedef yoksa, görünürlük bilinmiyorsa ya da hareket geçersizse.</exception>
         public void Submit(PlayerAction eylem)
         {
             if (eylem == null)
             {
                 throw new ArgumentNullException(nameof(eylem));
+            }
+
+            if (eylem.Tur == YerlesikTurler.OyuncuHareketi)
+            {
+                HareketiDenetle(eylem);
+                _bekleyenEylemler.Add(eylem);
+                return;
             }
 
             if (!_eylemTurleri.Contains(eylem.Tur))
@@ -131,6 +159,12 @@ namespace Yanki.Core.Simulation
                 throw new ArgumentException($"Eylemin hedefi dünyada yok: \"{eylem.Hedef}\".", nameof(eylem));
             }
 
+            YukuDenetle(eylem);
+            _bekleyenEylemler.Add(eylem);
+        }
+
+        private static void YukuDenetle(PlayerAction eylem)
+        {
             foreach (var kv in eylem.Yuk)
             {
                 if (kv.Key.Length == 0 || kv.Value == null)
@@ -143,8 +177,38 @@ namespace Yanki.Core.Simulation
                     throw new ArgumentException($"Bilinmeyen görünürlük \"{kv.Value}\" (acik, sessiz, gizli).", nameof(eylem));
                 }
             }
+        }
 
-            _bekleyenEylemler.Add(eylem);
+        private void HareketiDenetle(PlayerAction eylem)
+        {
+            if (eylem.Hedef.Length == 0 || Dunya.TurOf(eylem.Hedef) != VarlikTuru.Mekan)
+            {
+                throw new ArgumentException($"Hareketin hedefi dünyada var olan bir mekan olmalı: \"{eylem.Hedef}\".", nameof(eylem));
+            }
+
+            foreach (var bekleyen in _bekleyenEylemler)
+            {
+                if (bekleyen.Tur == YerlesikTurler.OyuncuHareketi)
+                {
+                    throw new ArgumentException("Bir tick'te yalnızca bir hareket kabul edilir.", nameof(eylem));
+                }
+            }
+
+            foreach (var kv in eylem.Yuk)
+            {
+                if (kv.Key != "gorunurluk")
+                {
+                    throw new ArgumentException($"Hareket yalnızca \"gorunurluk\" yükü alır; \"{kv.Key}\" yazılamaz.", nameof(eylem));
+                }
+            }
+
+            YukuDenetle(eylem);
+
+            var konum = Dunya.TekDeger("konum!", OyuncuId) ?? string.Empty;
+            if (!Dunya.BagliMi(konum, eylem.Hedef))
+            {
+                throw new ArgumentException($"\"{eylem.Hedef}\" mekanı oyuncunun mekanına (\"{konum}\") bağlı değil; yalnızca bağlı komşu mekana gidilir.", nameof(eylem));
+            }
         }
 
         /// <summary>Simülasyonu <paramref name="n"/> adım ilerletir.</summary>
@@ -166,6 +230,12 @@ namespace Yanki.Core.Simulation
         /// <exception cref="ArgumentOutOfRangeException">Olay günlükte yoksa.</exception>
         public IReadOnlyList<Olay> Neden(long olayId) => Gunluk.Neden(olayId);
 
+        /// <summary>NPC'nin son karar izi (bütün adaylar, puan bileşenleri, seçim); NPC henüz karar vermediyse ya da NPC değilse <c>null</c>.</summary>
+        public KararIziVerisi? KararIzi(string npc) => npc != null && _sonKararlar.TryGetValue(npc, out var iz) ? iz : null;
+
+        /// <summary>NPC'nin son <c>karar_verildi</c> olayı; yoksa <c>null</c>.</summary>
+        public Olay? SonKararOlayi(string npc) => npc != null && _sonKararOlaylari.TryGetValue(npc, out var id) ? Gunluk[id] : null;
+
         /// <summary>Şu anki dünya ve zihin durumunun hash'i (16 karakter onaltılık).</summary>
         public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler);
 
@@ -176,25 +246,40 @@ namespace Yanki.Core.Simulation
             _tick++;
             var baslangic = Gunluk.Sayi;
 
-            // Bu tick'in işleyeceği olaylar: önceki tick'in kural çıktıları, sonra bu tick'in oyuncu eylemleri.
+            // Önceki tick'in sakladıkları: yalnızca bu tick'in kural değerlendirmesinde kullanılır.
+            var saklananOlaylar = _saklananOlaylar;
+            var saklananAlgi = _saklananAlgi;
+            _saklananOlaylar = new List<Olay>();
+            _saklananAlgi = new AlgiHaritasi();
+            var saklananKimlikler = new SortedSet<long>();
+            foreach (var o in saklananOlaylar)
+            {
+                saklananKimlikler.Add(o.Id);
+            }
+
+            // Bu tick'in işleyeceği olaylar, Olay.Id artan sırayla: önceki tick'in kural çıktıları ve eylem etkileri ile NPC eylem/hareket
+            // olayları; sonra bu tick'in oyuncu eylemleri (kimlikleri daha büyüktür).
             var kuyruk = new List<Olay>(_devredilenler);
+            kuyruk.AddRange(saklananOlaylar);
+            kuyruk.Sort((a, b) => a.Id.CompareTo(b.Id));
             _devredilenler.Clear();
 
-            // 1. Bekleyen oyuncu eylemleri olay olarak kayda eklenir (KuralId: player).
+            // 1. Bekleyen oyuncu eylemleri olay olarak kayda eklenir (KuralId: player). Oyuncu hareketi de burada işlenir.
             OyuncuEylemleri(kuyruk);
 
-            // 2. Algı: kimin neyi gördüğü hesaplanır, kanıt ve hafıza yazılır.
-            var algiNedenleri = Algi(kuyruk);
+            // 2. Algı: kimin neyi gördüğü hesaplanır, kanıt ve hafıza yazılır. Saklanan olaylar zaten algılanmıştı (önceki tick'in 6. adımı).
+            var algi = Algi(kuyruk, saklananKimlikler);
+            algi.Birlestir(saklananAlgi);
 
             // 3. Sonuç kuralları. Çıktılar sıradaki tick'e devredilir (v0 kaskad kuralı).
-            SonucKurallari(kuyruk, algiNedenleri);
+            SonucKurallari(kuyruk, algi, saklananKimlikler);
 
             // 4. Süresi dolan modifier'lar, ruh hali, stres ve hafıza sönümü: değerler saklanmaz, sorgu anında tick'ten hesaplanır
             // (ADR-008), yani yazılacak durum yoktur. Stres krizi olayı üretilmez (6. hafta).
             SonumVeSureDolumu();
 
-            // 5. NPC karar adımı (IActionSelector) ve 6. seçilen eylemlerin olaya dönüşüp 2. adıma geri beslenmesi:
-            // 5. ve 6. haftanın işi. Bu iki adım 4 ile 7 arasına girecek; olaylar _devredilenler kuyruğuna eklenebilir.
+            // 5. NPC karar adımı (IActionSelector) ve 6. seçilen eylemlerin olaya dönüşmesi.
+            NpcAdimi();
 
             // 7. Durum hash'i alınır, olaylar dışarıya yayınlanır.
             Yayin(baslangic);
@@ -202,26 +287,76 @@ namespace Yanki.Core.Simulation
 
         private void OyuncuEylemleri(List<Olay> kuyruk)
         {
-            var mekan = Dunya.TekDeger("konum!", OyuncuId) ?? string.Empty;
             foreach (var eylem in _bekleyenEylemler)
             {
-                var olay = new Olay(
-                    Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), eylem.Tur, OyuncuId, eylem.Hedef, mekan, eylem.Yuk, new long[0], "player");
-                Ekle(olay);
+                if (eylem.Tur == YerlesikTurler.OyuncuHareketi)
+                {
+                    OyuncuHareketi(eylem, kuyruk);
+                }
+                else
+                {
+                    // Önceki bir hareket oyuncunun konumunu değiştirdiyse eylem varış mekanında olur.
+                    var mekan = Dunya.TekDeger("konum!", OyuncuId) ?? string.Empty;
+                    var olay = new Olay(
+                        Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), eylem.Tur, OyuncuId, eylem.Hedef, mekan, eylem.Yuk, new long[0], "player");
+                    Ekle(olay);
+                    kuyruk.Add(olay);
+                }
+
                 _eylemGunlugu.Add(new EylemKaydi(_tick, eylem));
-                kuyruk.Add(olay);
             }
 
             _bekleyenEylemler.Clear();
         }
 
-        // Dış olayları (zihin olayı olmayanları) algılatır; (olay, npc) → algı olaylarının kimlikleri haritasını döndürür.
-        private SortedDictionary<string, List<long>> Algi(List<Olay> kuyruk)
+        // Hareket: ayrildi + geldi (dış olaylar, algılanır) ve oyuncunun konum! gerçeği ayrı olayla hemen değişir.
+        private void OyuncuHareketi(PlayerAction eylem, List<Olay> kuyruk)
         {
-            var harita = new SortedDictionary<string, List<long>>(StringComparer.Ordinal);
-            foreach (var olay in kuyruk)
+            var nereden = Dunya.TekDeger("konum!", OyuncuId) ?? string.Empty;
+            var nereye = eylem.Hedef;
+            if (!Dunya.BagliMi(nereden, nereye))
             {
-                if (ZihinOlaylari.ZihinOlayiMi(olay.Tur))
+                throw new InvalidOperationException($"Oyuncu hareketi geçersiz: \"{nereden}\" ile \"{nereye}\" bağlı değil.");
+            }
+
+            var ayrildi = HareketOlayi(YerlesikTurler.Ayrildi, OyuncuId, nereye, nereden, nereye, eylem.Yuk, new long[0], "player");
+            Ekle(ayrildi);
+            var geldi = HareketOlayi(YerlesikTurler.Geldi, OyuncuId, nereden, nereye, nereden, eylem.Yuk, new long[0], "player");
+            Ekle(geldi);
+            kuyruk.Add(ayrildi);
+            kuyruk.Add(geldi);
+            KonumuYaz(OyuncuId, nereye, geldi.Id, "player");
+        }
+
+        // karsi: Yuk'taki karsi_mekan (ayrildi için varış, geldi için kalkış); hedef: Olay.Hedef (aynı karşı mekan).
+        private Olay HareketOlayi(
+            string tur, string fail, string hedef, string mekan, string karsi, IEnumerable<KeyValuePair<string, string>> ekYuk,
+            IEnumerable<long> nedenler, string kuralId)
+        {
+            var yuk = new List<KeyValuePair<string, string>>(ekYuk) { new KeyValuePair<string, string>("karsi_mekan", karsi) };
+            return new Olay(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), tur, fail, hedef, mekan, yuk, nedenler, kuralId);
+        }
+
+        private Olay KonumuYaz(string varlik, string mekan, long nedenOlayi, string kuralId)
+        {
+            var olay = new Olay(
+                Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), Dunya.GercekEklendi, string.Empty, string.Empty, mekan,
+                new[] { new KeyValuePair<string, string>("gercek", Gercek.Ayristir("konum!(" + varlik + "," + mekan + ")").ToString()) },
+                new[] { nedenOlayi }, kuralId);
+
+            // konum! olayları algılanmaz ve kural tetiklemez: hareketin dış görünümü ayrildi/geldi olaylarıdır.
+            Ekle(olay);
+            return olay;
+        }
+
+        // Dış olayları (zihin olayı olmayanları) algılatır; olay → (npc → algı olayları) haritasını döndürür.
+        // `atla`: zaten algılanmış (önceki tick'in 6. adımında) olaylar.
+        private AlgiHaritasi Algi(List<Olay> olaylar, SortedSet<long> atla)
+        {
+            var harita = new AlgiHaritasi();
+            foreach (var olay in olaylar)
+            {
+                if (ZihinOlaylari.ZihinOlayiMi(olay.Tur) || olay.Tur == YerlesikTurler.KararVerildi || atla.Contains(olay.Id))
                 {
                     continue;
                 }
@@ -229,31 +364,35 @@ namespace Yanki.Core.Simulation
                 foreach (var algi in DogrudanAlgi.Uret(Dunya, olay, Gunluk, _algiAyarlari, _tick))
                 {
                     Ekle(algi);
-                    var anahtar = HaritaAnahtari(olay.Id, algi.Deger("npc"));
-                    if (!harita.TryGetValue(anahtar, out var liste))
-                    {
-                        liste = new List<long>();
-                        harita.Add(anahtar, liste);
-                    }
-
-                    liste.Add(algi.Id);
+                    harita.Ekle(olay.Id, algi.Deger("npc"), algi.Id);
                 }
             }
 
             return harita;
         }
 
-        private void SonucKurallari(List<Olay> kuyruk, SortedDictionary<string, List<long>> algiNedenleri)
+        private void SonucKurallari(List<Olay> kuyruk, AlgiHaritasi algi, SortedSet<long> saklananKimlikler)
         {
             var tetikler = new List<TetikBilgisi>(kuyruk.Count);
             foreach (var olay in kuyruk)
             {
-                var kimler = ZihinOlaylari.ZihinOlayiMi(olay.Tur)
-                    ? new List<string> { olay.Deger("npc") }
-                    : new List<string>(DogrudanAlgi.Algilayanlar(Dunya, olay));
+                List<string> kimler;
+                if (ZihinOlaylari.ZihinOlayiMi(olay.Tur))
+                {
+                    kimler = new List<string> { olay.Deger("npc") };
+                }
+                else if (saklananKimlikler.Contains(olay.Id))
+                {
+                    // Algılayanlar adım 6'da yazılan algı olaylarından gelir; o andan sonraki konum değişimleri bunu etkilemez.
+                    kimler = new List<string>(algi.Algilayanlar(olay.Id));
+                }
+                else
+                {
+                    kimler = new List<string>(DogrudanAlgi.Algilayanlar(Dunya, olay));
+                }
+
                 var kimlik = olay.Id;
-                tetikler.Add(new TetikBilgisi(olay, kimler, npc =>
-                    algiNedenleri.TryGetValue(HaritaAnahtari(kimlik, npc), out var liste) ? liste : new List<long>()));
+                tetikler.Add(new TetikBilgisi(olay, kimler, npc => new List<long>(algi.Nedenler(kimlik, npc))));
             }
 
             var etkiler = _kuralMotoru.Degerlendir(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId);
@@ -267,6 +406,142 @@ namespace Yanki.Core.Simulation
 
         private static void SonumVeSureDolumu()
         {
+        }
+
+        // ---- Adım 5 ve 6: NPC kararları ----
+
+        private sealed class NpcSecimi
+        {
+            public NpcSecimi(string npc, string konum, SecimSonucu sonuc)
+            {
+                Npc = npc;
+                Konum = konum;
+                Sonuc = sonuc;
+            }
+
+            public string Npc { get; }
+
+            // Adım 5 başındaki konum görüntüsü.
+            public string Konum { get; }
+
+            public SecimSonucu Sonuc { get; }
+        }
+
+        private void NpcAdimi()
+        {
+            if (_eylemKatalogu.Eylemler.Count == 0)
+            {
+                return;
+            }
+
+            // Adım 5: hiçbir şey yazılmadan önce bütün kararlar aynı durumdan hesaplanır (NPC kimlik sırasıyla).
+            var cozucu = new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick);
+            var secimler = new List<NpcSecimi>();
+            foreach (var npc in Senaryo.Npcler)
+            {
+                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu);
+                var uretim = AdayUretici.Uret(baglam, _eylemKatalogu.Eylemler);
+                if (uretim.Adaylar.Count == 0)
+                {
+                    continue;
+                }
+
+                var sonuc = _secici.Sec(baglam, uretim.Adaylar, uretim.Elenenler);
+                secimler.Add(new NpcSecimi(npc.Id, Dunya.TekDeger("konum!", npc.Id) ?? string.Empty, sonuc));
+            }
+
+            // Adım 6.1: karar_verildi, eylem ve hareket olayları.
+            var disOlaylar = new List<Olay>();
+            var etkiBekleyenler = new List<KeyValuePair<NpcSecimi, Olay>>();
+            var konumDegisimleri = new List<KeyValuePair<NpcSecimi, Olay>>();
+            foreach (var s in secimler)
+            {
+                var karar = KararOlayi.Yap(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), s.Sonuc.Iz, s.Konum);
+                Ekle(karar);
+                _sonKararlar[s.Npc] = s.Sonuc.Iz;
+                _sonKararOlaylari[s.Npc] = karar.Id;
+
+                var aday = s.Sonuc.Secilen;
+                if (aday == null)
+                {
+                    continue;
+                }
+
+                var eylem = aday.Eylem;
+                Olay tetik;
+                if (eylem.Hareket)
+                {
+                    if (!Dunya.BagliMi(s.Konum, aday.Hedef))
+                    {
+                        throw new InvalidOperationException($"Seçici geçersiz hareket seçti: {s.Npc} \"{s.Konum}\" → \"{aday.Hedef}\" (bağlı değil).");
+                    }
+
+                    var ayrildi = HareketOlayi(YerlesikTurler.Ayrildi, s.Npc, aday.Hedef, s.Konum, aday.Hedef, new KeyValuePair<string, string>[0], new[] { karar.Id }, eylem.KuralId);
+                    Ekle(ayrildi);
+                    var geldi = HareketOlayi(YerlesikTurler.Geldi, s.Npc, s.Konum, aday.Hedef, s.Konum, new KeyValuePair<string, string>[0], new[] { karar.Id }, eylem.KuralId);
+                    Ekle(geldi);
+                    disOlaylar.Add(ayrildi);
+                    disOlaylar.Add(geldi);
+                    konumDegisimleri.Add(new KeyValuePair<NpcSecimi, Olay>(s, geldi));
+                    tetik = geldi;
+                }
+                else
+                {
+                    tetik = new Olay(
+                        Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), eylem.OlayTuru, s.Npc, aday.Hedef, s.Konum,
+                        new KeyValuePair<string, string>[0], new[] { karar.Id }, eylem.KuralId);
+                    Ekle(tetik);
+                    disOlaylar.Add(tetik);
+                }
+
+                if (eylem.Etkiler.Count > 0)
+                {
+                    etkiBekleyenler.Add(new KeyValuePair<NpcSecimi, Olay>(s, tetik));
+                }
+            }
+
+            // Adım 6.2: bu dış olayların algısı. Dünya hâlâ adım 5 başındaki konum görüntüsünü taşır (konum! 6.3'te değişir).
+            var algi = Algi(disOlaylar, new SortedSet<long>());
+            foreach (var o in disOlaylar)
+            {
+                _saklananOlaylar.Add(o);
+            }
+
+            _saklananAlgi = algi;
+
+            // Adım 6.3: gecikmeli eylem etkileri, sonra konum! değişimleri.
+            var yazilanGercekler = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var kv in etkiBekleyenler)
+            {
+                EylemEtkileriniYaz(kv.Key, kv.Value, yazilanGercekler);
+            }
+
+            foreach (var kv in konumDegisimleri)
+            {
+                KonumuYaz(kv.Key.Npc, kv.Key.Sonuc.Secilen!.Hedef, kv.Value.Id, kv.Key.Sonuc.Secilen!.Eylem.KuralId);
+            }
+        }
+
+        // Eylem etkileri mevcut kural etkisi biçimiyle ve kural motorunun etki üreticisiyle yazılır; KuralId eylem:<id>, neden eylem olayı.
+        private void EylemEtkileriniYaz(NpcSecimi secim, Olay tetik, SortedSet<string> yazilanGercekler)
+        {
+            var aday = secim.Sonuc.Secilen!;
+            var eylem = aday.Eylem;
+            var sanalKural = new KuralTanimi(eylem.KuralId, tetik.Tur, new Criteria.Kriter[0], eylem.Etkiler, new Criteria.Rol[0]);
+            var baglam = new Criteria.SorguBaglami(secim.Npc, OyuncuId, eylemHedef: aday.Hedef);
+            var nedenler = new[] { tetik.Id };
+            foreach (var etki in eylem.Etkiler)
+            {
+                var uretilen = KuralMotoru.EtkiUret(sanalKural, etki, secim.Npc, tetik, baglam, nedenler, Dunya, yazilanGercekler);
+                if (uretilen == null)
+                {
+                    continue;
+                }
+
+                var olay = KuralMotoru.OlayYap(uretilen, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
+                Ekle(olay);
+                _devredilenler.Add(olay);
+            }
         }
 
         private void Yayin(int baslangic)
@@ -396,8 +671,5 @@ namespace Yanki.Core.Simulation
         }
 
         private static bool RolAdiMi(string ad) => Criteria.RolAdlari.TryCoz(ad, out _);
-
-        private static string HaritaAnahtari(long olayId, string npc) =>
-            olayId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "|" + npc;
     }
 }
