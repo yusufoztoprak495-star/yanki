@@ -105,7 +105,7 @@ namespace Yanki.Core.Criteria
             }
         }
 
-        private static string Ad(SorguCagrisi cagri, int indeks)
+        internal static string Ad(SorguCagrisi cagri, int indeks)
         {
             var arg = cagri.Argumanlar[indeks];
             if (arg is TanimlayiciArgumani t)
@@ -116,7 +116,7 @@ namespace Yanki.Core.Criteria
             throw new KriterHatasi($"'{cagri.Ad}' fonksiyonunun {indeks + 1}. argümanı bir ad olmalı", arg.Konum);
         }
 
-        private static string Varlik(SorguCagrisi cagri, int indeks, SorguBaglami baglam)
+        internal static string Varlik(SorguCagrisi cagri, int indeks, SorguBaglami baglam)
         {
             var arg = cagri.Argumanlar[indeks];
             switch (arg)
@@ -127,7 +127,7 @@ namespace Yanki.Core.Criteria
             }
         }
 
-        private static long Tam(SorguCagrisi cagri, int indeks)
+        internal static long Tam(SorguCagrisi cagri, int indeks)
         {
             var arg = cagri.Argumanlar[indeks];
             if (arg is SayiArgumani s && s.Deger == decimal.Truncate(s.Deger))
@@ -138,7 +138,7 @@ namespace Yanki.Core.Criteria
             throw new KriterHatasi($"'{cagri.Ad}' fonksiyonunun {indeks + 1}. argümanı tam sayı olmalı", arg.Konum);
         }
 
-        private static OnermeDeseni Desen(SorguCagrisi cagri, SorguBaglami baglam)
+        internal static OnermeDeseni Desen(SorguCagrisi cagri, SorguBaglami baglam)
         {
             var onerme = ((OnermeArgumani)cagri.Argumanlar[0]).Cagri;
             var olumsuz = false;

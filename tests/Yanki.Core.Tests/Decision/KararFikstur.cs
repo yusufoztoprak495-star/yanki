@@ -41,7 +41,7 @@ namespace Yanki.Core.Tests.Decision
         /// <summary>Verilen NPC'nin o anki karar bağlamı.</summary>
         public static KararBaglami Baglam(Simulasyon sim, string npc) =>
             new KararBaglami(
-                npc, sim.OyuncuId, sim.Seed, sim.SimdikiTick + 1, sim.Dunya, sim.Zihinler[npc],
+                npc, sim.OyuncuId, sim.Seed, sim.SimdikiTick + 1, sim.Dunya, sim.Zihinler[npc], sim.Gunluk,
                 new ZihinSorguCozucusu(sim.Dunya, sim.Zihinler, sim.Gunluk, sim.SimdikiTick + 1));
     }
 

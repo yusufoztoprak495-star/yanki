@@ -1,5 +1,6 @@
 using System;
 using Yanki.Core.Criteria;
+using Yanki.Core.Events;
 using Yanki.Core.Mind;
 using Yanki.Core.World;
 
@@ -29,11 +30,14 @@ namespace Yanki.Core.Decision
         /// <summary>Karar verenin zihni.</summary>
         public Zihin Zihin { get; }
 
+        /// <summary>Olay günlüğü (salt okunur): hafızadaki olayların türü ve failı buradan okunur.</summary>
+        public OlayGunlugu Gunluk { get; }
+
         /// <summary>Kriter sözlüğü çözücüsü (zihin ve dünya sorguları).</summary>
         public ISorguCozucu Cozucu { get; }
 
         /// <summary>Bağlam kurar.</summary>
-        public KararBaglami(string npc, string oyuncuId, ulong seed, long tick, Dunya dunya, Zihin zihin, ISorguCozucu cozucu)
+        public KararBaglami(string npc, string oyuncuId, ulong seed, long tick, Dunya dunya, Zihin zihin, OlayGunlugu gunluk, ISorguCozucu cozucu)
         {
             if (string.IsNullOrEmpty(npc))
             {
@@ -46,6 +50,7 @@ namespace Yanki.Core.Decision
             Tick = tick;
             Dunya = dunya ?? throw new ArgumentNullException(nameof(dunya));
             Zihin = zihin ?? throw new ArgumentNullException(nameof(zihin));
+            Gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
             Cozucu = cozucu ?? throw new ArgumentNullException(nameof(cozucu));
         }
 

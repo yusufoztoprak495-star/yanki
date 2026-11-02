@@ -29,7 +29,7 @@ namespace Yanki.Core.Tests.Decision
             var b = KararFikstur.Baglam(k.Sim, npc);
             if (seed.HasValue || tick.HasValue)
             {
-                b = new KararBaglami(npc, b.OyuncuId, seed ?? b.Seed, tick ?? b.Tick, b.Dunya, b.Zihin, b.Cozucu);
+                b = new KararBaglami(npc, b.OyuncuId, seed ?? b.Seed, tick ?? b.Tick, b.Dunya, b.Zihin, b.Gunluk, b.Cozucu);
             }
 
             return secici.Sec(b, k.Adaylar, new ElenenAday[0]);
@@ -305,6 +305,66 @@ namespace Yanki.Core.Tests.Decision
             var s = Sec(ilk, ters);
 
             Assert.Equal("b", s.Secilen!.Eylem.Id); // sahte seçici girdideki ilk adayı seçer (puanı düşük olan); UtilitySelector'a bağımlılık yok
+        }
+
+        // ---- kaynaklar ----
+
+        private static (Yanki.Core.Simulation.Simulasyon Sim, IReadOnlyList<EylemTanimi> Eylemler, long ModifierOlayi) MinnetliKur(params string[] eylemJson)
+        {
+            var eylemler = KararFikstur.Yukle(eylemJson);
+            var sim = Yanki.Core.Simulation.Simulasyon.Olustur(
+                Yanki.Core.Tests.Simulation.SimFikstur.Senaryo(),
+                Yanki.Core.Tests.Simulation.SimFikstur.Kurallar(Yanki.Core.Tests.Simulation.SimFikstur.YardimKurali), 42, eylemler: eylemler);
+            sim.Submit(new Yanki.Core.Simulation.PlayerAction("yardim_etti", "Ali"));
+            sim.Tick(1);
+            var modifier = sim.Gunluk.Olaylar.First(o => o.Tur == "modifier_eklendi" && o.Deger("npc") == "Ali");
+            return (sim, eylemler, modifier.Id);
+        }
+
+        private const string MinnetOlcutu = "\"olcutler\": [ { \"alan\": \"modifier_var(eylem.hedef, minnet)\" } ]";
+
+        [Fact]
+        public void Iz_secilen_adayin_zihin_kaynaklarini_icerir()
+        {
+            var k = MinnetliKur(KararFikstur.Eylem("sor", "oyuncu", MinnetOlcutu, taban: 5m), KararFikstur.Eylem("selam", taban: 1m));
+            var secici = new UtilitySelector(new SecimAyarlari(1, 0.7m));
+
+            var s = secici.Sec(
+                KararFikstur.Baglam(k.Sim, "Ali"),
+                new[] { new Aday(k.Eylemler.Single(e => e.Id == "sor"), "oyuncu"), new Aday(k.Eylemler.Single(e => e.Id == "selam"), string.Empty) },
+                new ElenenAday[0]);
+
+            Assert.Equal("sor", s.Secilen!.Eylem.Id);
+            Assert.Equal(new[] { k.ModifierOlayi }, s.Iz.KaynakOlaylar.ToArray());
+            Assert.Empty(s.Iz.Kaynaksiz);
+        }
+
+        [Fact]
+        public void Secilmeyen_adayin_kaynaklari_ize_girmez()
+        {
+            // "sor" (kaynaklı) 1 puan, "selam" (kaynaksız) 10 puan: selam seçilir, modifier kaynak değildir.
+            var k = MinnetliKur(KararFikstur.Eylem("sor", "oyuncu", MinnetOlcutu, taban: 1m), KararFikstur.Eylem("selam", taban: 10m));
+            var secici = new UtilitySelector(new SecimAyarlari(1, 0.7m));
+
+            var s = secici.Sec(
+                KararFikstur.Baglam(k.Sim, "Ali"),
+                new[] { new Aday(k.Eylemler.Single(e => e.Id == "sor"), "oyuncu"), new Aday(k.Eylemler.Single(e => e.Id == "selam"), string.Empty) },
+                new ElenenAday[0]);
+
+            Assert.Equal("selam", s.Secilen!.Eylem.Id);
+            Assert.Empty(s.Iz.KaynakOlaylar);
+        }
+
+        [Fact]
+        public void Secilen_yoksa_kaynak_yoktur()
+        {
+            var k = MinnetliKur(KararFikstur.Eylem("sor", "oyuncu", "\"olcutler\": [ { \"alan\": \"modifier_var(eylem.hedef, yok_tur)\" } ]"));
+
+            var s = new UtilitySelector().Sec(KararFikstur.Baglam(k.Sim, "Ali"), new[] { new Aday(k.Eylemler[0], "oyuncu") }, new ElenenAday[0]);
+
+            Assert.Null(s.Secilen);
+            Assert.Empty(s.Iz.KaynakOlaylar);
+            Assert.Empty(s.Iz.Kaynaksiz);
         }
 
         private sealed class IlkAdayiSecen : IActionSelector

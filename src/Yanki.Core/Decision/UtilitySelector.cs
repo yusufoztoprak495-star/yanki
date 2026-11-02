@@ -8,7 +8,8 @@ namespace Yanki.Core.Decision
     /// Varsayılan seçici (plan 5.5): adayları puanlar; puanı en yüksek adayın <c>Esik</c> oranına (varsayılan %70) ulaşan ilk <c>EnIyiN</c>
     /// (varsayılan 3) aday arasından puan ağırlıklı seçer. <c>EnIyiN = 1</c> argmax'tır. Puanı 0 olan aday seçilemez.
     /// Sıra: puan azalan, eşitlikte eylem kimliği ve hedef ordinal. Zar <c>AnahtarliRng.Icin(Seed, tick, npcId, "karar")</c> akışından gelir,
-    /// bu yüzden NPC işleme sırası seçimi etkilemez. Hiçbir şey yazmaz.
+    /// bu yüzden NPC işleme sırası seçimi etkilemez. İzdeki zihin kaynakları (<c>KaynakOlaylar</c>) yalnızca SEÇİLEN adayın girdilerinden
+    /// toplanır. Hiçbir şey yazmaz.
     /// </summary>
     public sealed class UtilitySelector : IActionSelector
     {
@@ -116,6 +117,7 @@ namespace Yanki.Core.Decision
             }
 
             var secilenAday = secilen?.Aday;
+            var kaynak = secilenAday != null ? KaynakToplayici.Topla(baglam, secilenAday) : new KaynakSonucu(new long[0], new string[0]);
             var iz = new KararIzi(
                 baglam.Npc,
                 baglam.Tick,
@@ -125,8 +127,8 @@ namespace Yanki.Core.Decision
                 zar,
                 secilenAday,
                 secilenAday != null ? secilenAday.Eylem.CelisenOzellikler : new string[0],
-                new long[0],
-                new string[0]);
+                kaynak.Olaylar,
+                kaynak.Kaynaksiz);
             return new SecimSonucu(secilenAday, iz);
         }
     }
