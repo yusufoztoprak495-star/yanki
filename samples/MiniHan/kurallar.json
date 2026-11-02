@@ -1,0 +1,48 @@
+{
+  "kurallar": [
+    {
+      "id": "yardim_minneti",
+      "ne_zaman": "yardim_etti",
+      "kriterler": [
+        { "alan": "inanc(yardim_etti(olay.fail, ben))", "op": ">=", "deger": 0.5, "zorunlu": true }
+      ],
+      "etkiler": [
+        { "tur": "modifier", "hedef": "olay.fail", "modifier": "minnet", "deger": 15, "sure": 336 }
+      ]
+    },
+    {
+      "id": "tehdit_korkusu",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        { "alan": "inanc(tehdit_etti(olay.fail, ben))", "op": ">=", "deger": 0.5, "zorunlu": true }
+      ],
+      "etkiler": [
+        { "tur": "eksen", "hedef": "olay.fail", "eksen": "korku", "delta": 15 },
+        { "tur": "duygu", "duygu": "korku", "siddet": 0.6, "hedef": "olay.fail" },
+        { "tur": "hafiza", "onem": 0.9 }
+      ]
+    },
+    {
+      "id": "tehdit_cesur_ofkesi",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        { "alan": "inanc(tehdit_etti(olay.fail, ben))", "op": ">=", "deger": 0.5, "zorunlu": true },
+        { "alan": "kisilik(cesaret)", "op": ">=", "deger": 0.7, "zorunlu": true }
+      ],
+      "etkiler": [
+        { "tur": "modifier", "hedef": "olay.fail", "modifier": "tehdit_edildi", "deger": -20, "sure": 168 },
+        { "tur": "duygu", "duygu": "ofke", "siddet": 0.5, "hedef": "olay.fail" }
+      ]
+    },
+    {
+      "id": "tehdit_tanigi",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        { "alan": "inanc(tehdit_etti(olay.fail, ben))", "op": "<", "deger": 0.5, "zorunlu": true }
+      ],
+      "etkiler": [
+        { "tur": "modifier", "hedef": "olay.fail", "modifier": "tehdit_gordu", "deger": -5, "sure": 168 }
+      ]
+    }
+  ]
+}

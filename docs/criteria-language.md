@@ -58,3 +58,12 @@ v0.1'de sabit, belgelenmiş küçük bir set (yaklaşık 15 fonksiyon). **Bu sö
 `yay` (yay değişkenleri, 7. hafta) henüz bağlı değildir. Sözlüğe yeni fonksiyon eklenmedi. `inanc` çelişkide kaybeden önerme için 0 döner;
 `inanc(...)` ve `kaynak(...)` önerme argümanında `degil(yuklem(...))` kabul eder (ör. `inanc(degil(konum!(Ali, han)))` = "Ali handa değil" inancı); `degil` başka yerde ve iç içe geçersizdir. Yeni fonksiyon eklenmedi. Ayrıntı: `docs/notes/zihin.md`.
 
+## JSON'dan okuma ve kural bağlamı (4. hafta)
+
+Kriterler artık JSON nesnesinden okunur (`KriterOkuyucu`; `alan`, `op`, `deger`, isteğe bağlı `agirlik` ve `zorunlu`) ve sonuç kurallarında kullanılır (`docs/notes/kural-motoru.md`).
+Sözlüğe **yeni fonksiyon eklenmedi**. Sonuç kurallarında geçerli roller `ben`, `oyuncu`, `olay.fail`, `olay.hedef`'tir; `konusan` ve `dinleyen` diyalog içindir.
+Çözücüsü henüz bağlı olmayan `yalan_soyledi` ve `yay`, kural doğrulayıcısı tarafından reddedilir.
+
+Bir kuralın "olayın hedefi benim mi?" sorusu, sözlükte ayrı bir fonksiyon olmadan `inanc(<olay türü>(olay.fail, ben)) >= 0.5` ile ifade edilir: doğrudan algı `tur(fail, hedef)` önermesini yazar
+ve yalnızca hedef NPC bu önermeye (kendi kimliğiyle) inanır. Bu, algı önermesinin biçimine bağlıdır; ayrı bir `ben_hedef_mi()` benzeri fonksiyon sözlük değişikliği olur ve Yusuf'un onayını ister.
+

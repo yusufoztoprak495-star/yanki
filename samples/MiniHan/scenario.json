@@ -1,0 +1,15 @@
+{
+  "surum": 1,
+  "ad": "MiniHan",
+  "mekanlar": ["han", "pazar"],
+  "baglantilar": [["han", "pazar"]],
+  "oyuncu": { "id": "oyuncu", "konum": "han" },
+  "npcler": [
+    { "id": "Ayse", "konum": "han", "kisilik": { "acgozluluk": 0.5, "durustluk": 0.5, "cesaret": 0.3, "sosyallik": 0.5, "kin_tutma": 0.5, "merhamet": 0.5 } },
+    { "id": "Can", "konum": "han", "kisilik": { "acgozluluk": 0.5, "durustluk": 0.5, "cesaret": 0.8, "sosyallik": 0.5, "kin_tutma": 0.5, "merhamet": 0.5 } },
+    { "id": "Veli", "konum": "pazar", "kisilik": { "acgozluluk": 0.5, "durustluk": 0.5, "cesaret": 0.5, "sosyallik": 0.5, "kin_tutma": 0.5, "merhamet": 0.5 } }
+  ],
+  "gercekler": [],
+  "olay_turleri": ["yardim_etti", "tehdit_etti"],
+  "kural_dosyalari": ["kurallar.json"]
+}
