@@ -14,4 +14,4 @@ Simülasyon: tick döngüsü ve dış API (`Submit`, `Tick`, sorgular, `Neden`) 
 | `OturumKaydi`, `OturumOynatici` | seed + senaryo + eylem günlüğü + son hash (JSON); baştan oynatıp hash'i doğrular. Golden replay ve 7. hafta kayıt/yükleme aynı biçimi kullanır. |
 | `NedenYazici` | Nedensellik zincirini okunur satırlara çevirir (`yanki why`). |
 
-Taslak not: [`docs/notes/tick-dongusu.md`](../../../docs/notes/tick-dongusu.md).
+Not: [`docs/notes/tick-dongusu.md`](../../../docs/notes/tick-dongusu.md).

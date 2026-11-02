@@ -1,57 +1,43 @@
-# Not: Dünya (World), anahtarlı RNG ve durum hash'i
+# Not: Dünya, anahtarlı RNG ve durum hash'i
 
-> **Taslak (Claude Code).** Yusuf bunu kendi cümleleriyle yeniden yazacak. Aşağıdakiler "ne yaptım, neden" iskeletidir.
+> **Yazar: Claude Code** (Yusuf'un isteğiyle). **Karar (Yusuf)** satırları Yusuf'un kararlarıdır.
 
-## Bu modül ne yapıyor?
+## Ne yapıyor?
 
-- **Dünya:** varlıklar (NPC, mekan, eşya), mekanlar arası yönsüz bağlantılar ve **gerçekler** (dünyada nesnel olarak doğru
-  önermeler: `borclu(Mehmet, Ayse, 500)`). Durum yalnızca olaylar uygulanarak ilerliyor (`Dunya.Uygula`).
-- **Tek değerli gerçekler:** `konum!(Ali, han)` gibi `!` ile bitenler. Yeni değer yazılınca eskisi otomatik düşüyor; kurallarda
-  elle silmek gerekmiyor.
-- **Anahtarlı RNG:** `AnahtarliRng.Icin(seed, tick, anahtarlar...)`. Aynı girdi her zaman aynı akış; hiçbir akış başkasının
-  çağrı sırasından etkilenmiyor.
-- **Durum hash'i:** dünya durumunun kanonik metni üzerinden 64 bit hash. İki koşunun nerede ayrıştığını bulmak için.
+- **Dünya:** varlıklar, mekanlar arası yönsüz bağlantılar ve **gerçekler** (nesnel olarak doğru önermeler, ör. `borclu(Mehmet, Ayse, 500)`). Durum yalnızca `Dunya.Uygula` ile, olaylar uygulanarak ilerler.
+- **Tek değerli gerçekler:** `!` ile bitenler (`konum!(Ali, han)`). Yeni değer yazılınca eskisi kendiliğinden düşer.
+- **Anahtarlı RNG:** `AnahtarliRng.Icin(seed, tick, anahtarlar...)`. Aynı girdi aynı akışı verir, hiçbir akış başkasının çağrı sırasından etkilenmez.
+- **Durum hash'i:** durumun kanonik metni üzerinden 64 bit hash. İki koşunun nerede ayrıştığını bulmaya yarar.
 
-## Varlık türleri
-
-`npc`, `mekan`, `esya` ve `oyuncu`. Oyuncu ayrı bir türdür: `konum!` gerçeği taşıyabilir, olayda fail/hedef olabilir, başkalarının fikir hedefi olabilir; zihni ve algısı yoktur. Eşya sorguları (`Varliklar(Esya)`) oyuncuyu döndürmez; mekanlara bağlanamaz.
-
-## Kimlikler ASCII'dir
-
-Varlık kimlikleri, yüklem adları ve gerçek argümanları ASCII'dir (`[A-Za-z_][A-Za-z0-9_]*`). Türkçe karakterli, oyuncuya görünen
-ad (ör. "Ayşe") **ileride ayrı bir alan olacak**; kimlik ile görünen ad ayrı şeyler. Bu hafta o alan yazılmadı. Neden böyle:
-kimlikler hem kanonik hash metninde hem kriter dilinde ayraç olarak `( ) , ! * |` ile yan yana duruyor; ASCII ve kısıtlı bir
-alfabe kodlama ve ayraç karışıklığı ihtimalini sıfırlıyor.
+Varlık türleri `npc`, `mekan`, `esya` ve `oyuncu`. Oyuncu ayrı bir türdür: `konum!` taşıyabilir, fail, hedef ve fikir hedefi olabilir ama zihni ve algısı yoktur. `Varliklar(Esya)` oyuncuyu döndürmez.
 
 ## Neden böyle?
 
-- **Dünya olaylardan türetilir** (ADR-001). Dünyanın `Uygula` dışında değiştirilebilen bir yolu yok.
-- **`decimal` ve kanonik yazım** (ADR-007). `double` platformlar arası bit düzeyinde aynı sonucu garanti etmez; hash ve golden
-  replay buna bağlı. Sayılar `MidpointRounding.ToEven` ile 6 basamağa yuvarlanıp sondaki sıfırları kırpılarak yazılıyor.
-  `ToEven`'in seçilme sebebi: yarım değerler hep yukarı gitmez, toplu yuvarlamada sistematik kayma olmaz.
-- **Sıralı koleksiyonlar.** Sırasız `Dictionary`/`HashSet` gezintisi yasak; hepsi `SortedDictionary`/`SortedSet` +
-  `StringComparer.Ordinal`. Bir test, Core kaynağında yasaklı API'lerin geçmediğini tarıyor.
-- **Kendi hash'imiz.** `string.GetHashCode` süreçten sürece değişir. FNV-1a + SplitMix64 karıştırıcısı küçük, platformdan
-  bağımsız ve bilinen test vektörleri var (testlerde).
+- **Dünya olaylardan türer** (ADR-001). `Uygula` dışında bir değiştirme yolu yok.
+- **`decimal` ve kanonik yazım** (ADR-007). `double` platformlar arası aynı biti garanti etmez. Sayılar `ToEven` ile 6 basamağa yuvarlanır, sondaki sıfırlar kırpılır. `ToEven` yarım değerleri hep yukarı atmadığı için toplu yuvarlamada kayma olmaz.
+- **Sıralı koleksiyonlar.** Sırasız `Dictionary`/`HashSet` gezintisi yasak; bir test Core kaynağını yasaklı API'ler için tarar.
+- **Kendi hash'imiz.** `string.GetHashCode` süreçten sürece değişir. FNV-1a + SplitMix64 küçük ve platformdan bağımsızdır.
 - **Anahtarlar uzunluk önekli.** `("ab","c")` ile `("a","bc")` aynı tohumu üretmesin diye.
-- **Altın sabit testi bağımsız hesaplandı.** Hash ve RNG sabitleri C# çıktısından kopyalanmadı; aynı algoritmayı ayrı bir
-  betikte uygulayıp çapraz doğruladım. Böylece kod ile belirtim ayrışırsa test kırılır.
+- **Kimlikler ASCII** (`[A-Za-z_][A-Za-z0-9_]*`). Hash metninde ve kriter dilinde `( ) , ! * |` ayraçlarıyla yan yana duruyorlar; dar alfabe kodlama ve ayraç karışıklığını önler.
+- **Altın sabitler bağımsız hesaplandı.** Hash ve RNG sabitleri C# çıktısından kopyalanmadı, `tools/golden_ref.py` ile ayrıca üretildi. Kod belirtimden saparsa test kırılır.
 
-## Benim (Claude'un) verdiğim kararlar — Yusuf onaylasın
+## Yusuf'un kararı
 
-- Gerçek argümanları string (kimlik ya da kanonik sayı); `*` yalnızca desenlerde.
-- Olmayan gerçeği kaldırmak hata; var olan gerçeği ya da bağlantıyı tekrar eklemek sessizce geçer.
-- `Dunya.Uygula` dünya dışı olayı yoksayıp `false` döner (tüm günlük verilebilsin diye).
-- Hash'te sürüm başlığı var (`YANKI-DURUM|1`, `YankiInfo.EventLogFormatVersion`); biçim değişirse sürüm artar.
-- `Dictionary<` ve `HashSet<` yasaklı API testine eklendi (görev metnindeki listeye ek).
+- **Karar (Yusuf):** Görünen ad alanı 8. haftada diyalogla gelecek. O zamana kadar kimlikler ASCII kalır.
 
-## Alternatifler
+## Claude'un verdiği, Yusuf'un henüz ayrıca onaylamadığı kararlar
 
-- Sabit noktalı `long` (ADR-007 Seçenek C): daha hızlı ama her işlemde elle ölçekleme.
-- Gerçek argümanlarına tipli değerler (string/decimal ayrımı): şimdilik gereksiz karmaşa.
+- Gerçek argümanları string'dir (kimlik ya da kanonik sayı); `*` yalnızca desenlerde geçer.
+- Olmayan gerçeği kaldırmak hatadır; var olan gerçeği ya da bağlantıyı tekrar eklemek sessizce geçer.
+- `Dunya.Uygula` dünya dışı olayı yoksayıp `false` döner, böylece tüm günlük verilebilir.
+- Hash'te sürüm başlığı var (`YANKI-DURUM|1`); biçim değişirse sürüm artar.
+- `Dictionary<` ve `HashSet<` yasaklı API testine eklendi.
 
-## Emin olmadığım / Yusuf'un bakması gereken noktalar
+## Reddedilen yollar
 
-- Görünen ad alanı (yerelleştirme) ne zaman ve nerede? Diyalog haftasına (8. hafta) mı, varlık tanımına mı?
-  - **Karar (Yusuf):** Görünen ad alanı 8. haftada diyalogla birlikte gelecek. Bu hafta kodda yok; kimlikler ASCII kalır.
-- Korumalı bayraklar (5.10) ve yay değişkenleri 7. haftada; hash'e girecekler mi? (Muhtemelen evet.)
+- Sabit noktalı `long`: hızlı ama her işlemde elle ölçekleme ister (ADR-007, Seçenek C).
+- Tipli gerçek argümanları: şimdilik gereksiz karmaşa.
+
+## Açık
+
+- 7. haftadaki korumalı bayraklar ve yay değişkenleri hash'e girecek mi? Karar verilmedi.

@@ -13,4 +13,4 @@ Algı: görünürlük seviyelerine göre doğrudan algı (plan 5.3). Dedikodu, t
 | `DogrudanAlgi.OnermeUret(olay)` | `gercek_eklendi` → gerçek; `gercek_kaldirildi` → `degil(gercek)`; diğer → `tur(fail, hedef)`. |
 | `AlgiAyarlari` | `GorduKanitGucu` (0.9) ve `HafizaOnemi` (0.5). |
 
-Taslak not ve açık noktalar: [`docs/notes/algi.md`](../../../docs/notes/algi.md).
+Not ve açık noktalar: [`docs/notes/algi.md`](../../../docs/notes/algi.md).
