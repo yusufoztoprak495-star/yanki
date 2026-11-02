@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Yanki.Core.Decision;
 using Yanki.Core.Events;
 using Yanki.Core.Mind;
 using Yanki.Core.Perception;
@@ -26,6 +27,7 @@ namespace Yanki.Core.Simulation
     public sealed class Simulasyon
     {
         private readonly KuralMotoru _kuralMotoru;
+        private readonly EylemKatalogu _eylemKatalogu;
         private readonly AlgiAyarlari _algiAyarlari;
         private readonly List<PlayerAction> _bekleyenEylemler = new List<PlayerAction>();
         private readonly List<EylemKaydi> _eylemGunlugu = new List<EylemKaydi>();
@@ -63,15 +65,19 @@ namespace Yanki.Core.Simulation
         /// <summary>Yüklü kurallar, kimliğe göre ordinal sıralı.</summary>
         public IReadOnlyList<KuralTanimi> Kurallar => _kuralMotoru.Kurallar;
 
+        /// <summary>Yüklü NPC eylemleri, kimliğe göre ordinal sıralı; boşsa NPC karar adımı olay üretmez.</summary>
+        public IReadOnlyList<EylemTanimi> Eylemler => _eylemKatalogu.Eylemler;
+
         /// <summary>
         /// Her tick'in sonunda (adım 7) o tick'te günlüğe eklenen olaylar, ekleniş sırasıyla bildirilir. Oyun buna abone olup sahneyi günceller.
         /// </summary>
         public event Action<Olay>? OlayYayinlandi;
 
-        private Simulasyon(SenaryoTanimi senaryo, KuralMotoru motor, ulong seed, AlgiAyarlari algi)
+        private Simulasyon(SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, ulong seed, AlgiAyarlari algi)
         {
             Senaryo = senaryo;
             _kuralMotoru = motor;
+            _eylemKatalogu = katalog;
             Seed = seed;
             _algiAyarlari = algi;
             _eylemTurleri = new SortedSet<string>(senaryo.OlayTurleri, StringComparer.Ordinal);
@@ -81,9 +87,13 @@ namespace Yanki.Core.Simulation
         /// <summary>
         /// Senaryodan simülasyon kurar: başlangıç dünyası tick 0'da <c>KuralId: senaryo</c> olaylarıyla yazılır, zihinler kurulur.
         /// </summary>
-        /// <exception cref="ArgumentException">Bir kuralın <c>ne_zaman</c> türü ya da sabit etki hedefi bu senaryoda yoksa.</exception>
+        /// <exception cref="ArgumentException">
+        /// Bir kuralın <c>ne_zaman</c> türü (senaryonun oyuncu eylem türleri, çekirdek olayları ve <paramref name="eylemler"/>'in olay türleri dışında)
+        /// ya da bir kural/eylemin sabit etki hedefi bu senaryoda yoksa; eylem kimliği tekrar ediyorsa.
+        /// </exception>
         public static Simulasyon Olustur(
-            SenaryoTanimi senaryo, IEnumerable<KuralTanimi> kurallar, ulong seed, ZihinAyarlari? zihinAyarlari = null, AlgiAyarlari? algiAyarlari = null)
+            SenaryoTanimi senaryo, IEnumerable<KuralTanimi> kurallar, ulong seed, ZihinAyarlari? zihinAyarlari = null, AlgiAyarlari? algiAyarlari = null,
+            IEnumerable<EylemTanimi>? eylemler = null)
         {
             if (senaryo == null)
             {
@@ -91,8 +101,10 @@ namespace Yanki.Core.Simulation
             }
 
             var motor = new KuralMotoru(kurallar ?? throw new ArgumentNullException(nameof(kurallar)));
-            KurallariDenetle(senaryo, motor);
-            var sim = new Simulasyon(senaryo, motor, seed, algiAyarlari ?? new AlgiAyarlari());
+            var katalog = new EylemKatalogu(eylemler ?? new EylemTanimi[0]);
+            KurallariDenetle(senaryo, motor, katalog);
+            EylemleriDenetle(senaryo, katalog);
+            var sim = new Simulasyon(senaryo, motor, katalog, seed, algiAyarlari ?? new AlgiAyarlari());
             sim.Kur(zihinAyarlari);
             sim.SonHash = sim.DurumHash();
             return sim;
@@ -325,10 +337,15 @@ namespace Yanki.Core.Simulation
             }
         }
 
-        private static void KurallariDenetle(SenaryoTanimi senaryo, KuralMotoru motor)
+        private static void KurallariDenetle(SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog)
         {
             var turler = new SortedSet<string>(KuralYukleyici.YerlesikOlayTurleri, StringComparer.Ordinal);
             foreach (var t in senaryo.OlayTurleri)
+            {
+                turler.Add(t);
+            }
+
+            foreach (var t in katalog.OlayTurleri)
             {
                 turler.Add(t);
             }
@@ -351,6 +368,28 @@ namespace Yanki.Core.Simulation
                     if (etki.Hedef.Length > 0 && !RolAdiMi(etki.Hedef) && !varliklar.Contains(etki.Hedef))
                     {
                         throw new ArgumentException($"Kural \"{kural.Id}\": etki hedefi \"{etki.Hedef}\" bu senaryoda yok (NPC ya da oyuncu olmalı).", nameof(motor));
+                    }
+                }
+            }
+        }
+
+        // Eylem etkilerinin sabit hedefleri (rol olmayanlar) senaryoda var olmalı.
+        private static void EylemleriDenetle(SenaryoTanimi senaryo, EylemKatalogu katalog)
+        {
+            var varliklar = new SortedSet<string>(StringComparer.Ordinal) { senaryo.OyuncuId };
+            foreach (var n in senaryo.Npcler)
+            {
+                varliklar.Add(n.Id);
+            }
+
+            foreach (var eylem in katalog.Eylemler)
+            {
+                foreach (var etki in eylem.Etkiler)
+                {
+                    if (etki.Hedef.Length > 0 && !RolAdiMi(etki.Hedef) && !varliklar.Contains(etki.Hedef))
+                    {
+                        throw new ArgumentException(
+                            $"Eylem \"{eylem.Id}\": etki hedefi \"{etki.Hedef}\" bu senaryoda yok (NPC ya da oyuncu olmalı).", nameof(katalog));
                     }
                 }
             }

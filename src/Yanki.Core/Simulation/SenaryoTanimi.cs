@@ -29,7 +29,7 @@ namespace Yanki.Core.Simulation
 
     /// <summary>
     /// Başlangıç dünyası: mekanlar ve bağlantıları, oyuncu, NPC'ler, başlangıç gerçekleri, oyuncu eylem türleri ve kural dosyaları.
-    /// Dosya okuma çekirdeğin işi değildir: <see cref="KuralDosyalari"/> yalnızca adlardır, okuyucu (CLI) çözer.
+    /// Dosya okuma çekirdeğin işi değildir: <see cref="KuralDosyalari"/> ve <see cref="EylemDosyalari"/> yalnızca adlardır, okuyucu (CLI) çözer.
     /// </summary>
     public sealed class SenaryoTanimi
     {
@@ -60,6 +60,11 @@ namespace Yanki.Core.Simulation
         /// <summary>Kural dosyalarının adları (senaryo dosyasına göre göreli).</summary>
         public IReadOnlyList<string> KuralDosyalari { get; }
 
+        /// <summary>
+        /// NPC eylem dosyalarının adları (senaryo dosyasına göre göreli). Bu liste boşsa NPC karar adımı hiçbir olay üretmez (ADR-011).
+        /// </summary>
+        public IReadOnlyList<string> EylemDosyalari { get; }
+
         /// <summary>Senaryo kurar. Tutarlılık denetimi <c>SenaryoYukleyici</c>'dadır.</summary>
         public SenaryoTanimi(
             string ad,
@@ -70,7 +75,8 @@ namespace Yanki.Core.Simulation
             IEnumerable<NpcTanimi> npcler,
             IEnumerable<string> gercekler,
             IEnumerable<string> olayTurleri,
-            IEnumerable<string> kuralDosyalari)
+            IEnumerable<string> kuralDosyalari,
+            IEnumerable<string>? eylemDosyalari = null)
         {
             Ad = ad ?? string.Empty;
             Mekanlar = new ReadOnlyCollection<string>(new List<string>(mekanlar));
@@ -85,6 +91,7 @@ namespace Yanki.Core.Simulation
             t.Sort(string.CompareOrdinal);
             OlayTurleri = new ReadOnlyCollection<string>(t);
             KuralDosyalari = new ReadOnlyCollection<string>(new List<string>(kuralDosyalari));
+            EylemDosyalari = new ReadOnlyCollection<string>(new List<string>(eylemDosyalari ?? new string[0]));
         }
     }
 
