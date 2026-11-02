@@ -1,0 +1,19 @@
+{
+  "surum": 1,
+  "seed": 42,
+  "senaryo": "../../samples/MiniKarar/scenario.json",
+  "tick_sayisi": 24,
+  "eylemler": [
+    {
+      "tick": 3,
+      "tur": "yardim_etti",
+      "hedef": "Ayse"
+    },
+    {
+      "tick": 5,
+      "tur": "hareket",
+      "hedef": "pazar"
+    }
+  ],
+  "son_hash": "fe29a63d6dfbc307"
+}

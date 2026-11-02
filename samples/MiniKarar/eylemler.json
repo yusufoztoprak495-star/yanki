@@ -1,0 +1,88 @@
+{
+  "eylemler": [
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.1,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.1
+        }
+      ]
+    },
+    {
+      "id": "git",
+      "hedef": "komsu_mekan",
+      "taban": 0.25,
+      "olcutler": [
+        {
+          "alan": "kisilik(acgozluluk)",
+          "egri": {
+            "tur": "ustel",
+            "k": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "selam_ver",
+      "olay_turu": "selam_verdi",
+      "hedef": "yok",
+      "taban": 0.5,
+      "on_kosullar": [
+        {
+          "alan": "hafiza_var(selam_verdi, ben, 6)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(sosyallik)"
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.3
+        }
+      ]
+    },
+    {
+      "id": "yardim_et",
+      "olay_turu": "yardim_etti",
+      "hedef": "npc",
+      "taban": 1,
+      "on_kosullar": [
+        {
+          "alan": "hafiza_var(yardim_etti, ben, 12)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(merhamet)"
+        }
+      ],
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "merhamet"
+          }
+        ]
+      },
+      "fikir_carpani": {
+        "yon": "artan"
+      },
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.6
+        }
+      ]
+    }
+  ]
+}
