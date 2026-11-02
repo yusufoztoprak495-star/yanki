@@ -258,18 +258,22 @@ namespace Yanki.Core.Rules
             }
         }
 
-        internal static void KriterRolleriniDenetle(Kriter kriter, int satir, int sira, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume)
+        internal static void KriterRolleriniDenetle(Kriter kriter, int satir, int sira, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume) =>
+            AlanRolleriniDenetle(kriter.Alan, satir, $"kriter #{sira}: ", roller, hata, kume);
+
+        // Bağlı olmayan fonksiyonları ve bağlamda tanımsız rolleri bulur (kriterler ve eylem ölçütleri ortak kullanır).
+        internal static void AlanRolleriniDenetle(SorguCagrisi alan, int satir, string onek, SortedSet<Rol> roller, Action<int, string> hata, RolKumesi kume)
         {
             foreach (var bagli in BagliOlmayanFonksiyonlar)
             {
-                if (string.Equals(kriter.Alan.Ad, bagli, StringComparison.Ordinal))
+                if (string.Equals(alan.Ad, bagli, StringComparison.Ordinal))
                 {
-                    hata(satir, $"kriter #{sira}: '{bagli}' fonksiyonu henüz bağlı değil (yalan_soyledi 6. hafta, yay 7. hafta)");
+                    hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yalan_soyledi 6. hafta, yay 7. hafta)");
                 }
             }
 
             var bulunan = new List<Rol>();
-            RolleriTopla(kriter.Alan, bulunan);
+            RolleriTopla(alan, bulunan);
             foreach (var rol in bulunan)
             {
                 if (kume.Gecerli(rol))
@@ -278,7 +282,7 @@ namespace Yanki.Core.Rules
                 }
                 else
                 {
-                    hata(satir, $"kriter #{sira}: '{RolAdlari.Ad(rol)}' rolü {kume.Baglam} tanımsız ({kume.Aciklama})");
+                    hata(satir, $"{onek}'{RolAdlari.Ad(rol)}' rolü {kume.Baglam} tanımsız ({kume.Aciklama})");
                 }
             }
         }
