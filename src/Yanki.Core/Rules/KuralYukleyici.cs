@@ -31,6 +31,7 @@ namespace Yanki.Core.Rules
             Dunya.VarlikEklendi, Dunya.GercekEklendi, Dunya.GercekKaldirildi, Dunya.MekanBaglandi,
             ZihinOlaylari.ModifierEklendiTuru, ZihinOlaylari.EksenDegistiTuru, ZihinOlaylari.DuyguDegistiTuru,
             ZihinOlaylari.StresDegistiTuru, ZihinOlaylari.KanitEklendiTuru, ZihinOlaylari.HafizaEklendiTuru,
+            Decision.YerlesikTurler.Ayrildi, Decision.YerlesikTurler.Geldi,
         }.AsReadOnly();
 
         /// <summary>Kural bağlamında çözülebilen roller.</summary>
@@ -160,6 +161,10 @@ namespace Yanki.Core.Rules
             {
                 Hata(oge.Satir, "Kuralda metin olarak \"ne_zaman\" alanı gerekli");
             }
+            else if (nzDugumu.MetinDeger == Decision.YerlesikTurler.KararVerildi)
+            {
+                Hata(nzDugumu.Satir, $"\"{Decision.YerlesikTurler.KararVerildi}\" ne_zaman olamaz: karar izi olayları algılanmaz ve kural tetiklemez (ADR-011)");
+            }
             else if (!bilinen.Contains(nzDugumu.MetinDeger))
             {
                 Hata(nzDugumu.Satir, $"Bilinmeyen olay türü: \"{nzDugumu.MetinDeger}\" (çekirdek olayları ya da senaryonun tanımladığı eylem türleri)");
@@ -230,7 +235,13 @@ namespace Yanki.Core.Rules
                 for (var i = 0; i < etkiDugumu.Elemanlar.Count; i++)
                 {
                     var etki = EtkiOku(etkiDugumu.Elemanlar[i], i + 1, roller, Hata, RolKumesi.Kural);
-                    if (etki != null)
+                    if (etki != null && HareketOlayindaMekanaKisiEtkisi(neZaman, etki))
+                    {
+                        Hata(
+                            etkiDugumu.Elemanlar[i].Satir,
+                            $"Etki #{i + 1}: 'olay.hedef' {neZaman} olaylarında bir mekandır; {EtkiAdi(etki.Tur)} etkisinin hedefi kişi bekler (olay.fail kullan)");
+                    }
+                    else if (etki != null)
                     {
                         etkiler.Add(etki);
                     }
@@ -244,6 +255,15 @@ namespace Yanki.Core.Rules
 
             return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir);
         }
+
+        // ayrildi/geldi olaylarının Hedef alanı karşı mekandır; mekana modifier/eksen/duygu yazılamaz.
+        private static bool HareketOlayindaMekanaKisiEtkisi(string neZaman, KuralEtkisi etki) =>
+            (neZaman == Decision.YerlesikTurler.Ayrildi || neZaman == Decision.YerlesikTurler.Geldi)
+            && etki.Hedef == "olay.hedef"
+            && (etki.Tur == EtkiTuru.Modifier || etki.Tur == EtkiTuru.Eksen || etki.Tur == EtkiTuru.Duygu);
+
+        private static string EtkiAdi(EtkiTuru tur) =>
+            tur == EtkiTuru.Modifier ? "modifier" : tur == EtkiTuru.Eksen ? "eksen" : "duygu";
 
         private static Kriter? KriterOku(JsonDegeri kd, int sira, Action<int, string> hata)
         {

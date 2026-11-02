@@ -225,7 +225,7 @@ namespace Yanki.Core.Rules
             return true;
         }
 
-        private static UretilenEtki? EtkiUret(
+        internal static UretilenEtki? EtkiUret(
             KuralTanimi kural, KuralEtkisi etki, string npc, Olay tetik, SorguBaglami baglam,
             IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler)
         {
@@ -256,9 +256,24 @@ namespace Yanki.Core.Rules
                 default:
                 {
                     var hedef = etki.Hedef.Length == 0 ? string.Empty : HedefCoz(etki.Hedef, baglam);
+
+                    // Modifier, eksen ve duygu hedefi bir kişi (NPC ya da oyuncu) olmalı. Hedef bir mekan ya da eşya ise (ör. Hedefi mekan olan
+                    // bir oyuncu eylemi, ayrildi/geldi olayları) etki üretilmez: zihne mekan adına ilişki kaydı yazılıp durum bozulmaz.
+                    // 7. hafta: bu atlama için fren olayı yazılacak.
+                    if (hedef.Length > 0 && !KisiMi(dunya, hedef))
+                    {
+                        return null;
+                    }
+
                     return new UretilenEtki(kural, etki, npc, tetik, hedef, string.Empty, nedenler);
                 }
             }
+        }
+
+        private static bool KisiMi(Dunya dunya, string kimlik)
+        {
+            var tur = dunya.TurOf(kimlik);
+            return tur == VarlikTuru.Npc || tur == VarlikTuru.Oyuncu;
         }
 
         private static string HedefCoz(string hedef, SorguBaglami baglam) =>
