@@ -10,7 +10,7 @@ namespace Yanki.Core.Tests.Decision
     public class KararIziOzetiTests
     {
         // a|Veli: taban 2 × lojistik(cesaret) = 1.0; b: taban 1.4. N=1 → b seçilir.
-        private static Olay Olay(int n = 1, string aEk = "")
+        private static KararIzi Tam(int n = 1, string aEk = "")
         {
             var eylemler = KararFikstur.Yukle(
                 KararFikstur.Eylem("a", "npc", "\"olcutler\": [ { \"alan\": \"kisilik(cesaret)\", \"egri\": { \"tur\": \"lojistik\", \"k\": 10, \"m\": 0.5 } } ]" + aEk, 2m),
@@ -18,16 +18,21 @@ namespace Yanki.Core.Tests.Decision
             var sim = KararFikstur.Sim(eylemler);
             var adaylar = new[] { new Aday(eylemler[0], "Veli"), new Aday(eylemler[1], string.Empty) };
             var elenen = new[] { new ElenenAday(eylemler[0], "Can", "on_kosul #1 tutmadi: ayni_mekanda(eylem.hedef) == true") };
-            var iz = new UtilitySelector(new SecimAyarlari(n, 0.7m)).Sec(KararFikstur.Baglam(sim, "Ali"), adaylar, elenen).Iz;
-            return KararOlayi.Yap(5, iz.Tick, 0, iz, "han");
+            return new UtilitySelector(new SecimAyarlari(n, 0.7m)).Sec(KararFikstur.Baglam(sim, "Ali"), adaylar, elenen).Iz;
         }
+
+        // Tam iz: replay ile yeniden üretilmiş izin görünümü (bileşenler dahil).
+        private static string[] Satirlar(KararIzi iz) => KararIziOzeti.Satirlar(KararOlayi.Yap(5, iz.Tick, 0, iz, "han"), iz).ToArray();
+
+        // Kısa iz: yalnızca günlükteki olaydan.
+        private static string[] KisaSatirlar(KararIzi iz) => KararIziOzeti.Satirlar(KararOlayi.Yap(5, iz.Tick, 0, iz, "han")).ToArray();
 
         private static string[] Satirlar(Olay olay) => KararIziOzeti.Satirlar(olay).ToArray();
 
         [Fact]
         public void Baslik_npc_tick_ve_secim_ayarini_gosterir()
         {
-            var satirlar = Satirlar(Olay());
+            var satirlar = Satirlar(Tam());
 
             Assert.StartsWith("karar izi: Ali, tick 1", satirlar[0]);
             Assert.Contains("ilk 1", satirlar[0]);
@@ -37,7 +42,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Secilen_ve_havuz_gorunur()
         {
-            var satirlar = Satirlar(Olay());
+            var satirlar = Satirlar(Tam());
 
             Assert.Contains(satirlar, s => s.Trim().StartsWith("seçilen: b", System.StringComparison.Ordinal));
             Assert.Contains(satirlar, s => s.Contains("havuz: b (1.4)"));
@@ -46,7 +51,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Puanlanan_adayin_butun_bilesenleri_okunur_satirdadir()
         {
-            var satir = Satirlar(Olay()).Single(s => s.Contains("aday a → Veli"));
+            var satir = Satirlar(Tam()).Single(s => s.Contains("aday a → Veli"));
 
             Assert.Contains("puan 1", satir);
             Assert.Contains("taban 2", satir);
@@ -64,7 +69,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Hedefsiz_aday_hedef_oku_olmadan_yazilir()
         {
-            var satir = Satirlar(Olay()).Single(s => s.Contains("aday b"));
+            var satir = Satirlar(Tam()).Single(s => s.Contains("aday b"));
 
             Assert.DoesNotContain("→", satir);
             Assert.Contains("puan 1.4", satir);
@@ -74,7 +79,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Elenen_aday_nedeniyle_yazilir()
         {
-            var satir = Satirlar(Olay()).Single(s => s.Contains("aday a → Can"));
+            var satir = Satirlar(Tam()).Single(s => s.Contains("aday a → Can"));
 
             Assert.Contains("elendi", satir);
             Assert.Contains("on_kosul #1 tutmadi: ayni_mekanda(eylem.hedef) == true", satir);
@@ -83,7 +88,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Zar_atildiysa_gorunur()
         {
-            var satirlar = Satirlar(Olay(n: 2));
+            var satirlar = Satirlar(Tam(n: 2));
 
             Assert.Contains(satirlar, s => s.Contains("zar "));
         }
@@ -91,7 +96,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Zar_atilmadiysa_zar_satiri_yoktur()
         {
-            Assert.DoesNotContain(Satirlar(Olay(n: 1)), s => s.Contains("zar "));
+            Assert.DoesNotContain(Satirlar(Tam(n: 1)), s => s.Contains("zar "));
         }
 
         [Fact]
@@ -101,7 +106,7 @@ namespace Yanki.Core.Tests.Decision
             var sim = KararFikstur.Sim(eylemler);
             var iz = new UtilitySelector().Sec(KararFikstur.Baglam(sim, "Ali"), new[] { new Aday(eylemler[0], string.Empty) }, new ElenenAday[0]).Iz;
 
-            var satirlar = Satirlar(KararOlayi.Yap(1, iz.Tick, 0, iz, "han"));
+            var satirlar = Satirlar(iz);
 
             Assert.Contains(satirlar, s => s.Contains("çelişen özellikler: durustluk"));
         }
@@ -113,7 +118,7 @@ namespace Yanki.Core.Tests.Decision
                 "Ali", 4, new SecimAyarlari(), new AdayIzi[0], new string[0], null, null, new string[0],
                 new long[] { 9, 3 }, new[] { "stres(): kaynak yok" });
 
-            var satirlar = Satirlar(KararOlayi.Yap(12, 4, 0, iz, "han"));
+            var satirlar = Satirlar(iz);
 
             Assert.Contains(satirlar, s => s.Contains("kaynak olaylar: #3, #9"));
             Assert.Contains(satirlar, s => s.Contains("kaynaksız girdi: stres(): kaynak yok"));
@@ -124,7 +129,7 @@ namespace Yanki.Core.Tests.Decision
         {
             var iz = new KararIzi("Ali", 4, new SecimAyarlari(), new AdayIzi[0], new string[0], null, null, new string[0], new long[0], new string[0]);
 
-            var satirlar = Satirlar(KararOlayi.Yap(12, 4, 0, iz, "han"));
+            var satirlar = Satirlar(iz);
 
             Assert.Contains(satirlar, s => s.Contains("seçilen: yok"));
         }
@@ -138,6 +143,44 @@ namespace Yanki.Core.Tests.Decision
 
             Assert.Single(satirlar);
             Assert.Contains("okunamadı", satirlar[0]);
+        }
+
+        // ---- kısa iz görünümü (günlükten) ----
+
+        [Fact]
+        public void Kisa_iz_basligi_havuzu_puanlari_zari_ve_sayilari_gosterir()
+        {
+            var satirlar = KisaSatirlar(Tam(n: 2));
+
+            Assert.StartsWith("karar izi (kısa): Ali, tick 1", satirlar[0]);
+            Assert.Contains(satirlar, s => s.Contains("havuz: b (1.4), a → Veli (1)"));
+            Assert.Contains(satirlar, s => s.Contains("adaylar: 2 puanlandı, 1 elendi"));
+            Assert.Contains(satirlar, s => s.Contains("seçilen: ") && s.Contains("(zar "));
+        }
+
+        [Fact]
+        public void Kisa_iz_bilesenleri_ve_elenme_nedenlerini_yazmaz_ama_tam_izin_replayle_uretilecegini_soyler()
+        {
+            var satirlar = KisaSatirlar(Tam());
+
+            Assert.DoesNotContain(satirlar, s => s.Contains("aday a → Veli:"));
+            Assert.DoesNotContain(satirlar, s => s.Contains("on_kosul"));
+            Assert.Contains(satirlar, s => s.Contains("tam iz replay ile yeniden üretilir"));
+        }
+
+        [Fact]
+        public void Kisa_iz_kaynaklari_ve_celisen_ozellikleri_yazar()
+        {
+            var eylemler = KararFikstur.Yukle(KararFikstur.Eylem("c", ek: "\"celisen_ozellikler\": [ \"durustluk\" ]"));
+            var sim = KararFikstur.Sim(eylemler);
+            var iz = new UtilitySelector().Sec(KararFikstur.Baglam(sim, "Ali"), new[] { new Aday(eylemler[0], string.Empty) }, new ElenenAday[0]).Iz;
+            var kaynakli = new KararIzi(iz.Npc, iz.Tick, iz.Ayarlar, iz.Adaylar, iz.Havuz, iz.Zar, iz.Secilen, iz.CelisenOzellikler, new long[] { 9, 3 }, new[] { "stres(): kaynak yok" });
+
+            var satirlar = KisaSatirlar(kaynakli);
+
+            Assert.Contains(satirlar, s => s.Contains("çelişen özellikler: durustluk"));
+            Assert.Contains(satirlar, s => s.Contains("kaynak olaylar: #3, #9"));
+            Assert.Contains(satirlar, s => s.Contains("kaynaksız girdi: stres(): kaynak yok"));
         }
 
         [Fact]

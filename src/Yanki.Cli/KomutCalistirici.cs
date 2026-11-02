@@ -4,13 +4,15 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using Yanki.Core;
+using Yanki.Core.Decision;
+using Yanki.Core.Events;
 using Yanki.Core.Simulation;
 
 namespace Yanki.Cli
 {
     /// <summary>
     /// Komut satırı komutları. Çıkış kodları: 0 başarılı, 1 kullanım hatası, 2 okuma/doğrulama/çalıştırma hatası,
-    /// 3 replay hash'i tutmadı. Dosya sistemi erişimi yalnızca burada ve <see cref="SenaryoDosyasi"/>'ndadır; çekirdek metin alır.
+    /// 3 replay hash'i tutmadı, 4 yeniden üretilen karar izi günlükteki kısa izle uyuşmadı. Dosya sistemi erişimi yalnızca burada ve <see cref="SenaryoDosyasi"/>'ndadır; çekirdek metin alır.
     /// </summary>
     internal static class KomutCalistirici
     {
@@ -18,6 +20,7 @@ namespace Yanki.Cli
         public const int KullanimHatasi = 1;
         public const int DosyaHatasi = 2;
         public const int HashUyusmadi = 3;
+        public const int IzUyusmadi = 4;
 
         private const ulong VarsayilanSeed = 42;
 
@@ -211,15 +214,18 @@ namespace Yanki.Cli
 
         private sealed class YuklenenOturum
         {
-            public YuklenenOturum(string yol, OturumKaydi kayit, Simulasyon sim, OynatmaSonucu sonuc)
+            public YuklenenOturum(string yol, string senaryoYolu, OturumKaydi kayit, Simulasyon sim, OynatmaSonucu sonuc)
             {
                 Yol = yol;
+                SenaryoYolu = senaryoYolu;
                 Kayit = kayit;
                 Sim = sim;
                 Sonuc = sonuc;
             }
 
             public string Yol { get; }
+
+            public string SenaryoYolu { get; }
 
             public OturumKaydi Kayit { get; }
 
@@ -257,7 +263,7 @@ namespace Yanki.Cli
 
             try
             {
-                return new YuklenenOturum(yol, kayit, sim, OturumOynatici.Oynat(sim, kayit));
+                return new YuklenenOturum(yol, senaryoYolu, kayit, sim, OturumOynatici.Oynat(sim, kayit));
             }
             catch (ArgumentException e)
             {
@@ -387,7 +393,42 @@ namespace Yanki.Cli
                 return DosyaHatasi;
             }
 
-            foreach (var satir in NedenYazici.Yaz(oturum.Sim.Gunluk, olayId))
+            // Günlük karar_verildi olaylarında yalnızca KISA izi taşır (K3). Zincirdeki her karar için tam iz, oturum o karara kadar
+            // replay ile yeniden oynatılarak üretilir ve günlükteki kısa izle doğrulanır; uyuşmazlık sessizce geçmez.
+            var sim = oturum.Sim;
+            var kararlar = new List<Olay>();
+            if (sim.Gunluk[olayId].Tur == YerlesikTurler.KararVerildi)
+            {
+                kararlar.Add(sim.Gunluk[olayId]);
+            }
+
+            foreach (var neden in sim.Neden(olayId))
+            {
+                if (neden.Tur == YerlesikTurler.KararVerildi)
+                {
+                    kararlar.Add(neden);
+                }
+            }
+
+            IReadOnlyDictionary<long, KararIzi>? tamIzler = null;
+            if (kararlar.Count > 0)
+            {
+                try
+                {
+                    tamIzler = KararIziYenidenUretici.UretCoklu(
+                        () => SenaryoDosyasi.Yukle(oturum.SenaryoYolu, oturum.Kayit.Seed, hata)
+                            ?? throw new InvalidOperationException("Senaryo yeniden yüklenemedi: " + oturum.SenaryoYolu),
+                        oturum.Kayit,
+                        kararlar);
+                }
+                catch (KararIziUyusmazligiException e)
+                {
+                    hata.WriteLine(e.Message);
+                    return IzUyusmadi;
+                }
+            }
+
+            foreach (var satir in NedenYazici.Yaz(sim.Gunluk, olayId, tamIzler))
             {
                 cikti.WriteLine(satir);
             }

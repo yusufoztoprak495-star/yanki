@@ -12,7 +12,8 @@ namespace Yanki.Core.Simulation
     /// "Neden?" zincirini okunur satırlara çevirir (<c>yanki why</c>): önce olayın kendisi, altında girintili olarak
     /// <see cref="Olay.NedenOlaylar"/> ve onların nedenleri, kök nedene (oyuncu eylemi) kadar. Birden fazla yoldan
     /// erişilen olay yalnızca ilk görüldüğü yerde açılır; sonrakilerde <c>(yukarıda)</c> yazar. Zincirde bir <c>karar_verildi</c> olayına
-    /// gelince altına karar izinin okunur satırları (adaylar, puan bileşenleri, seçim, kaynaklar) girintili eklenir.
+    /// gelince altına karar izinin okunur satırları girintili eklenir: tamIzler verilmişse (replay ile yeniden üretilmiş) adaylar
+    /// ve puan bileşenleri dahil tam iz, verilmemişse günlükteki kısa iz.
     /// </summary>
     public static class NedenYazici
     {
@@ -20,7 +21,7 @@ namespace Yanki.Core.Simulation
 
         /// <summary>Zinciri satır satır döndürür.</summary>
         /// <exception cref="ArgumentOutOfRangeException">Olay günlükte yoksa.</exception>
-        public static IReadOnlyList<string> Yaz(OlayGunlugu gunluk, long olayId)
+        public static IReadOnlyList<string> Yaz(OlayGunlugu gunluk, long olayId, IReadOnlyDictionary<long, KararIzi>? tamIzler = null)
         {
             if (gunluk == null)
             {
@@ -29,7 +30,7 @@ namespace Yanki.Core.Simulation
 
             var satirlar = new List<string>();
             var gorulen = new SortedSet<long>();
-            Ac(gunluk, gunluk[olayId], 0, satirlar, gorulen);
+            Ac(gunluk, gunluk[olayId], 0, satirlar, gorulen, tamIzler);
             return new ReadOnlyCollection<string>(satirlar);
         }
 
@@ -74,7 +75,8 @@ namespace Yanki.Core.Simulation
             return sb.ToString();
         }
 
-        private static void Ac(OlayGunlugu gunluk, Olay olay, int derinlik, List<string> satirlar, SortedSet<long> gorulen)
+        private static void Ac(
+            OlayGunlugu gunluk, Olay olay, int derinlik, List<string> satirlar, SortedSet<long> gorulen, IReadOnlyDictionary<long, KararIzi>? tamIzler)
         {
             var onek = derinlik == 0 ? string.Empty : Tekrarla(Girinti, derinlik - 1) + "← ";
             if (!gorulen.Add(olay.Id))
@@ -84,14 +86,20 @@ namespace Yanki.Core.Simulation
             }
 
             satirlar.Add(onek + Ozet(olay));
-            foreach (var detay in KararIziOzeti.Satirlar(olay))
+            KararIzi? tam = null;
+            if (tamIzler != null)
+            {
+                tamIzler.TryGetValue(olay.Id, out tam);
+            }
+
+            foreach (var detay in KararIziOzeti.Satirlar(olay, tam))
             {
                 satirlar.Add(Tekrarla(Girinti, derinlik) + detay);
             }
 
             foreach (var nedenId in olay.NedenOlaylar)
             {
-                Ac(gunluk, gunluk[nedenId], derinlik + 1, satirlar, gorulen);
+                Ac(gunluk, gunluk[nedenId], derinlik + 1, satirlar, gorulen, tamIzler);
             }
         }
 

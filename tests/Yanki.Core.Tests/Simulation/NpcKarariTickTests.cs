@@ -456,14 +456,14 @@ namespace Yanki.Core.Tests.Simulation
         }
 
         [Fact]
-        public void Karar_olayi_yuku_izin_kanonik_json_metnidir()
+        public void Karar_olayi_yuku_izin_kanonik_kisa_json_metnidir()
         {
             var sim = Kur(Senaryo1(), Eylemler1);
             sim.Tick(1);
 
             var olay = Tek(sim, "karar_verildi", "Ali", 1);
 
-            Assert.Equal(KararIziYazici.Yaz(sim.KararIzi("Ali")!), olay.Deger("iz"));
+            Assert.Equal(KararIziYazici.YazKisa(sim.KararIzi("Ali")!), olay.Deger("iz"));
         }
     }
 }

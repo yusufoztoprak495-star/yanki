@@ -174,7 +174,7 @@ namespace Yanki.Core.Tests.Decision
             Assert.Equal(string.Empty, olay.Hedef);
             Assert.Equal("han", olay.Mekan);
             Assert.Equal("karar", olay.KuralId);
-            Assert.Equal(KararIziYazici.Yaz(iz), olay.Deger("iz"));
+            Assert.Equal(KararIziYazici.YazKisa(iz), olay.Deger("iz"));
             Assert.Equal(iz.Secilen!.Eylem.Id, olay.Deger("secilen_eylem"));
             Assert.Equal(iz.Secilen.Hedef, olay.Deger("secilen_hedef"));
         }

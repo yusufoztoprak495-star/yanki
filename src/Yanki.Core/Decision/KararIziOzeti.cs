@@ -12,14 +12,15 @@ namespace Yanki.Core.Decision
     /// <summary>
     /// <c>karar_verildi</c> olayının izini okunur satırlara çevirir (<c>yanki why</c>, <c>yanki query</c>): adaylar, puan bileşenleri
     /// (taban × ölçütler × kişilik × fikir × ruh hali), elenenler ve nedeni, top-N havuzu, zar, seçilen, çelişen özellikler, kaynak olaylar
-    /// ve kaynağı bulunamayan girdiler. Kaynak olayın <c>iz</c> yükündeki kanonik JSON'dur; bellekteki nesneye bağlı değildir.
+    /// ve kaynağı bulunamayan girdiler. Tam iz verilirse (replay ile yeniden üretilmiş) hepsi yazılır; verilmezse olayın <c>iz</c> yükündeki
+    /// KISA izden (seçilen, havuz ve puanlar, zar, sayılar, kaynaklar) yazılır ve bileşenlerin günlükte olmadığı belirtilir (K3).
     /// </summary>
     public static class KararIziOzeti
     {
         /// <summary>
         /// Satırları döndürür (girinti çağıranın işidir). Olay karar olayı değilse boş liste; yük okunamazsa tek satırlık uyarı.
         /// </summary>
-        public static IReadOnlyList<string> Satirlar(Olay karar)
+        public static IReadOnlyList<string> Satirlar(Olay karar, KararIzi? tam = null)
         {
             if (karar == null)
             {
@@ -34,7 +35,22 @@ namespace Yanki.Core.Decision
 
             try
             {
-                Yaz(JsonAyristirici.Ayristir(karar.Deger("iz")), satirlar);
+                if (tam != null)
+                {
+                    Yaz(JsonAyristirici.Ayristir(KararIziYazici.Yaz(tam)), satirlar);
+                }
+                else
+                {
+                    var iz = JsonAyristirici.Ayristir(karar.Deger("iz"));
+                    if (iz.Al("surum")?.MetinDeger == KisaIz.SurumEtiketi)
+                    {
+                        KisaYaz(iz, satirlar);
+                    }
+                    else
+                    {
+                        Yaz(iz, satirlar);
+                    }
+                }
             }
             catch (Exception e) when (e is JsonHatasi || e is InvalidOperationException || e is FormatException || e is NullReferenceException)
             {
@@ -79,6 +95,67 @@ namespace Yanki.Core.Decision
             {
                 satirlar.Add("  " + Aday(a));
             }
+
+            if (secilen.Tur != JsonTuru.Bos)
+            {
+                var celisen = new List<string>();
+                foreach (var c in Al(secilen, "celisen_ozellikler").Elemanlar)
+                {
+                    celisen.Add(c.MetinDeger);
+                }
+
+                if (celisen.Count > 0)
+                {
+                    satirlar.Add("  çelişen özellikler: " + string.Join(", ", celisen));
+                }
+            }
+
+            var kaynaklar = new List<string>();
+            foreach (var k in Al(iz, "kaynak_olaylar").Elemanlar)
+            {
+                kaynaklar.Add("#" + Say(k));
+            }
+
+            if (kaynaklar.Count > 0)
+            {
+                satirlar.Add("  kaynak olaylar: " + string.Join(", ", kaynaklar));
+            }
+
+            foreach (var k in Al(iz, "kaynaksiz").Elemanlar)
+            {
+                satirlar.Add("  kaynaksız girdi: " + k.MetinDeger);
+            }
+        }
+
+        // Günlükteki kısa iz: bileşenler yoktur, sayılar ve havuz vardır.
+        private static void KisaYaz(JsonDegeri iz, List<string> satirlar)
+        {
+            var ayarlar = Al(iz, "ayarlar");
+            satirlar.Add(
+                $"karar izi (kısa): {Al(iz, "npc").MetinDeger}, tick {Say(Al(iz, "tick"))} (ilk {Say(Al(ayarlar, "en_iyi_n"))} aday, eşik {Say(Al(ayarlar, "esik"))})");
+
+            var secilen = Al(iz, "secilen");
+            var zar = Al(iz, "zar");
+            satirlar.Add(secilen.Tur == JsonTuru.Bos
+                ? "  seçilen: yok (puanı sıfırdan büyük aday yok)"
+                : $"  seçilen: {Ad(Al(secilen, "eylem").MetinDeger, Al(secilen, "hedef").MetinDeger)}" + (zar.Tur == JsonTuru.Sayi ? $" (zar {Say(zar)})" : string.Empty));
+
+            var havuz = new List<string>();
+            foreach (var h in Al(iz, "havuz").Elemanlar)
+            {
+                var anahtar = Al(h, "aday").MetinDeger;
+                var i = anahtar.IndexOf('|');
+                var puan = Al(h, "puan");
+                havuz.Add(Ad(anahtar.Substring(0, i), anahtar.Substring(i + 1)) + (puan.Tur == JsonTuru.Sayi ? " (" + Say(puan) + ")" : string.Empty));
+            }
+
+            if (havuz.Count > 0)
+            {
+                satirlar.Add("  havuz: " + string.Join(", ", havuz));
+            }
+
+            satirlar.Add(
+                $"  adaylar: {Say(Al(iz, "puanlanan"))} puanlandı, {Say(Al(iz, "elenen"))} elendi (puan bileşenleri ve elenme nedenleri günlükte yok; tam iz replay ile yeniden üretilir)");
 
             if (secilen.Tur != JsonTuru.Bos)
             {

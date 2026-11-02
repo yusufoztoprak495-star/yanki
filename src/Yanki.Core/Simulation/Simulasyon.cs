@@ -48,6 +48,10 @@ namespace Yanki.Core.Simulation
         private readonly SortedDictionary<string, KararIziVerisi> _sonKararlar = new SortedDictionary<string, KararIziVerisi>(StringComparer.Ordinal);
         private readonly SortedDictionary<string, long> _sonKararOlaylari = new SortedDictionary<string, long>(StringComparer.Ordinal);
 
+        // Açıkça istenen gelecek kararların tam izleri: "npc@tick" anahtarı. Başka hiçbir tam iz saklanmaz (K3).
+        private readonly SortedSet<string> _istenenIzler = new SortedSet<string>(StringComparer.Ordinal);
+        private readonly SortedDictionary<string, KararIziVerisi> _yakalananIzler = new SortedDictionary<string, KararIziVerisi>(StringComparer.Ordinal);
+
         // Adım 6'da yazılan NPC eylem/hareket olayları ve algı sonuçları: yalnızca sıradaki tick'in kural değerlendirmesinde kullanılıp atılır.
         private List<Olay> _saklananOlaylar = new List<Olay>();
         private AlgiHaritasi _saklananAlgi = new AlgiHaritasi();
@@ -235,6 +239,49 @@ namespace Yanki.Core.Simulation
 
         /// <summary>NPC'nin son <c>karar_verildi</c> olayı; yoksa <c>null</c>.</summary>
         public Olay? SonKararOlayi(string npc) => npc != null && _sonKararOlaylari.TryGetValue(npc, out var id) ? Gunluk[id] : null;
+
+        /// <summary>
+        /// Geçmiş bir kararın izi: günlükteki KISA iz (K3). Simülasyon geçmişe gidemez ve geçmiş tam izleri tutmaz; tam iz için oturumu
+        /// replay ile o karara kadar oynatan <c>KararIziYenidenUretici</c> kullanılır (gizli önbellek yoktur).
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Olay günlükte yoksa.</exception>
+        /// <exception cref="ArgumentException">Olay bir karar_verildi olayı değilse.</exception>
+        public KisaIz GecmisKararKisaIzi(long kararOlayId) => KisaIz.Oku(Gunluk[kararOlayId]);
+
+        /// <summary>
+        /// Bu NPC'nin <paramref name="tick"/>'teki kararının TAM izinin yakalanmasını ister; <see cref="YakalananIz"/> ile okunur.
+        /// Yalnızca henüz işlenmemiş (gelecek) tick'ler istenebilir: geçmiş tam izler tutulmaz, replay ile yeniden üretilir.
+        /// Yakalama durum hash'ini ve olay günlüğünü değiştirmez; yalnızca istenen (NPC, tick) çiftinin izi saklanır.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="tick"/> işlenmişse.</exception>
+        /// <exception cref="ArgumentException">NPC yoksa.</exception>
+        public void TamIziIste(string npc, long tick)
+        {
+            if (npc == null || !Zihinler.Var(npc))
+            {
+                throw new ArgumentException($"\"{npc}\" bir NPC değil.", nameof(npc));
+            }
+
+            if (tick <= _tick)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(tick), tick, $"Tick {tick} zaten işlendi (şu an {_tick}): geçmiş kararların tam izi tutulmaz; oturumu replay ile yeniden üret (KararIziYenidenUretici).");
+            }
+
+            _istenenIzler.Add(YakalamaAnahtari(npc, tick));
+        }
+
+        /// <summary><see cref="TamIziIste"/> ile istenmiş kararın tam izi; istenmediyse ya da karar henüz verilmediyse <c>null</c>.</summary>
+        public KararIziVerisi? YakalananIz(string npc, long tick) =>
+            npc != null && _yakalananIzler.TryGetValue(YakalamaAnahtari(npc, tick), out var iz) ? iz : null;
+
+        /// <summary>
+        /// Bellekte tutulan tam iz sayısı: NPC başına en fazla bir SON iz ve açıkça istenip yakalananlar. Zamanla büyümez.
+        /// </summary>
+        public int TutulanTamIzSayisi => _sonKararlar.Count + _yakalananIzler.Count;
+
+        private static string YakalamaAnahtari(string npc, long tick) =>
+            npc + "@" + tick.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>Şu anki dünya ve zihin durumunun hash'i (16 karakter onaltılık).</summary>
         public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler);
@@ -460,6 +507,11 @@ namespace Yanki.Core.Simulation
                 Ekle(karar);
                 _sonKararlar[s.Npc] = s.Sonuc.Iz;
                 _sonKararOlaylari[s.Npc] = karar.Id;
+                var yakalamaAnahtari = YakalamaAnahtari(s.Npc, _tick);
+                if (_istenenIzler.Contains(yakalamaAnahtari))
+                {
+                    _yakalananIzler[yakalamaAnahtari] = s.Sonuc.Iz;
+                }
 
                 var aday = s.Sonuc.Secilen;
                 if (aday == null)

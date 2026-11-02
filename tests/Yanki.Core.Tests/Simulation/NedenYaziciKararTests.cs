@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Yanki.Core.Decision;
@@ -27,9 +28,18 @@ namespace Yanki.Core.Tests.Simulation
             var kural = KuralYukleyici.Yukle(SelamTanigi, "k.json", new[] { "yardim_etti", "tehdit_etti", "selam_oldu" });
             Assert.True(kural.Basarili, string.Join("\n", kural.Hatalar));
             var sim = Simulasyon.Olustur(SimFikstur.Senaryo(), kural.Kurallar, 42, eylemler: KararFikstur.Yukle(selam), secici: new UtilitySelector(new SecimAyarlari(1, 0.7m)));
+            foreach (var npc in new[] { "Ali", "Can", "Veli" })
+            {
+                sim.TamIziIste(npc, 1);
+            }
+
             sim.Tick(2);
             return sim;
         }
+
+        // Tick 1 kararlarının tam izleri (replay'in yapacağı yakalamanın aynısı): karar olayı kimliği → tam iz.
+        private static IReadOnlyDictionary<long, KararIzi> TamIzler(Simulasyon sim) =>
+            sim.Gunluk.Olaylar.Where(o => o.Tur == "karar_verildi" && o.Tick == 1).ToDictionary(o => o.Id, o => sim.YakalananIz(o.Fail, 1)!);
 
         [Fact]
         public void Karar_olayinin_ozeti_buyuk_iz_yukunu_dokmez()
@@ -51,7 +61,7 @@ namespace Yanki.Core.Tests.Simulation
             var sim = Kur();
             var modifier = sim.Gunluk.Olaylar.First(o => o.KuralId == "selam_tanigi");
 
-            var satirlar = NedenYazici.Yaz(sim.Gunluk, modifier.Id);
+            var satirlar = NedenYazici.Yaz(sim.Gunluk, modifier.Id, TamIzler(sim));
             var metin = string.Join("\n", satirlar);
 
             Assert.Contains("modifier_eklendi", satirlar[0]);
@@ -70,7 +80,7 @@ namespace Yanki.Core.Tests.Simulation
             var sim = Kur();
             var modifier = sim.Gunluk.Olaylar.First(o => o.KuralId == "selam_tanigi");
 
-            var satirlar = NedenYazici.Yaz(sim.Gunluk, modifier.Id).ToList();
+            var satirlar = NedenYazici.Yaz(sim.Gunluk, modifier.Id, TamIzler(sim)).ToList();
 
             var kararSatiri = satirlar.FindIndex(s => s.Contains("karar_verildi"));
             var detay = satirlar.FindIndex(s => s.Contains("karar izi:"));
@@ -86,8 +96,34 @@ namespace Yanki.Core.Tests.Simulation
 
             var satirlar = NedenYazici.Yaz(sim.Gunluk, sim.SonKararOlayi("Ali")!.Id);
 
-            Assert.Contains(satirlar, s => s.Contains("karar izi: Ali"));
+            // Tam iz verilmediği için günlükteki kısa iz gösterilir.
+            Assert.Contains(satirlar, s => s.Contains("karar izi (kısa): Ali"));
             Assert.Contains(satirlar, s => s.Contains("seçilen:"));
+            Assert.DoesNotContain(satirlar, s => s.Contains("aday selam: puan"));
+        }
+
+        [Fact]
+        public void Tam_iz_verilmeyen_zincir_kisa_izle_calisir_ve_bilesenleri_yazmaz()
+        {
+            var sim = Kur();
+            var modifier = sim.Gunluk.Olaylar.First(o => o.KuralId == "selam_tanigi");
+
+            var satirlar = NedenYazici.Yaz(sim.Gunluk, modifier.Id);
+
+            Assert.Contains(satirlar, s => s.Contains("karar izi (kısa)"));
+            Assert.DoesNotContain(satirlar, s => s.Contains("lojistik"));
+        }
+
+        [Fact]
+        public void Tam_iz_verilen_karar_olayi_sorgulaninca_bilesenler_yazilir()
+        {
+            var sim = Kur();
+            var karar = sim.Gunluk.Olaylar.First(o => o.Tur == "karar_verildi" && o.Tick == 1 && o.Fail == "Ali");
+
+            var satirlar = NedenYazici.Yaz(sim.Gunluk, karar.Id, TamIzler(sim));
+
+            Assert.Contains(satirlar, s => s.Contains("karar izi: Ali"));
+            Assert.Contains(satirlar, s => s.Contains("aday selam: puan"));
         }
     }
 }

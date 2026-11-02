@@ -19,6 +19,67 @@ namespace Yanki.Core.Decision
         /// <summary>İzi kompakt kanonik JSON olarak yazar.</summary>
         public static string Yaz(KararIzi iz) => JsonYazici.YazKisa(Agac(iz ?? throw new ArgumentNullException(nameof(iz))));
 
+        /// <summary>
+        /// İzi KISA kanonik JSON'a çevirir (günlükteki <c>karar_verildi</c> yükü, K3): seçilen, top-N havuzu ve puanları, zar, aday/elenen
+        /// sayıları, kaynak olaylar ve kaynaksız girdiler. Bütün adaylar ve puan bileşenleri yazılmaz (aday sayısıyla büyümez); tam iz replay ile
+        /// yeniden üretilir. Şema: <c>surum:"kisa", npc, tick, ayarlar, puanlanan, elenen, havuz[{aday, puan}], zar, secilen, kaynak_olaylar, kaynaksiz</c>.
+        /// </summary>
+        public static string YazKisa(KararIzi iz)
+        {
+            if (iz == null)
+            {
+                throw new ArgumentNullException(nameof(iz));
+            }
+
+            var puanlanan = 0;
+            var elenen = 0;
+            var puanlar = new SortedDictionary<string, decimal?>(StringComparer.Ordinal);
+            foreach (var a in iz.Adaylar)
+            {
+                if (a.Elendi)
+                {
+                    elenen++;
+                }
+                else
+                {
+                    puanlanan++;
+                    puanlar[a.Aday.Anahtar] = a.Puan?.Puan;
+                }
+            }
+
+            var havuz = new List<JsonDegeri>(iz.Havuz.Count);
+            foreach (var h in iz.Havuz)
+            {
+                puanlar.TryGetValue(h, out var puan);
+                havuz.Add(JsonDegeri.Nesne(("aday", JsonDegeri.Metin(h)), ("puan", puan.HasValue ? JsonDegeri.Sayi(puan.Value) : JsonDegeri.Bos())));
+            }
+
+            var kaynaklar = new List<JsonDegeri>(iz.KaynakOlaylar.Count);
+            foreach (var k in iz.KaynakOlaylar)
+            {
+                kaynaklar.Add(JsonDegeri.Sayi(k));
+            }
+
+            var kaynaksiz = new List<JsonDegeri>(iz.Kaynaksiz.Count);
+            foreach (var k in iz.Kaynaksiz)
+            {
+                kaynaksiz.Add(JsonDegeri.Metin(k));
+            }
+
+            return JsonYazici.YazKisa(JsonDegeri.Nesne(
+                ("surum", JsonDegeri.Metin(KisaIz.SurumEtiketi)),
+                ("npc", JsonDegeri.Metin(iz.Npc)),
+                ("tick", JsonDegeri.Sayi(iz.Tick)),
+                ("ayarlar", JsonDegeri.Nesne(("en_iyi_n", JsonDegeri.Sayi(iz.Ayarlar.EnIyiN)), ("esik", JsonDegeri.Sayi(iz.Ayarlar.Esik)))),
+                ("puanlanan", JsonDegeri.Sayi(puanlanan)),
+                ("elenen", JsonDegeri.Sayi(elenen)),
+                ("havuz", JsonDegeri.Dizi(havuz.ToArray())),
+                ("zar", iz.Zar.HasValue ? JsonDegeri.Sayi(iz.Zar.Value) : JsonDegeri.Bos()),
+                ("secilen", Secilen(iz)),
+                ("kaynak_olaylar", JsonDegeri.Dizi(kaynaklar.ToArray())),
+                ("kaynaksiz", JsonDegeri.Dizi(kaynaksiz.ToArray()))));
+        }
+
         private static JsonDegeri Agac(KararIzi iz)
         {
             var adaylar = new List<JsonDegeri>(iz.Adaylar.Count);
@@ -140,7 +201,7 @@ namespace Yanki.Core.Decision
     }
 
     /// <summary>
-    /// <c>karar_verildi</c> olayı: karar izini <c>iz</c> yükünde kanonik JSON olarak taşır. <c>KuralId</c> <c>karar</c>, fail karar veren NPC,
+    /// <c>karar_verildi</c> olayı: KISA karar izini <c>iz</c> yükünde kanonik JSON olarak taşır (K3; tam iz replay ile yeniden üretilir). <c>KuralId</c> <c>karar</c>, fail karar veren NPC,
     /// <c>NedenOlaylar</c> izin zihin kaynaklarıdır. Bu olay algılanmaz, kural tetiklemez ve durum hash'ine girmez.
     /// Yükte ayrıca hızlı okuma için <c>secilen_eylem</c> ve <c>secilen_hedef</c> bulunur (seçim yoksa boş).
     /// </summary>
@@ -161,7 +222,7 @@ namespace Yanki.Core.Decision
                 id, tick, sira, YerlesikTurler.KararVerildi, iz.Npc, string.Empty, mekan ?? string.Empty,
                 new[]
                 {
-                    new KeyValuePair<string, string>("iz", KararIziYazici.Yaz(iz)),
+                    new KeyValuePair<string, string>("iz", KararIziYazici.YazKisa(iz)),
                     new KeyValuePair<string, string>("secilen_eylem", iz.Secilen != null ? iz.Secilen.Eylem.Id : string.Empty),
                     new KeyValuePair<string, string>("secilen_hedef", iz.Secilen != null ? iz.Secilen.Hedef : string.Empty),
                 },

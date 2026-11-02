@@ -106,7 +106,7 @@ namespace Yanki.Cli
             if (sonKarar != null)
             {
                 w.WriteLine($"-- son karar (#{Sayi(sonKarar.Id)}, tick {Sayi(sonKarar.Tick)}) --");
-                foreach (var satir in KararIziOzeti.Satirlar(sonKarar))
+                foreach (var satir in KararIziOzeti.Satirlar(sonKarar, sim.KararIzi(npc)))
                 {
                     w.WriteLine(satir);
                 }
