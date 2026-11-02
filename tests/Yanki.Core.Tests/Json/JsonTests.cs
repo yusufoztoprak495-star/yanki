@@ -210,5 +210,25 @@ namespace Yanki.Core.Tests.Json
             Assert.Equal("1.5\n", JsonYazici.Yaz(JsonDegeri.Sayi(1.50m)));
             Assert.Equal("0\n", JsonYazici.Yaz(JsonDegeri.Sayi(0.000m)));
         }
+        [Fact]
+        public void Kisa_yazici_bosluksuz_tek_satir_yazar_ve_sayilari_kirpar()
+        {
+            var agac = JsonDegeri.Nesne(
+                ("a", JsonDegeri.Sayi(1.50m)),
+                ("b", JsonDegeri.Dizi(JsonDegeri.Mantiksal(true), JsonDegeri.Bos(), JsonDegeri.Metin("x y"))),
+                ("c", JsonDegeri.Nesne()),
+                ("d", JsonDegeri.Dizi()));
+
+            var metin = JsonYazici.YazKisa(agac);
+
+            Assert.Equal("{\"a\":1.5,\"b\":[true,null,\"x y\"],\"c\":{},\"d\":[]}", metin);
+            Assert.Equal(JsonYazici.Yaz(JsonAyristirici.Ayristir(metin)), JsonYazici.Yaz(agac));
+        }
+
+        [Fact]
+        public void Kisa_yazici_metni_kacirir()
+        {
+            Assert.Equal("\"a\\\"b\\n\"", JsonYazici.YazKisa(JsonDegeri.Metin("a\"b\n")));
+        }
     }
 }

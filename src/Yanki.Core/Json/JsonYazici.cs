@@ -24,6 +24,62 @@ namespace Yanki.Core.Json
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Değeri kompakt kanonik biçimde yazar: boşluksuz, tek satır, sonda satır sonu yok; özellikler verilen sırayla, sayılar
+        /// <see cref="Yaz(JsonDegeri)"/> ile aynı. Olay yüklerine gömülen JSON için (ör. karar izi): günlüğü şişirmez.
+        /// </summary>
+        public static string YazKisa(JsonDegeri deger)
+        {
+            if (deger == null)
+            {
+                throw new ArgumentNullException(nameof(deger));
+            }
+
+            var sb = new StringBuilder();
+            YazKisa(sb, deger);
+            return sb.ToString();
+        }
+
+        private static void YazKisa(StringBuilder sb, JsonDegeri d)
+        {
+            switch (d.Tur)
+            {
+                case JsonTuru.Dizi:
+                    sb.Append('[');
+                    for (var i = 0; i < d.Elemanlar.Count; i++)
+                    {
+                        if (i > 0)
+                        {
+                            sb.Append(',');
+                        }
+
+                        YazKisa(sb, d.Elemanlar[i]);
+                    }
+
+                    sb.Append(']');
+                    break;
+                case JsonTuru.Nesne:
+                    sb.Append('{');
+                    for (var i = 0; i < d.Ozellikler.Count; i++)
+                    {
+                        if (i > 0)
+                        {
+                            sb.Append(',');
+                        }
+
+                        MetinYaz(sb, d.Ozellikler[i].Key);
+                        sb.Append(':');
+                        YazKisa(sb, d.Ozellikler[i].Value);
+                    }
+
+                    sb.Append('}');
+                    break;
+                default:
+                    Yaz(sb, d, 0);
+                    break;
+            }
+        }
+
         private static void Yaz(StringBuilder sb, JsonDegeri d, int girinti)
         {
             switch (d.Tur)
