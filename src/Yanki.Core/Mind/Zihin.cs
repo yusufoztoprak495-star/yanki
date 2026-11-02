@@ -18,6 +18,12 @@ namespace Yanki.Core.Mind
         private readonly SortedDictionary<string, Iliski> _iliskiler = new SortedDictionary<string, Iliski>(StringComparer.Ordinal);
         private readonly SortedDictionary<string, InancKaydi> _inanclar = new SortedDictionary<string, InancKaydi>(StringComparer.Ordinal);
         private readonly List<HafizaKaydi> _hafiza = new List<HafizaKaydi>();
+
+        // _hafiza konumlarının, hatırlanan OLAY kimliğine göre artan sıralı dizini. Yalnızca sorguyu hızlandırır; durum değildir, hash'e girmez.
+        // Neden gerekli: HafizaVar penceresi hatırlanan olayın tick'ine göre uygulanır; _hafiza ise ekleme sırasındadır ve bu anahtara göre
+        // sıralı DEĞİLDİR (kural `hafiza` etkisi bir önceki tick'in olayını sona ekler, mevcut kayıt yerinde güncellenir). Günlük olay
+        // tick'inin kimlikle azalmamasını zorunlu kıldığı için kimliğe göre sıralı dizinde sondan taramak, pencere dışına çıkınca durmak doğrudur.
+        private readonly List<int> _hafizaOlayaGore = new List<int>();
         private Duygu? _duygu;
         private Duygu? _onceki;
         private StresDurumu? _stres;
@@ -359,17 +365,24 @@ namespace Yanki.Core.Mind
                 throw new ArgumentNullException(nameof(gunluk));
             }
 
-            foreach (var h in Hafiza(simdikiTick))
+            // Olay kimliğine göre azalan sırada tara: olay tick'i kimlikle azalmaz, yani ilk pencere dışı olaydan sonrası da dışarıdadır.
+            for (var k = _hafizaOlayaGore.Count - 1; k >= 0; k--)
             {
+                var h = _hafiza[_hafizaOlayaGore[k]];
                 if (!gunluk.Var(h.OlayId))
                 {
                     continue;
                 }
 
                 var olay = gunluk[h.OlayId];
+                if (simdikiTick - olay.Tick > sonNTick)
+                {
+                    break;
+                }
+
                 if (string.Equals(olay.Tur, olayTuru, StringComparison.Ordinal)
                     && string.Equals(olay.Fail, fail, StringComparison.Ordinal)
-                    && simdikiTick - olay.Tick <= sonNTick)
+                    && _sonumleme.HafizaAktifMi(h, simdikiTick))
                 {
                     return true;
                 }
@@ -544,20 +557,40 @@ namespace Yanki.Core.Mind
 
             // Aynı olay için tek kayıt: kayıt varsa önem max(eski, yeni) olur (yalnızca artarsa kayıt tazelenir), yoksa yeni kayıt açılır.
             var hatirlanan = ZihinOlaylari.Tam(olay, "olay");
-            for (var i = 0; i < _hafiza.Count; i++)
+            var yer = HafizaDizinYeri(hatirlanan);
+            if (yer < _hafizaOlayaGore.Count && _hafiza[_hafizaOlayaGore[yer]].OlayId == hatirlanan)
             {
-                if (_hafiza[i].OlayId == hatirlanan)
+                var konum = _hafizaOlayaGore[yer];
+                if (onem > _hafiza[konum].Onem)
                 {
-                    if (onem > _hafiza[i].Onem)
-                    {
-                        _hafiza[i] = new HafizaKaydi(hatirlanan, onem, olay.Tick);
-                    }
+                    _hafiza[konum] = new HafizaKaydi(hatirlanan, onem, olay.Tick);
+                }
 
-                    return;
+                return;
+            }
+
+            _hafizaOlayaGore.Insert(yer, _hafiza.Count);
+            _hafiza.Add(new HafizaKaydi(hatirlanan, onem, olay.Tick));
+        }
+
+        // Dizinde olay kimliği >= olayId olan ilk konum (ikili arama).
+        private int HafizaDizinYeri(long olayId)
+        {
+            int alt = 0, ust = _hafizaOlayaGore.Count;
+            while (alt < ust)
+            {
+                var orta = alt + ((ust - alt) / 2);
+                if (_hafiza[_hafizaOlayaGore[orta]].OlayId < olayId)
+                {
+                    alt = orta + 1;
+                }
+                else
+                {
+                    ust = orta;
                 }
             }
 
-            _hafiza.Add(new HafizaKaydi(hatirlanan, onem, olay.Tick));
+            return alt;
         }
 
         // ---- Yardımcılar ----
