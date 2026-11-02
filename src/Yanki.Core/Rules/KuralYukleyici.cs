@@ -49,6 +49,7 @@ namespace Yanki.Core.Rules
             }
 
             var hatalar = new List<KuralHatasi>();
+            var uyarilar = new List<KuralHatasi>();
             var bilinen = new SortedSet<string>(YerlesikOlayTurleri, StringComparer.Ordinal);
             if (ekOlayTurleri != null)
             {
@@ -94,7 +95,7 @@ namespace Yanki.Core.Rules
             var kimlikler = new SortedSet<string>(StringComparer.Ordinal);
             foreach (var oge in dizi.Elemanlar)
             {
-                var kural = KuralOku(oge, kaynakAdi, bilinen, hatalar);
+                var kural = KuralOku(oge, kaynakAdi, bilinen, hatalar, uyarilar);
                 if (kural == null)
                 {
                     continue;
@@ -111,14 +112,14 @@ namespace Yanki.Core.Rules
 
             if (hatalar.Count > 0)
             {
-                return new KuralYuklemeSonucu(new KuralTanimi[0], hatalar);
+                return new KuralYuklemeSonucu(new KuralTanimi[0], hatalar, uyarilar);
             }
 
             kurallar.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
-            return new KuralYuklemeSonucu(kurallar, hatalar);
+            return new KuralYuklemeSonucu(kurallar, hatalar, uyarilar);
         }
 
-        private static KuralTanimi? KuralOku(JsonDegeri oge, string kaynak, SortedSet<string> bilinen, List<KuralHatasi> hatalar)
+        private static KuralTanimi? KuralOku(JsonDegeri oge, string kaynak, SortedSet<string> bilinen, List<KuralHatasi> hatalar, List<KuralHatasi> uyarilar)
         {
             if (oge.Tur != JsonTuru.Nesne)
             {
@@ -190,6 +191,13 @@ namespace Yanki.Core.Rules
                         }
 
                         KriterRolleriniDenetle(kriter, kd.Satir, i + 1, roller, Hata);
+                        if (kd.Al("agirlik") != null)
+                        {
+                            uyarilar.Add(new KuralHatasi(
+                                kaynak, kd.Al("agirlik")!.Satir, kimlik,
+                                $"kriter #{i + 1}: kural yalnızca tüm kriterleri tutunca çalışır; \"agirlik\" sonucu etkilemez (ADR-010), kaldırılabilir"));
+                        }
+
                         kriterler.Add(kriter);
                     }
                 }

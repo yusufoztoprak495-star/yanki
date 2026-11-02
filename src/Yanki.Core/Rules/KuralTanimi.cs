@@ -88,8 +88,8 @@ namespace Yanki.Core.Rules
     }
 
     /// <summary>
-    /// Sonuç kuralı (plan 5.6): <c>ne_zaman &lt;olay türü&gt;</c> + kriterler (5.9) → etkiler. Kriterler tutarsa (bkz.
-    /// <c>KuralMotoru</c>) etkiler yeni olaylar olarak kayda düşer.
+    /// Sonuç kuralı (plan 5.6): <c>ne_zaman &lt;olay türü&gt;</c> + kriterler (5.9) → etkiler. Tüm kriterler tutarsa (bkz.
+    /// <c>KuralMotoru</c>, ADR-010) etkiler yeni olaylar olarak kayda düşer.
     /// </summary>
     public sealed class KuralTanimi
     {
@@ -182,14 +182,18 @@ namespace Yanki.Core.Rules
         /// <summary>Bulunan tüm hatalar, dosyadaki sırayla.</summary>
         public IReadOnlyList<KuralHatasi> Hatalar { get; }
 
+        /// <summary>Uyarılar (yüklemeyi engellemez), dosyadaki sırayla; ör. sonucu etkilemeyen <c>agirlik</c> kullanımı.</summary>
+        public IReadOnlyList<KuralHatasi> Uyarilar { get; }
+
         /// <summary>Hata yok mu.</summary>
         public bool Basarili => Hatalar.Count == 0;
 
         /// <summary>Sonuç kurar.</summary>
-        public KuralYuklemeSonucu(IEnumerable<KuralTanimi> kurallar, IEnumerable<KuralHatasi> hatalar)
+        public KuralYuklemeSonucu(IEnumerable<KuralTanimi> kurallar, IEnumerable<KuralHatasi> hatalar, IEnumerable<KuralHatasi>? uyarilar = null)
         {
             Kurallar = new ReadOnlyCollection<KuralTanimi>(new List<KuralTanimi>(kurallar));
             Hatalar = new ReadOnlyCollection<KuralHatasi>(new List<KuralHatasi>(hatalar));
+            Uyarilar = new ReadOnlyCollection<KuralHatasi>(new List<KuralHatasi>(uyarilar ?? new KuralHatasi[0]));
         }
     }
 }

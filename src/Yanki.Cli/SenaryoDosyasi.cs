@@ -58,6 +58,11 @@ namespace Yanki.Cli
                     continue;
                 }
 
+                foreach (var u in sonuc.Uyarilar)
+                {
+                    hata.WriteLine("uyarı: " + u);
+                }
+
                 kurallar.AddRange(sonuc.Kurallar);
             }
 

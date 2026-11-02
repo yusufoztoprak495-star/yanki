@@ -30,20 +30,20 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 ### 4. hafta: sonuç kuralları ve ince dikey dilim (PR #7, merge bekliyor)
 - **JSON okuyucu/yazıcı** (`Yanki.Core.Json`, bağımlılıksız, sayılar `decimal`, satır/sütun bilgili hata); ADR-009. `KriterOkuyucu` kriterleri JSON'dan okur (ikinci kriter yolu yok).
-- **Kural motoru** (`Rules`): `ne_zaman` + kriterler → etkiler; v0 etkileri modifier, eksen, ruh hali, hafıza, dünya gerçeği; etkiler yeni olay (`KuralId` + `NedenOlaylar`). Doğrulayıcı v0 `dosya:satır: kural "id": mesaj` verir.
+- **Kural motoru** (`Rules`): `ne_zaman` + kriterler (hepsi tutmalı, ADR-010) → etkiler; v0 etkileri modifier, eksen, ruh hali, hafıza, dünya gerçeği; etkiler yeni olay (`KuralId` + `NedenOlaylar`). Doğrulayıcı v0 `dosya:satır: kural "id": mesaj` verir, `agirlik` için uyarır. Sözlüğe `olay_rolu` eklendi (16 fonksiyon).
 - **Tick döngüsü v0 ve dış API** (`Simulation`): `Submit(PlayerAction)`, `Tick(n)`, sorgular, `Neden(olayId)`; adımlar 1, 2, 3, 4, 7. Kaskad v0: kural çıktıları sıradaki tick'e kalır.
 - **CLI:** `yanki run | query | why | replay` (`replay --guncelle` golden hash'i tek komutla günceller).
 - **Mini senaryo `samples/MiniHan`** (Yusuf'un seçimi: seçenek A + hedef/tanık düzeltmesi) ve **golden replay #1** (`tests/golden/mini-han-1.json`); CI her push'ta tekrar oynatır.
 - Uçtan uca test: oyuncu eylemi fikri değiştirir, `why` zinciri modifier'dan oyuncu eylemine iner. Notlar: `docs/notes/kural-motoru.md`, `docs/notes/tick-dongusu.md`; devlog iskeleti `docs/devlog/01-taslak.md`.
-- Testler: 625 (Core) + 24 (senaryo/CLI/golden); iki hedef derleniyor, 0 uyarı.
+- Testler: 637 (Core) + 24 (senaryo/CLI/golden) = 661; iki hedef derleniyor, 0 uyarı. Golden hash değişti (hafıza tekilleştirme): `504f3142d1dc15dd` → `cee9956ef06df17f`.
 
 ## Ertelenenler (Yusuf'un işi)
 
-- [ ] **ADR-001..009 "Gerekçe (Yusuf)" bölümleri:** dokuz ADR'nin hepsinde boş (ADR-009: çekirdekte JSON okuyucu).
+- [ ] **ADR-001..010 "Gerekçe (Yusuf)" bölümleri:** on ADR'nin hepsinde boş (ADR-009: çekirdekte JSON okuyucu, ADR-010: kural tetiklenmesi).
 - [ ] **`docs/notes/` taslaklarını kendi cümlelerimle yeniden yazmak:** `dunya.md`, `olay-kaydi.md`, `kriter-dili.md`, `zihin.md`, `algi.md`, `kural-motoru.md`, `tick-dongusu.md`.
 - [ ] **Devlog #1'i yazmak:** `docs/devlog/01-taslak.md` yalnızca başlık ve teknik gerçek içerir.
 - [x] **`CODECOV_TOKEN` secret'ı:** GitHub repo ayarlarına eklendi.
-- [x] **Mini senaryo (3 NPC):** `samples/MiniHan` (4. hafta). Kişilik özelliklerinden `cesaret` dışındakiler 0.5 yer tutucu; Yusuf değiştirebilir.
+- [x] **Mini senaryo (3 NPC):** `samples/MiniHan` (4. hafta). Kişilik özelliklerinden `cesaret` dışındakiler 0.5 yer tutucu; 11. hafta denge turunda ayarlanacak.
 - [ ] **Kasaba Hanı NPC'leri:** 9. haftada 8.
 
 ## Açık kararlar (Yusuf'u bekleyen)
@@ -54,17 +54,19 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - `oyuncu` artık ayrı bir varlık türü (`VarlikTuru.Oyuncu`), eşya değil.
 - 3. hafta için Yusuf'u bekleyen açık karar kalmadı (yalnızca ADR-008 "Gerekçe (Yusuf)" yazımı).
 
-**4. hafta (Claude'un varsayılan seçtikleri; Yusuf'un onayı/kararı bekleniyor, ayrıntı `docs/notes/kural-motoru.md` ve `tick-dongusu.md`):**
-- **Kural ne zaman tetiklenir?** Hiçbir `zorunlu` kriter elenmemiş **ve** toplam puan > 0 (tutan en az bir kriter); kriteri olmayan kural olay türü tutunca tetiklenir. Alternatifler: tüm kriterler tutmalı, ya da kuralda eşik puanı.
-- **Olayda tanımsız rol** (ör. hedefsiz eylemde `olay.hedef`): kural o olay için sessizce atlanır.
-- **Hedef/tanık ayrımı** sözlüğe fonksiyon eklenmeden `inanc(<tür>(olay.fail, ben)) >= 0.5` ile yapıldı (algı önermesi `tur(fail, hedef)` biçimine bağlı). İstenirse `ben_hedef_mi()` gibi bir fonksiyon sözlük değişikliği olarak onayına sunulur.
-- **Algı hangi olayları alır:** zihin olayı olmayan (dış) olaylar; zihin olayını yalnızca sahibi kural tetiklemek için "algılar". Algı olayları kural tetiklemez.
+**4. hafta: karara bağlananlar (Yusuf, PR #7 incelemesi):**
+- [x] **Hedef/tanık ayrımı:** sözlüğe `olay_rolu(fail|hedef|tanik)` eklendi (16. fonksiyon); `inanc(...)` yöntemi kaldırıldı. Regresyon: daha önce tehdit edilmiş NPC, başkasına yapılan tehdidi görünce tanıktır.
+- [x] **Kural tetiklenmesi:** kural yalnızca tüm kriterleri tutunca çalışır; kriteri olmayan kural her tetikleyici olayda çalışır; `agirlik` etkilemez, doğrulayıcı uyarır (ADR-010, gerekçe boş).
+- [x] **Algı kapsamı (KAPANDI):** algı yalnızca dış (zihin olmayan) olayları alır; algı olayları (`KuralId: algi`) kural tetiklemez.
+- [x] **Hafıza:** aynı NPC ve aynı olay için tek kayıt; `hafiza` etkisi kayıt varsa önemi `max(eski, yeni)` yapar, yoksa yeni kayıt açar; her değişiklik yine `hafiza_eklendi` olayıyla kaydedilir.
+- [x] **Tanımsız rol:** mevcut davranış kalır (kural o olay için sessizce atlanır). **7. hafta notu:** bu durum için fren olayı yazılmalı (atlanan kural günlükte iz bırakmalı).
+- [x] **MiniHan:** `olay_rolu` kullanıyor. `cesaret` dışındaki kişilik değerleri 0.5 kalıyor; **11. hafta denge turunda ayarlanacak.**
+
+**4. hafta: Claude'un varsayılan seçtikleri, hâlâ Yusuf'un onayını bekleyenler (ayrıntı `docs/notes/kural-motoru.md`, `tick-dongusu.md`):**
 - **Tek durum görüntüsü:** bir adımdaki bütün kurallar adım başındaki durumu görür; aynı adımdaki başka kuralın çıktısı görünmez.
 - **Gerçek etkisi** durumu değiştirmiyorsa üretilmez ve aynı adımda aynı gerçek tek kez yazılır; `hafiza` etkisi her zaman tetikleyici olayı hatırlatır.
-- **Aynı olay için çift hafıza kaydı:** algı (önem 0.5) ve `hafiza` etkisi (ör. 0.9) ayrı kayıtlardır; `query` ikisini de gösterir.
 - **Oyuncu hareketi yok** (oyuncunun mekanı senaryodan gelir, v0'da değişmez).
 - **1 tick = 1 saat** zaten `docs/notes/zihin.md` madde 5'te **Karar (Yusuf)** olarak kayıtlı; yeni karar gerekmedi.
-- **Kişilik özellikleri** MiniHan'da `cesaret` dışında 0.5 yer tutucu.
 
 ## Sıradaki hafta
 

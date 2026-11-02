@@ -14,6 +14,45 @@ namespace Yanki.Core.Tests.Mind
         });
 
         [Fact]
+        public void Ayni_olay_icin_ikinci_kayit_yeni_kayit_acmaz_onem_max_olur()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici { Tick = 4 };
+            z.Uygula(u.Hafiza("Can", 42, 0.5m));
+            u.Tick = 6;
+            z.Uygula(u.Hafiza("Can", 42, 0.9m));
+
+            var k = Assert.Single(z.HafizaKayitlari);
+            Assert.Equal(0.9m, k.Onem);
+            Assert.Equal(6, k.Tick);
+        }
+
+        [Fact]
+        public void Daha_dusuk_onemli_tekrar_kaydi_degistirmez()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici { Tick = 4 };
+            z.Uygula(u.Hafiza("Can", 42, 0.9m));
+            u.Tick = 6;
+            z.Uygula(u.Hafiza("Can", 42, 0.5m));
+
+            var k = Assert.Single(z.HafizaKayitlari);
+            Assert.Equal(0.9m, k.Onem);
+            Assert.Equal(4, k.Tick);
+        }
+
+        [Fact]
+        public void Farkli_olaylar_ayri_kayit_olarak_kalir()
+        {
+            var z = Yeni();
+            var u = new ZihinOlayUretici { Tick = 4 };
+            z.Uygula(u.Hafiza("Can", 42, 0.5m));
+            z.Uygula(u.Hafiza("Can", 43, 0.5m));
+
+            Assert.Equal(2, z.HafizaKayitlari.Count);
+        }
+
+        [Fact]
         public void Kayit_olay_kimligi_ve_onem_tasir()
         {
             var z = Yeni();

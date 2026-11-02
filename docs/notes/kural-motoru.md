@@ -17,13 +17,8 @@ Kural dosyası (`kurallar.json`):
       "id": "yardim_minneti",
       "ne_zaman": "yardim_etti",
       "kriterler": [
-        {
-          "alan": "fikir(olay.fail)",
-          "op": "<",
-          "deger": 50,
-          "agirlik": 1,
-          "zorunlu": false
-        }
+        { "alan": "olay_rolu(hedef)", "op": "==", "deger": true },
+        { "alan": "fikir(olay.fail)", "op": "<", "deger": 50 }
       ],
       "etkiler": [
         {
@@ -52,7 +47,7 @@ Kural dosyası (`kurallar.json`):
 }
 ```
 
-- **Kriterler** mevcut kriter dilidir (`docs/criteria-language.md`): `KriterOkuyucu` JSON'u `Kriter.Olustur`'a verir, `Secici.Puanla` puanlar. İkinci bir kriter yolu yoktur.
+- **Kriterler** mevcut kriter dilidir (`docs/criteria-language.md`): `KriterOkuyucu` JSON'u `Kriter.Olustur`'a verir, `KriterDegerlendirici` her kriteri değerlendirir; kural yalnızca hepsi tutunca çalışır (ADR-010). İkinci bir kriter yolu yoktur.
 - **Roller:** kural bağlamında `ben` (kuralı değerlendiren NPC), `oyuncu`, `olay.fail`, `olay.hedef`. `konusan`/`dinleyen` diyalog içindir, kuralda reddedilir.
 - **Etkiler (v0, genişletilmedi):** `modifier`, `eksen`, `duygu`, `hafiza`, `gercek`. Zihin etkileri `ben`'in zihnine yazılır; `hedef` ilişkinin karşı tarafıdır. `hafiza` tetikleyici olayı hatırlatır.
   `gercek` metnindeki `{ben}`, `{oyuncu}`, `{olay.fail}`, `{olay.hedef}` çalışma anında kimlikle doldurulur.
@@ -71,12 +66,12 @@ Kural dosyası (`kurallar.json`):
 
 `cooldown`, `tick_basina_en_fazla`, `yay` koşulları, zincir derinliği sınırı, fren olayları, korumalı bayraklar (hepsi 7. hafta). Sözlüğe yeni fonksiyon eklenmedi.
 
-## Açık noktalar (Yusuf'un kararı)
+## Kararlar (Yusuf, PR #7 incelemesi) ve açık noktalar
 
-1. **Kural ne zaman tetiklenir?** Şu an: hiçbir `zorunlu` kriter elenmemiş **ve** toplam puan 0'dan büyük (tutan en az bir kriter); kriteri olmayan kural olay türü tutunca tetiklenir.
-   Alternatif: tüm kriterler tutmalı ("hepsi"), ya da kuralda `esik` puanı. ADR-003'ün ağırlık/puan modeline en yakın olan şimdiki seçim.
-2. **Olayda tanımsız rol:** kural `olay.hedef` kullanıyor ama eylemin hedefi yoksa kural o olay için sessizce atlanır (hata değil).
-3. **`hafiza` etkisi** her zaman tetikleyici olayı hatırlatır; başka bir olayı seçme yok.
-4. **Algı olayları kural tetiklemez** (`kanit_eklendi`/`hafiza_eklendi` `KuralId: algi`); yalnızca oyuncu eylemleri ve kural çıktıları tetikler.
-   Kural çıktıları sonraki tick'te hem algıya (dış olaysa) hem kurallara girer; bir zihin olayını yalnızca sahibi algılar.
-5. **Etki hedefi** senaryoda bulunmayan bir sabit kimlikse `Simulasyon.Olustur` reddeder.
+- **Karar (Yusuf):** Kural yalnızca **tüm kriterleri** tutunca çalışır; kriteri olmayan kural her tetikleyici olayda çalışır; `agirlik` sonucu etkilemez ve doğrulayıcı uyarı verir (ADR-010).
+- **Karar (Yusuf):** Hedef/tanık ayrımı `olay_rolu(fail|hedef|tanik)` ile yapılır (sözlüğe eklendi). Rol, o olaydaki fail/hedef alanlarından belirlenir; geçmiş inançlara bakmaz.
+- **Karar (Yusuf):** Tanımsız rol gerektiren kural o olay için atlanır; 7. haftada bu durum için fren olayı yazılacak.
+- **Karar (Yusuf):** Algı yalnızca dış olayları alır; algı olayları kural tetiklemez. Kural çıktıları sonraki tick'te hem algıya (dış olaysa) hem kurallara girer; bir zihin olayını yalnızca sahibi algılar.
+- **Karar (Yusuf):** Aynı NPC ve aynı olay için tek hafıza kaydı; `hafiza` etkisi önemi `max(eski, yeni)` yapar (yalnızca artarsa kayıt tazelenir); her çağrı yine `hafiza_eklendi` olayıyla kaydedilir.
+- **Açık:** `hafiza` etkisi her zaman tetikleyici olayı hatırlatır; başka bir olayı seçme yok.
+- **Açık:** Etki hedefi senaryoda bulunmayan bir sabit kimlikse `Simulasyon.Olustur` reddeder.

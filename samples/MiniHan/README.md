@@ -3,25 +3,25 @@
 Motoru uçtan uca sınamak için küçük bir senaryo: oyuncu eylemi → algı → kural → fikir değişimi → `why` zinciri. **Kasaba Hanı değildir** (o, 9. hafta); dedikodu ve NPC kararı yoktur, akış oyuncu eylemini aynı mekanda görenler üzerinden çalışır.
 İçeriği Yusuf seçti (seçenek A + hedef/tanık düzeltmesi).
 
-| Varlık | Mekan | Not |
-|---|---|---|
-| `oyuncu` | han | |
-| `Ayse` (hancı) | han | cesaret 0.3 |
-| `Can` (demirci) | han | cesaret 0.8 |
+| Varlık          | Mekan | Not                                |
+| --------------- | ----- | ---------------------------------- |
+| `oyuncu`        | han   |                                    |
+| `Ayse` (hancı)  | han   | cesaret 0.3                        |
+| `Can` (demirci) | han   | cesaret 0.8                        |
 | `Veli` (gezgin) | pazar | cesaret 0.5; han ile `pazar` bağlı |
 
-Eylem türleri: `yardim_etti`, `tehdit_etti`. Kişilik özelliklerinden `cesaret` dışındakiler (açgözlülük, dürüstlük, sosyallik, kin tutma, merhamet) **0.5 yer tutucudur**; Yusuf değiştirebilir.
+Eylem türleri: `yardim_etti`, `tehdit_etti`. Kişilik özelliklerinden `cesaret` dışındakiler (açgözlülük, dürüstlük, sosyallik, kin tutma, merhamet) **0.5 yer tutucudur**; 11. hafta denge turunda ayarlanacak.
 
 ## Kurallar (`kurallar.json`)
 
-Hedef/tanık ayrımı yeni bir sorgu fonksiyonu eklemeden, `inanc(<tür>(olay.fail, ben))` ile yapılır: algı olayı `tur(fail, hedef)` önermesini yazdığı için yalnızca hedef NPC bu önermeye inanır.
+Hedef/tanık ayrımı `olay_rolu(hedef)` / `olay_rolu(tanik)` ile yapılır (4. haftada Yusuf'un kararıyla sözlüğe eklendi). Bir kural yalnızca tüm kriterleri tutunca çalışır (ADR-010).
 
-| Kural | Ne zaman | Kim için | Etki |
-|---|---|---|---|
-| `yardim_minneti` | `yardim_etti` | yalnızca olayın hedefi | `olay.fail`'e `minnet` +15 (336 tick) |
-| `tehdit_korkusu` | `tehdit_etti` | yalnızca olayın hedefi | `korku` ekseni +15, `korku` duygusu 0.6, hafıza 0.9 |
-| `tehdit_cesur_ofkesi` | `tehdit_etti` | yalnızca hedef ve `kisilik(cesaret) >= 0.7` | `tehdit_edildi` −20 (168 tick), `ofke` duygusu 0.5 |
-| `tehdit_tanigi` | `tehdit_etti` | hedef olmayan tanıklar | `olay.fail`'e `tehdit_gordu` −5 (168 tick) |
+| Kural                 | Ne zaman      | Kim için                                    | Etki                                                |
+| --------------------- | ------------- | ------------------------------------------- | --------------------------------------------------- |
+| `yardim_minneti`      | `yardim_etti` | yalnızca olayın hedefi                      | `olay.fail`'e `minnet` +15 (336 tick)               |
+| `tehdit_korkusu`      | `tehdit_etti` | yalnızca olayın hedefi                      | `korku` ekseni +15, `korku` duygusu 0.6, hafıza 0.9 |
+| `tehdit_cesur_ofkesi` | `tehdit_etti` | yalnızca hedef ve `kisilik(cesaret) >= 0.7` | `tehdit_edildi` −20 (168 tick), `ofke` duygusu 0.5  |
+| `tehdit_tanigi`       | `tehdit_etti` | hedef olmayan tanıklar                      | `olay.fail`'e `tehdit_gordu` −5 (168 tick)          |
 
 ## Akış ve beklenen sonuç
 

@@ -542,7 +542,22 @@ namespace Yanki.Core.Mind
                 throw new ArgumentOutOfRangeException("onem", onem, $"Olay #{olay.Id}: hafıza önemi 0..1 olmalı.");
             }
 
-            _hafiza.Add(new HafizaKaydi(ZihinOlaylari.Tam(olay, "olay"), onem, olay.Tick));
+            // Aynı olay için tek kayıt: kayıt varsa önem max(eski, yeni) olur (yalnızca artarsa kayıt tazelenir), yoksa yeni kayıt açılır.
+            var hatirlanan = ZihinOlaylari.Tam(olay, "olay");
+            for (var i = 0; i < _hafiza.Count; i++)
+            {
+                if (_hafiza[i].OlayId == hatirlanan)
+                {
+                    if (onem > _hafiza[i].Onem)
+                    {
+                        _hafiza[i] = new HafizaKaydi(hatirlanan, onem, olay.Tick);
+                    }
+
+                    return;
+                }
+            }
+
+            _hafiza.Add(new HafizaKaydi(hatirlanan, onem, olay.Tick));
         }
 
         // ---- Yardımcılar ----

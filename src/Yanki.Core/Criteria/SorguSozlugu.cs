@@ -45,7 +45,7 @@ namespace Yanki.Core.Criteria
     }
 
     /// <summary>
-    /// Kriter dilinin sabit sorgu fonksiyonu sözlüğü (v0.1, 15 fonksiyon). Kaynak: <c>docs/criteria-language.md</c>;
+    /// Kriter dilinin sabit sorgu fonksiyonu sözlüğü (v0.1, 16 fonksiyon). Kaynak: <c>docs/criteria-language.md</c>;
     /// sözlük Yusuf'un tasarım alanıdır, değişiklik onun onayıyla yapılır.
     /// </summary>
     public static class SorguSozlugu
@@ -64,10 +64,14 @@ namespace Yanki.Core.Criteria
             new FonksiyonTanimi("kaynak", 2, DonusTuru.Mantiksal, 0),
             new FonksiyonTanimi("kisilik", 1, DonusTuru.Sayi),
             new FonksiyonTanimi("modifier_var", 2, DonusTuru.Mantiksal),
+            new FonksiyonTanimi("olay_rolu", 1, DonusTuru.Mantiksal),
             new FonksiyonTanimi("stres", 0, DonusTuru.Sayi),
             new FonksiyonTanimi("yalan_soyledi", 1, DonusTuru.Mantiksal),
             new FonksiyonTanimi("yay", 1, DonusTuru.Sayi),
         };
+
+        /// <summary><c>olay_rolu</c> argümanının geçerli değerleri.</summary>
+        public static readonly string[] OlayRolleri = { "fail", "hedef", "tanik" };
 
         /// <summary>Geçerli bant değerleri.</summary>
         public static readonly IReadOnlyList<string> Bantlar =
@@ -118,6 +122,12 @@ namespace Yanki.Core.Criteria
                 throw new KriterHatasi(
                     $"'{tanim.Ad}' {tanim.ArgumanSayisi} argüman alır, {cagri.Argumanlar.Count} verildi",
                     cagri.Konum);
+            }
+
+            if (tanim.Ad == "olay_rolu"
+                && !(cagri.Argumanlar[0] is TanimlayiciArgumani rolAdi && Array.IndexOf(OlayRolleri, rolAdi.Ad) >= 0))
+            {
+                throw new KriterHatasi("'olay_rolu' argümanı fail, hedef ya da tanik olmalı", cagri.Argumanlar[0].Konum);
             }
 
             for (var i = 0; i < cagri.Argumanlar.Count; i++)

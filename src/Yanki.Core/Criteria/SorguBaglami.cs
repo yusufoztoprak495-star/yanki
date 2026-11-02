@@ -38,6 +38,20 @@ namespace Yanki.Core.Criteria
             _olayHedef = olayHedef ?? string.Empty;
         }
 
+        /// <summary>Rol bu bağlamda tanımlı mı.</summary>
+        public bool Tanimli(Rol rol)
+        {
+            switch (rol)
+            {
+                case Rol.Ben: return _ben.Length > 0;
+                case Rol.Oyuncu: return _oyuncu.Length > 0;
+                case Rol.Konusan: return _konusan.Length > 0;
+                case Rol.Dinleyen: return _dinleyen.Length > 0;
+                case Rol.OlayFail: return _olayFail.Length > 0;
+                default: return _olayHedef.Length > 0;
+            }
+        }
+
         /// <summary>Rolün varlık kimliği.</summary>
         /// <exception cref="InvalidOperationException">Rol bu bağlamda tanımlı değilse.</exception>
         public string Coz(Rol rol)

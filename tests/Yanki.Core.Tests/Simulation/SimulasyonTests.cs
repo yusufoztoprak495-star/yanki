@@ -223,21 +223,93 @@ namespace Yanki.Core.Tests.Simulation
         }
 
         [Fact]
-        public void Kriter_tutarsa_kural_calisir_ve_puani_0_olan_agirlikli_kural_calismaz()
+        public void Kural_yalnizca_tum_kriterler_tutunca_calisir_agirlik_etkilemez()
         {
             const string kurallar = @"{ ""kurallar"": [
-  { ""id"": ""k_tutar"", ""ne_zaman"": ""yardim_etti"",
-    ""kriterler"": [ { ""alan"": ""fikir(olay.fail)"", ""op"": ""<="", ""deger"": 0, ""agirlik"": 2 } ],
+  { ""id"": ""k_hepsi"", ""ne_zaman"": ""yardim_etti"",
+    ""kriterler"": [ { ""alan"": ""fikir(olay.fail)"", ""op"": ""<="", ""deger"": 0, ""agirlik"": 0 },
+                     { ""alan"": ""stres()"", ""op"": ""=="", ""deger"": 0 } ],
     ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.4 } ] },
-  { ""id"": ""k_tutmaz"", ""ne_zaman"": ""yardim_etti"",
-    ""kriterler"": [ { ""alan"": ""fikir(olay.fail)"", ""op"": "">"", ""deger"": 0, ""agirlik"": 2 } ],
+  { ""id"": ""k_biri_tutmaz"", ""ne_zaman"": ""yardim_etti"",
+    ""kriterler"": [ { ""alan"": ""fikir(olay.fail)"", ""op"": ""<="", ""deger"": 0, ""agirlik"": 100 },
+                     { ""alan"": ""stres()"", ""op"": "">"", ""deger"": 50 } ],
     ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.4 } ] } ] }";
             var s = SimFikstur.Yap(kurallar);
             s.Submit(Yardim());
             s.Tick(1);
 
-            Assert.Contains(s.Gunluk.Olaylar, o => o.KuralId == "k_tutar");
-            Assert.DoesNotContain(s.Gunluk.Olaylar, o => o.KuralId == "k_tutmaz");
+            Assert.Contains(s.Gunluk.Olaylar, o => o.KuralId == "k_hepsi");
+            Assert.DoesNotContain(s.Gunluk.Olaylar, o => o.KuralId == "k_biri_tutmaz");
+        }
+
+        [Fact]
+        public void Kriteri_olmayan_kural_her_tetikleyici_olayda_calisir()
+        {
+            const string kurallar = @"{ ""kurallar"": [ { ""id"": ""her_zaman"", ""ne_zaman"": ""yardim_etti"",
+  ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""olay.fail"", ""eksen"": ""guven"", ""delta"": 1 } ] } ] }";
+            var s = SimFikstur.Yap(kurallar);
+            s.Submit(Yardim("Ali"));
+            s.Tick(1);
+            s.Submit(Yardim("Can"));
+            s.Tick(1);
+
+            Assert.Equal(2, s.Gunluk.Olaylar.Count(o => o.KuralId == "her_zaman" && o.Tick == 1));
+            Assert.Equal(2, s.Gunluk.Olaylar.Count(o => o.KuralId == "her_zaman" && o.Tick == 2));
+        }
+
+        private const string RolKurallari = @"{ ""kurallar"": [
+  { ""id"": ""tehdit_korkusu"", ""ne_zaman"": ""tehdit_etti"",
+    ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true } ],
+    ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""olay.fail"", ""eksen"": ""korku"", ""delta"": 15 } ] },
+  { ""id"": ""tehdit_tanigi"", ""ne_zaman"": ""tehdit_etti"",
+    ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ],
+    ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""tehdit_gordu"", ""deger"": -5, ""sure"": 100 } ] } ] }";
+
+        [Fact]
+        public void Daha_once_tehdit_edilen_npc_baskasina_yapilan_tehdidin_tanigidir_hedefi_degil()
+        {
+            // Regresyon: Ali once kendisi tehdit edildi (tehdit_etti(oyuncu,Ali) inanci kalici), sonra Veli'ye yapilan tehdidi goruyor.
+            // Ali bu olayda yalnizca tanik; hedef kurali calismamali.
+            var s = SimFikstur.Yap(RolKurallari);
+            s.Submit(new PlayerAction("tehdit_etti", "Ali"));
+            s.Tick(1);
+            s.Submit(new PlayerAction("tehdit_etti", "Veli"));
+            s.Tick(1);
+
+            var ikinci = s.Gunluk.Olaylar.Where(o => o.Tick == 2 && o.KuralId != "player" && o.KuralId != "algi").ToList();
+            Assert.Equal("tehdit_tanigi", Assert.Single(ikinci, o => o.Deger("npc") == "Ali").KuralId);
+            Assert.Equal("tehdit_korkusu", Assert.Single(ikinci, o => o.Deger("npc") == "Veli").KuralId);
+
+            var ilk = s.Gunluk.Olaylar.Where(o => o.Tick == 1 && o.KuralId != "player" && o.KuralId != "algi").ToList();
+            Assert.Equal("tehdit_korkusu", Assert.Single(ilk, o => o.Deger("npc") == "Ali").KuralId);
+            Assert.Equal("tehdit_tanigi", Assert.Single(ilk, o => o.Deger("npc") == "Veli").KuralId);
+        }
+
+        [Fact]
+        public void Baska_mekandaki_npc_hicbir_role_girmez()
+        {
+            var s = SimFikstur.Yap(RolKurallari);
+            s.Submit(new PlayerAction("tehdit_etti", "Ali"));
+            s.Tick(1);
+
+            Assert.DoesNotContain(s.Gunluk.Olaylar, o => o.Tick == 1 && o.Tur != "varlik_eklendi" && o.Tur != "gercek_eklendi" && o.Tur != "mekan_baglandi" && o.Yuk.Any(y => y.Key == "npc" && y.Value == "Can"));
+        }
+
+        [Fact]
+        public void Hafiza_etkisi_ayni_olay_icin_tek_kayit_birakir_ve_max_onemi_tutar()
+        {
+            const string kurallar = @"{ ""kurallar"": [ { ""id"": ""hatirla"", ""ne_zaman"": ""tehdit_etti"",
+  ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.9 } ] } ] }";
+            var s = SimFikstur.Yap(kurallar);
+            s.Submit(new PlayerAction("tehdit_etti", "Ali"));
+            s.Tick(1);
+
+            var eylem = s.Gunluk.Olaylar.Single(o => o.Tur == "tehdit_etti");
+            var kayit = Assert.Single(s.Zihinler["Ali"].HafizaKayitlari);
+            Assert.Equal(eylem.Id, kayit.OlayId);
+            Assert.Equal(0.9m, kayit.Onem);
+            // Degisiklik olayla kaydedilir: algi (0.5) ve kural (0.9) iki ayri hafiza_eklendi olayidir.
+            Assert.Equal(2, s.Gunluk.Olaylar.Count(o => o.Tur == "hafiza_eklendi" && o.Deger("npc") == "Ali"));
         }
 
         [Fact]

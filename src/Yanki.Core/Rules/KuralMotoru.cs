@@ -82,8 +82,8 @@ namespace Yanki.Core.Rules
     /// Tüm değerlendirme tek bir durum görüntüsü üzerinde yapılır: adım içinde üretilen etkiler aynı adımdaki başka kurallara görünmez.
     /// </para>
     /// <para>
-    /// Kriterli bir kural şu durumda tetiklenir: hiçbir <c>zorunlu</c> kriter elenmemiş ve toplam puan 0'dan büyük
-    /// (tutan en az bir kriter). Kriteri olmayan kural olay türü tutunca tetiklenir. Kuralın başvurduğu bir rol olayda
+    /// Bir kural yalnızca tüm kriterleri tutunca tetiklenir (ADR-010); kriteri olmayan kural her tetikleyici olayda tetiklenir.
+    /// <c>agirlik</c> ve <c>zorunlu</c> sonucu etkilemez (kriter puanı kural tetiklenmesinde kullanılmaz). Kuralın başvurduğu bir rol olayda
     /// tanımsızsa (ör. hedefsiz eylemde <c>olay.hedef</c>) kural o olay için atlanır.
     /// </para>
     /// </summary>
@@ -214,8 +214,15 @@ namespace Yanki.Core.Rules
                 return true;
             }
 
-            var iz = Secici.Puanla(new Aday<KuralTanimi>(kural.Id, kural, kural.Kriterler), cozucu, baglam);
-            return !iz.Elendi && iz.Puan > 0m;
+            foreach (var kriter in kural.Kriterler)
+            {
+                if (!KriterDegerlendirici.Degerlendir(kriter, cozucu, baglam).Tuttu)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static UretilenEtki? EtkiUret(

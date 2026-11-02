@@ -209,6 +209,35 @@ namespace Yanki.Core.Tests.Rules
         }
 
         [Fact]
+        public void Agirlik_kullanan_kural_icin_uyari_verir_ama_yuklenir()
+        {
+            var sonuc = Yukle(Gecerli);
+
+            Assert.True(sonuc.Basarili);
+            var uyari = Assert.Single(sonuc.Uyarilar);
+            Assert.Equal("yardim_minneti", uyari.KuralId);
+            Assert.Contains("agirlik", uyari.Mesaj);
+            Assert.StartsWith("kurallar.json:", uyari.ToString());
+        }
+
+        [Fact]
+        public void Agirliksiz_kural_uyari_vermez()
+        {
+            var sonuc = Yukle(Tek("\"kriterler\": [ { \"alan\": \"olay_rolu(hedef)\", \"op\": \"==\", \"deger\": true } ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ]"));
+            Assert.True(sonuc.Basarili, string.Join("\n", sonuc.Hatalar));
+            Assert.Empty(sonuc.Uyarilar);
+        }
+
+        [Theory]
+        [InlineData("olay_rolu(baska)")]
+        [InlineData("olay_rolu(oyuncu)")]
+        [InlineData("olay_rolu()")]
+        public void Olay_rolu_yalnizca_fail_hedef_tanik_alir(string alan)
+        {
+            HataVar(Tek("\"kriterler\": [ { \"alan\": \"" + alan + "\", \"op\": \"==\", \"deger\": true } ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ]"), "olay_rolu");
+        }
+
+        [Fact]
         public void Birden_cok_hata_toplanir()
         {
             const string json = "{ \"kurallar\": [ " +
