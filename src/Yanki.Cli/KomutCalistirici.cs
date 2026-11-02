@@ -58,9 +58,10 @@ namespace Yanki.Cli
         {
             w.WriteLine("Kullanım:");
             w.WriteLine("  yanki run <senaryo.json> [--seed N] [--eylem tur[:hedef[:anahtar=deger,...]]] [--tick N] ... [--kaydet oturum.json] [--hepsi]");
+            w.WriteLine("      oyuncu hareketi: --eylem hareket:<komsu_mekan>");
             w.WriteLine("  yanki replay <oturum.json> [--guncelle]");
-            w.WriteLine("  yanki query <oturum.json> <npc>");
-            w.WriteLine("  yanki why <oturum.json> <olayId>");
+            w.WriteLine("  yanki query <oturum.json> <npc>      (NPC durumu ve son karar izi)");
+            w.WriteLine("  yanki why <oturum.json> <olayId>     (nedensellik zinciri; karar olayında adaylar ve puan bileşenleri)");
             w.WriteLine("  yanki --version");
         }
 

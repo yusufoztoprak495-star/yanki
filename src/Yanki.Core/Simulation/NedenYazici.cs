@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
+using Yanki.Core.Decision;
 using Yanki.Core.Events;
 
 namespace Yanki.Core.Simulation
@@ -10,7 +11,8 @@ namespace Yanki.Core.Simulation
     /// <summary>
     /// "Neden?" zincirini okunur satırlara çevirir (<c>yanki why</c>): önce olayın kendisi, altında girintili olarak
     /// <see cref="Olay.NedenOlaylar"/> ve onların nedenleri, kök nedene (oyuncu eylemi) kadar. Birden fazla yoldan
-    /// erişilen olay yalnızca ilk görüldüğü yerde açılır; sonrakilerde <c>(yukarıda)</c> yazar.
+    /// erişilen olay yalnızca ilk görüldüğü yerde açılır; sonrakilerde <c>(yukarıda)</c> yazar. Zincirde bir <c>karar_verildi</c> olayına
+    /// gelince altına karar izinin okunur satırları (adaylar, puan bileşenleri, seçim, kaynaklar) girintili eklenir.
     /// </summary>
     public static class NedenYazici
     {
@@ -60,6 +62,12 @@ namespace Yanki.Core.Simulation
 
             foreach (var kv in olay.Yuk)
             {
+                // Karar izi büyük bir JSON'dur; özette yazılmaz, ayrıntısı zincirde ve `query` çıktısında okunur satırlarla gösterilir.
+                if (olay.Tur == YerlesikTurler.KararVerildi && kv.Key == "iz")
+                {
+                    continue;
+                }
+
                 sb.Append(' ').Append(kv.Key).Append('=').Append(kv.Value);
             }
 
@@ -76,6 +84,11 @@ namespace Yanki.Core.Simulation
             }
 
             satirlar.Add(onek + Ozet(olay));
+            foreach (var detay in KararIziOzeti.Satirlar(olay))
+            {
+                satirlar.Add(Tekrarla(Girinti, derinlik) + detay);
+            }
+
             foreach (var nedenId in olay.NedenOlaylar)
             {
                 Ac(gunluk, gunluk[nedenId], derinlik + 1, satirlar, gorulen);
