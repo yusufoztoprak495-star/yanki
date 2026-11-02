@@ -50,7 +50,6 @@ namespace Yanki.Core.Tests.Criteria
         }
 
         [Theory]
-        [InlineData("fikir(eylem)")]
         [InlineData("fikir(eylem.fail)")]
         [InlineData("fikir(eylem.)")]
         public void Eksik_ya_da_yanlis_eylem_rolu_hatadir(string ifade) =>

@@ -127,7 +127,7 @@ namespace Yanki.Core.Criteria
                         return OlayRolu(konum);
                     }
 
-                    if (ad == "eylem")
+                    if (ad == "eylem" && Bak() == '.')
                     {
                         return EylemRolu(konum);
                     }

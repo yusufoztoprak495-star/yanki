@@ -21,6 +21,16 @@ namespace Yanki.Core.Decision
             _ayarlar = ayarlar ?? new SecimAyarlari();
         }
 
+        /// <summary>
+        /// Ham zarı (<c>[0, 1)</c>) 6 ondalığa yuvarlar; yuvarlama 1'e ulaşırsa <c>0.999999</c>'a çeker, böylece zar belgelenen aralıkta kalır
+        /// ve son aday yalnızca gerçekten son dilimde seçilir.
+        /// </summary>
+        internal static decimal ZarYuvarla(decimal ham)
+        {
+            var z = Egriler.Yuvarla(ham);
+            return z >= 1m ? 0.999999m : z;
+        }
+
         /// <inheritdoc />
         public SecimSonucu Sec(KararBaglami baglam, IReadOnlyList<Aday> adaylar, IReadOnlyList<ElenenAday> elenenler)
         {
@@ -75,7 +85,7 @@ namespace Yanki.Core.Decision
             }
             else if (havuz.Count > 1)
             {
-                var z = Egriler.Yuvarla(AnahtarliRng.Icin(baglam.Seed, baglam.Tick, baglam.Npc, "karar").SonrakiDecimal01());
+                var z = ZarYuvarla(AnahtarliRng.Icin(baglam.Seed, baglam.Tick, baglam.Npc, "karar").SonrakiDecimal01());
                 zar = z;
                 var toplam = 0m;
                 foreach (var p in havuz)

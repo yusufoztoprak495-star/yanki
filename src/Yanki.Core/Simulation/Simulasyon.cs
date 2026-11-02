@@ -494,6 +494,26 @@ namespace Yanki.Core.Simulation
                 }
 
                 var sonuc = _secici.Sec(baglam, uretim.Adaylar, uretim.Elenenler);
+                if (sonuc.Secilen != null)
+                {
+                    // Özel bir seçici (GOAP/BT adaptörü) yalnızca ön koşulları tutan adaylardan seçebilir; hedef/hareket doğrulaması buna dayanır.
+                    var adaylarda = false;
+                    foreach (var a in uretim.Adaylar)
+                    {
+                        if (string.Equals(a.Anahtar, sonuc.Secilen.Anahtar, StringComparison.Ordinal))
+                        {
+                            adaylarda = true;
+                            break;
+                        }
+                    }
+
+                    if (!adaylarda)
+                    {
+                        throw new InvalidOperationException(
+                            $"Seçici {npc.Id} (tick {_tick}) için aday listesinde olmayan bir seçim döndürdü: \"{sonuc.Secilen.Anahtar}\" (seçici yalnızca verilen adaylardan seçebilir).");
+                    }
+                }
+
                 secimler.Add(new NpcSecimi(npc.Id, Dunya.TekDeger("konum!", npc.Id) ?? string.Empty, sonuc));
             }
 

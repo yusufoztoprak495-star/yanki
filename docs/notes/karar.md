@@ -74,6 +74,9 @@ Bu hafta için yeterli; cooldown, tetiklenme sınırı ve fren olayları 7. haft
 
 ## Açık noktalar
 
+- **Kod incelemesi bulguları (düzeltildi):** `eylem` adı artık yalnızca `eylem.` biçiminde rol sayılır (önceki gramer korunur: `inanc(eylem(*,*))` ve `eylem` kimliği geçerli); zar yuvarlaması 1'e ulaşamaz (`0.999999`); seçici sonucu aday listesinde değilse `Simulasyon` açık hata verir.
+- **Kod incelemesi bulguları (açık, 7. hafta, bkz. `DURUM.md`):** adım 6.3'te eylem etkilerinin sırası (aynı tick'te aynı tek değerli gerçek: son kimlik kazanır), `KaynakToplayici`nın dünya okuyan sorgularda sessizliği, `replay` hash'inin karar olaylarını kapsamaması.
+
 - Z3 ve Z4 (7. hafta, Yusuf'un kararı bekleniyor): bkz. `DURUM.md`.
 - Mekan hedefli olayda atlanan etki için fren olayı (7. hafta).
 - Eksenin toplam değerinin tek kaynak olayı yok; şimdilik son değişim olayı kaynak gösteriliyor ve birikim `kaynaksiz` içinde not ediliyor. Eksen değişimlerinin tümünü izlemek gerekirse zihin modelinin değişmesi gerekir.
