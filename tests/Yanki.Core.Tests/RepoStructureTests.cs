@@ -53,7 +53,7 @@ namespace Yanki.Core.Tests
         }
 
         [Fact]
-        public void Adr_007_vardir_onerildi_durumunda_ve_gerekcesi_bostur()
+        public void Adr_007_vardir_ve_onerildi_durumundadir()
         {
             var path = RepoRoot.Combine("docs", "adr", "0007-sayisal-temsil-decimal.md");
 
@@ -61,14 +61,6 @@ namespace Yanki.Core.Tests
             var text = File.ReadAllText(path).Replace("\r\n", "\n");
             Assert.Contains("**Durum:** Önerildi", text);
             Assert.Contains("**Kabul eden:** —", text);
-
-            // "Gerekçe (Yusuf)" bölümünü Yusuf yazar; bu bölüm boş kalmalı.
-            var start = text.IndexOf("## Gerekçe (Yusuf)", System.StringComparison.Ordinal);
-            Assert.True(start >= 0, "Gerekçe (Yusuf) başlığı yok.");
-            var rest = text.Substring(start + "## Gerekçe (Yusuf)".Length);
-            var next = rest.IndexOf("\n## ", System.StringComparison.Ordinal);
-            var body = next >= 0 ? rest.Substring(0, next) : rest;
-            Assert.True(string.IsNullOrWhiteSpace(body), "Gerekçe (Yusuf) boş olmalı.");
         }
     }
 }
