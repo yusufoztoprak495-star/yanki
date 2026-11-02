@@ -46,6 +46,10 @@ A biraz daha fazla tören getirir; ölçek küçük olduğu için performans mal
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Yankı'nın varlık sebebi, oyuncu seçiminin gerçek sonuç doğurması ve bunun gösterilebilmesi. Değiştirilebilir durum + ayrı log ile "neden oldu?" sorusunun cevabı log disiplinine bağlı kalırdı; olay kaynaklı çekirdekte cevap yapının kendisinden çıkıyor. Replay, golden test ve geri sarma da aynı kararın yan ürünü. Ödenen bedel, her değişiklik için olay tipi tasarlamak. 10–50 NPC ölçeğinde bu kabul edilebilir.
+
 ## Sonuçlar
 - Kolaylaşan: `yanki why`, `yanki diff`, golden replay testleri, demodaki geri sarma.
 - Zorlaşan: Olay tiplerini baştan dikkatli tasarlamak; günlük biçimi değişince sürüm yükseltmek.

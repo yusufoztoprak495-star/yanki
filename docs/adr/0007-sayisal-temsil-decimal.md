@@ -57,6 +57,10 @@ B, hız yerine deterministik ve okunur sayılar verir; bu proje için doğru tak
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Golden replay, hash'in her platformda aynı çıkmasına dayanıyor. `double` bunu garanti etmediği için en büyük risk tam projenin kanıt mekanizmasında duruyordu. Sabit noktalı sayı da garanti verir ama her işlemde elle ölçekleme ister. `decimal` deterministik, okunur ve kriter değerleriyle doğal eşleşiyor. Yavaşlığı 10–50 NPC ölçeğinde sorun değil; benchmark aksini gösterirse ADR yenilenir.
+
 ## Sonuçlar
 - Kolaylaşan: Platformlar arası aynı hash; kanonik yazım; kriter değerlerinin okunabilirliği.
 - Zorlaşan: Matematik fonksiyonları elle yazılır; `double` bekleyen dış API'lere sınırda çevrim gerekir.

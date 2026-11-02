@@ -65,6 +65,10 @@ tam iner.
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Tick başına sönme olayı, günlüğü anlamsız kayıtlarla şişirir ve `why` zincirini gürültüye boğardı. Sönme zaten formülle bilinen bir şey, olay değil. Saf fonksiyonla sorgu anında hesaplamak günlüğü gerçek olaylara ayırıyor, zihni tick döngüsünden bağımsız test edilebilir kılıyor ve hash'i sorgu tick'inden koruyor. Bedeli, eşik geçişlerinin tick döngüsünde açıkça olaya çevrilmesi. Doğrusal sönme de `Math.Pow` gerektirmediği için ADR-007 ile uyumlu.
+
 ## Sonuçlar
 
 - Kolaylaşan: zihin tek başına test edilir; günlük ve golden dosyalar küçük kalır; `FikirDokumu` her tick için yeniden üretilir.

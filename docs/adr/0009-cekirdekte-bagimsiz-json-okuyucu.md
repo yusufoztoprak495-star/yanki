@@ -46,6 +46,10 @@ Kendi okuyucumuzun bakım yükü, ADR-004'ün "sıfır bağımlılık" taahhüd�
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Unity ve Blazor aynı kuralları aynı şekilde okumalı, ADR-004 ise paket yasaklıyor. JSON'u CLI'ya bırakmak bu kullanıcıları kendi başına bırakır ve satır bilgili doğrulama hatalarını CLI'ya bağlar. Biçim sabit ve dosyalar küçük olduğu için özel okuyucunun bakım yükü düşük. Karşılığında her hedefte aynı davranış, kayıpsız `decimal` ve `dosya:satır` hataları geliyor. Yorum desteği gibi eklentiler bilerek dışarıda.
+
 ## Sonuçlar
 
 - Kolaylaşan: Kural, senaryo, oturum dosyaları çekirdekte doğrulanır; Unity'de ek paket gerekmez; hatalar `dosya:satır` taşır.

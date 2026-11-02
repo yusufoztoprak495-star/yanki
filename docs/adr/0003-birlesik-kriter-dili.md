@@ -45,6 +45,10 @@ sorusunu kanıtlamanın ön şartı.
 
 ## Gerekçe (Yusuf)
 
+> Bu gerekçeyi Claude Code, Yusuf'un isteğiyle plandan, görev metinlerinden ve PR kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+"Seçimler gerçekten önemli mi?" sorusunu kanıtlamak için hangi kuralın ve şablonun hiç tetiklenmediğini ölçmek gerekiyor. Bu, ancak içerik kısıtlı ve doğrulanabilir bir dilde yazılırsa mümkün. Gömülü betik dili sınırsız güç verir ama doğrulamayı ve determinizmi kaybettirir; ayrı DSL'ler işi ikiye katlar. Bir kişinin 12 haftada bakım yapabileceği yol tek dil. Dilin dışında kalan nadir durumlar bilerek kabul edildi.
+
 ## Sonuçlar
 - Kolaylaşan: Doğrulama, kapsama raporu, karar izinde "hangi kriterler sağlandı" gösterimi.
 - Zorlaşan: Dilin dışında kalan nadir durumlar için C# eklenti noktası gerekecek.
