@@ -1,0 +1,19 @@
+{
+  "surum": 1,
+  "seed": 42,
+  "senaryo": "../../samples/MiniHan/scenario.json",
+  "tick_sayisi": 6,
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "yardim_etti",
+      "hedef": "Ayse"
+    },
+    {
+      "tick": 2,
+      "tur": "tehdit_etti",
+      "hedef": "Can"
+    }
+  ],
+  "son_hash": "cee9956ef06df17f"
+}

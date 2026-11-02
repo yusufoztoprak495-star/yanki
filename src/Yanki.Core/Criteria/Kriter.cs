@@ -30,7 +30,7 @@ namespace Yanki.Core.Criteria
 
     /// <summary>
     /// Ağırlıklı tek kriter (Valve tarzı, plan 5.9): bir sorgu çağrısı, operatör, değer, ağırlık ve zorunluluk.
-    /// Kriterler C# ile kurulur; JSON okuma bu hafta yoktur.
+    /// Kriterler C# ile kurulur ya da JSON nesnesinden <c>KriterOkuyucu</c> ile okunur.
     /// </summary>
     public sealed class Kriter
     {

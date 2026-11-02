@@ -9,7 +9,7 @@
 
 **Anlatı oyunları için deterministik, tekrar oynatılabilir NPC hafızası ve sonuç sistemi; Unity, Godot ve sunucuda çalışan açık bir C# kütüphanesi.**
 
-> 🚧 **Erken geliştirme aşamasında.** 12 haftalık planın 1. haftası: iskelet, CI ve mimari kararlar.
+> 🚧 **Erken geliştirme aşamasında.** 12 haftalık planın 4. haftası: olay kaydı, zihin ve doğrudan algı, sonuç kuralları, tick döngüsü, minimal CLI (`run`, `query`, `why`, `replay`) ve ilk golden replay.
 
 ## 1. Rozetler
 

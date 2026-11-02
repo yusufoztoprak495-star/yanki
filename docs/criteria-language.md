@@ -30,7 +30,7 @@ Bir kriter JSON nesnesidir:
 
 ## Sorgu fonksiyonu sözlüğü
 
-v0.1'de sabit, belgelenmiş küçük bir set (yaklaşık 15 fonksiyon). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
+v0.1'de sabit, belgelenmiş küçük bir set (16 fonksiyon; 15'i v0.1 listesi, `olay_rolu` 4. haftada Yusuf'un kararıyla eklendi). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
 İpuçları: ruh hali, stres, mekan, zaman, kimden duydu, kaç kişi biliyor, yalan söylendi mi, bir eylemi en son ne zaman yaptı.
 
 | # | Fonksiyon | Ne sorar | Döndürdüğü | Örnek kriter |
@@ -49,12 +49,22 @@ v0.1'de sabit, belgelenmiş küçük bir set (yaklaşık 15 fonksiyon). **Bu sö
 | 12 | `yalan_soyledi(kime)` | Bu NPC o kişiye yalan söylediğini biliyor mu (kendi yalan kaydı) | doğru/yanlış | `yalan_soyledi(olay.hedef)` |
 | 13 | `ayni_mekanda(hedef)` | Hedefle aynı mekanda mı | doğru/yanlış | `ayni_mekanda(oyuncu)` |
 | 14 | `gercek(onerme)` | Önerme dünyada nesnel olarak doğru mu (yalnızca sonuç kuralları ve yazar koşulları için; NPC zihni bunu göremez) | doğru/yanlış | `gercek(konum!(Ali, han))` |
-| 15 | `yay(degisken)` | Senaryo düzeyindeki dramatik yay değişkeninin değeri | sayı | `yay(kasaba_gerginligi) aralik [2, 4]` |
+| 15 | `olay_rolu(rol)` | Sonuç kuralında mevcut olay bağlamında bu NPC `fail` (olayı yapan), `hedef` (olayın yöneldiği) ya da `tanik` (olayı algılayan, ama ikisi de olmayan) mı. Olay bağlamı yoksa her rol yanlış | doğru/yanlış | `olay_rolu(hedef)` |
+| 16 | `yay(degisken)` | Senaryo düzeyindeki dramatik yay değişkeninin değeri | sayı | `yay(kasaba_gerginligi) aralik [2, 4]` |
 
 ## Bağlama durumu (3. hafta)
 
-`ZihinSorguCozucusu` 15 fonksiyonun 13'ünü gerçek veriye bağlar: zihne dayanan 11 (`kisilik`, `eksen`, `fikir`, `fikir_bandi`, `modifier_var`, `duygu`,
+`ZihinSorguCozucusu` 16 fonksiyonun 14'ünü gerçek veriye bağlar: zihne dayanan 12 (`kisilik`, `eksen`, `fikir`, `fikir_bandi`, `modifier_var`, `olay_rolu`, `duygu`,
 `duygu_hedefi`, `stres`, `inanc`, `kaynak`, `hafiza_var`) ve dünyaya dayanan 2 (`gercek`, `ayni_mekanda`). `yalan_soyledi` (yalan kaydı, 6. hafta) ve
 `yay` (yay değişkenleri, 7. hafta) henüz bağlı değildir. Sözlüğe yeni fonksiyon eklenmedi. `inanc` çelişkide kaybeden önerme için 0 döner;
 `inanc(...)` ve `kaynak(...)` önerme argümanında `degil(yuklem(...))` kabul eder (ör. `inanc(degil(konum!(Ali, han)))` = "Ali handa değil" inancı); `degil` başka yerde ve iç içe geçersizdir. Yeni fonksiyon eklenmedi. Ayrıntı: `docs/notes/zihin.md`.
 
+## JSON'dan okuma ve kural bağlamı (4. hafta)
+
+Kriterler artık JSON nesnesinden okunur (`KriterOkuyucu`; `alan`, `op`, `deger`, isteğe bağlı `agirlik` ve `zorunlu`) ve sonuç kurallarında kullanılır (`docs/notes/kural-motoru.md`).
+Sözlüğe **yeni fonksiyon eklenmedi**. Sonuç kurallarında geçerli roller `ben`, `oyuncu`, `olay.fail`, `olay.hedef`'tir; `konusan` ve `dinleyen` diyalog içindir.
+Çözücüsü henüz bağlı olmayan `yalan_soyledi` ve `yay`, kural doğrulayıcısı tarafından reddedilir.
+
+`olay_rolu(rol)` (4. hafta, Yusuf'un kararı) hedef/tanık ayrımını yapar: önceki geçici `inanc(<tür>(olay.fail, ben))` yöntemi kaldırıldı, çünkü NPC'nin geçmişte benzer bir olayın hedefi olması
+onu sonraki olaylarda yanlışlıkla hedef sayıyordu. Rol yalnızca o olaydaki fail/hedef alanlarından belirlenir; olay bağlamı (`olay.fail`) yoksa her rol yanlıştır.
+Kural kriterleri hakkında: bir kural yalnızca **tüm** kriterleri tutunca çalışır; `agirlik` kural tetiklenmesini etkilemez (doğrulayıcı uyarı verir), bkz. ADR-010.

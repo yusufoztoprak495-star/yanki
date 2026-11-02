@@ -30,7 +30,7 @@ diğer türler → `<tur>(fail, hedef)`.
 
 ## Bu hafta yazılmayanlar
 
-Dedikodu (`anlat`, `duydu` kanıtı aktarımı), konu sınırı, yalan kaydı: 6. hafta. Tick döngüsünde algının hangi olayları alacağı (zihin olaylarının kendisinin algılanıp algılanmayacağı dahil): 4. hafta.
+Dedikodu (`anlat`, `duydu` kanıtı aktarımı), konu sınırı, yalan kaydı: 6. hafta. Tick döngüsünde algının hangi olayları aldığı 4. haftada şöyle çözüldü (Claude önerisi, Yusuf onayı bekliyor; bkz. `docs/notes/kural-motoru.md` açık nokta 4): zihin olayı olmayan (dış) olaylar algılanır (oyuncu eylemleri ve kural çıktılarından gelen `gercek_*` olayları); zihin olaylarını yalnızca sahibi "algılar" (kural tetiklemek için), onlar için kanıt/hafıza yazılmaz (`docs/notes/tick-dongusu.md`).
 
 ## Açık noktalar
 

@@ -116,8 +116,10 @@ namespace Yanki.Core.Perception
         /// Her algılayan için sırayla <c>kanit_eklendi</c> (<c>gordu</c>; önerme türetilemezse atlanır) ve <c>hafiza_eklendi</c> olaylarını
         /// üretir. Olaylar günlüğe EKLENMEZ; kimlik ve sıra günlüğün sonuna göre verilir, çağıran sırayla ekler ve uygular.
         /// Hepsinin <c>NedenOlaylar</c> alanında algılanan olay, <c>KuralId</c>'sinde <c>algi</c> yazar.
+        /// Olaylar varsayılan olarak algılanan olayın tick'ine yazılır; önceki tick'ten ertelenmiş bir olay algılanıyorsa
+        /// algının gerçekleştiği tick <paramref name="tick"/> ile verilir.
         /// </summary>
-        public static IReadOnlyList<Olay> Uret(Dunya dunya, Olay olay, OlayGunlugu gunluk, AlgiAyarlari? ayar = null)
+        public static IReadOnlyList<Olay> Uret(Dunya dunya, Olay olay, OlayGunlugu gunluk, AlgiAyarlari? ayar = null, long? tick = null)
         {
             if (gunluk == null)
             {
@@ -127,8 +129,9 @@ namespace Yanki.Core.Perception
             ayar ??= new AlgiAyarlari();
             var onerme = OnermeUret(olay);
             var neden = new[] { olay.Id };
+            var algiTicki = tick ?? olay.Tick;
             var id = gunluk.SonrakiId;
-            var sira = gunluk.SonrakiSira(olay.Tick);
+            var sira = gunluk.SonrakiSira(algiTicki);
             var sonuc = new List<Olay>();
 
             foreach (var npc in Algilayanlar(dunya, olay))
@@ -136,11 +139,11 @@ namespace Yanki.Core.Perception
                 if (onerme != null)
                 {
                     sonuc.Add(ZihinOlaylari.KanitEklendi(
-                        id++, olay.Tick, sira++, npc, onerme, KanitTurleri.Ad(KanitTuru.Gordu), npc, ayar.GorduKanitGucu, neden, AlgiKuralId, olay.Mekan));
+                        id++, algiTicki, sira++, npc, onerme, KanitTurleri.Ad(KanitTuru.Gordu), npc, ayar.GorduKanitGucu, neden, AlgiKuralId, olay.Mekan));
                 }
 
                 sonuc.Add(ZihinOlaylari.HafizaEklendi(
-                    id++, olay.Tick, sira++, npc, olay.Id, ayar.HafizaOnemi, neden, AlgiKuralId, olay.Mekan));
+                    id++, algiTicki, sira++, npc, olay.Id, ayar.HafizaOnemi, neden, AlgiKuralId, olay.Mekan));
             }
 
             return new ReadOnlyCollection<Olay>(sonuc);

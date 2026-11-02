@@ -1,12 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Konsol sandbox ve araçlar: yanki run / why / diff / validate / coverage (ilerleyen haftalarda). -->
+  <!-- Konsol sandbox ve araçlar: yanki run / query / why / replay (4. hafta); diff / validate / coverage ilerleyen haftalarda. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Yanki.Cli</RootNamespace>
     <AssemblyName>yanki</AssemblyName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Komut mantığı (KomutCalistirici) senaryo testlerinden çağrılır. -->
+    <InternalsVisibleTo Include="Yanki.Scenarios.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Yanki.Core\Yanki.Core.csproj" />

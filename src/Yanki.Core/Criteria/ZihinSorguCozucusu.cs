@@ -8,7 +8,7 @@ namespace Yanki.Core.Criteria
 {
     /// <summary>
     /// Sözlükteki zihne dayanan fonksiyonları gerçek veriye bağlar: <c>kisilik</c>, <c>eksen</c>, <c>fikir</c>, <c>fikir_bandi</c>,
-    /// <c>modifier_var</c>, <c>duygu</c>, <c>duygu_hedefi</c>, <c>stres</c>, <c>inanc</c>, <c>kaynak</c>, <c>hafiza_var</c>.
+    /// <c>modifier_var</c>, <c>olay_rolu</c>, <c>duygu</c>, <c>duygu_hedefi</c>, <c>stres</c>, <c>inanc</c>, <c>kaynak</c>, <c>hafiza_var</c>.
     /// <c>gercek</c> ve <c>ayni_mekanda</c> dünya çözücüsüne devredilir. <c>yalan_soyledi</c> (6. hafta) ve <c>yay</c> (7. hafta)
     /// henüz yoktur. "Ben" rolünün zihni sorgulanır; süreli değerler verilen tick'te hesaplanır (ADR-008).
     /// Çözücü tek tick için kurulur; tick ilerleyince yenisi kurulur.
@@ -47,6 +47,8 @@ namespace Yanki.Core.Criteria
                 case "gercek":
                 case "ayni_mekanda":
                     return _dunyaCozucusu.Coz(cagri, baglam);
+                case "olay_rolu":
+                    return SorguDegeri.Mantiksal(OlayRolundeMi(Ad(cagri, 0), baglam));
                 case "yalan_soyledi":
                     throw new NotSupportedException("'yalan_soyledi' yalan kaydı gerektirir; 6. haftada eklenecek.");
                 case "yay":
@@ -80,6 +82,26 @@ namespace Yanki.Core.Criteria
                     return SorguDegeri.Mantiksal(ben.HafizaVar(_gunluk, Ad(cagri, 0), Varlik(cagri, 1, baglam), Tam(cagri, 2), _simdikiTick));
                 default:
                     throw new NotSupportedException($"'{cagri.Ad}' fonksiyonu ZihinSorguCozucusu'nde yok.");
+            }
+        }
+
+        // "Ben" mevcut olayda ne: fail (olayı yapan), hedef (olayın yöneldiği) ya da tanık (olayı algılayan ama ikisi de olmayan).
+        // Olay bağlamı (olay.fail) yoksa hiçbir rol doğru değildir.
+        private static bool OlayRolundeMi(string rol, SorguBaglami baglam)
+        {
+            if (!baglam.Tanimli(Rol.OlayFail))
+            {
+                return false;
+            }
+
+            var ben = baglam.Coz(Rol.Ben);
+            var fail = string.Equals(ben, baglam.Coz(Rol.OlayFail), StringComparison.Ordinal);
+            var hedef = baglam.Tanimli(Rol.OlayHedef) && string.Equals(ben, baglam.Coz(Rol.OlayHedef), StringComparison.Ordinal);
+            switch (rol)
+            {
+                case "fail": return fail;
+                case "hedef": return hedef;
+                default: return !fail && !hedef;
             }
         }
 

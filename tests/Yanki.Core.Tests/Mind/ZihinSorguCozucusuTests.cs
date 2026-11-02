@@ -247,7 +247,7 @@ namespace Yanki.Core.Tests.Mind
         [Fact]
         public void Her_zihin_fonksiyonu_zihin_ya_da_dunya_cozucusunde_karsilik_bulur()
         {
-            // 15 fonksiyonun hiçbiri "bilinmiyor" diye düşmemeli; yalnızca yalan_soyledi (6. hafta) ve yay (7. hafta) NotSupported verir.
+            // 16 fonksiyonun hiçbiri "bilinmiyor" diye düşmemeli; yalnızca yalan_soyledi (6. hafta) ve yay (7. hafta) NotSupported verir.
             var d = new Duzen();
             var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0);
             var baglam = new SorguBaglami("Ali", oyuncu: "Ayse", konusan: "Ali", dinleyen: "Can", olayFail: "Ali", olayHedef: "Can");
@@ -266,6 +266,7 @@ namespace Yanki.Core.Tests.Mind
                 ["kaynak"] = "kaynak(borclu(*, *, *), Ayse)",
                 ["kisilik"] = "kisilik(cesaret)",
                 ["modifier_var"] = "modifier_var(Can, minnet)",
+                ["olay_rolu"] = "olay_rolu(hedef)",
                 ["stres"] = "stres()",
                 ["yalan_soyledi"] = "yalan_soyledi(oyuncu)",
                 ["yay"] = "yay(x)",

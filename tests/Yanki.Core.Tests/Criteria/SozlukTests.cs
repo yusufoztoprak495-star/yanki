@@ -37,11 +37,11 @@ namespace Yanki.Core.Tests.Criteria
         }
 
         [Fact]
-        public void Sozluk_tam_15_fonksiyon_ve_ordinal_siralidir()
+        public void Sozluk_tam_16_fonksiyon_ve_ordinal_siralidir()
         {
             var adlar = SorguSozlugu.Hepsi.Select(t => t.Ad).ToArray();
 
-            Assert.Equal(15, adlar.Length);
+            Assert.Equal(16, adlar.Length);
             Assert.Equal(adlar.OrderBy(a => a, StringComparer.Ordinal).ToArray(), adlar);
             Assert.Null(SorguSozlugu.Bul("yok_boyle_bir_sey"));
         }
@@ -52,7 +52,7 @@ namespace Yanki.Core.Tests.Criteria
             var satirlar = File.ReadAllLines(RepoRoot.Combine("docs", "criteria-language.md"))
                 .Where(s => s.StartsWith("| ", StringComparison.Ordinal) && char.IsDigit(s[2]))
                 .ToList();
-            Assert.Equal(15, satirlar.Count);
+            Assert.Equal(16, satirlar.Count);
 
             var gorulen = new List<string>();
             foreach (var satir in satirlar)
