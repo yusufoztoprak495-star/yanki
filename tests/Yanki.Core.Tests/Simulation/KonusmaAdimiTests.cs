@@ -361,6 +361,33 @@ namespace Yanki.Core.Tests.Simulation
             Assert.DoesNotContain(secici.Adaylar["Ayse@2"], a => a.StartsWith("anlat_oyuncuya", StringComparison.Ordinal));
         }
 
+        [Fact]
+        public void Konusan_dinleyenin_zihnini_okumaz_karar_dinleyenin_ic_durumundan_bagimsizdir()
+        {
+            (string[] Karar, decimal CanKanitGucu) Kos(bool guvensiz)
+            {
+                var sim = Kur(new Kaydedici().Sec("Ayse", 2, "anlat|Can"));
+                if (guvensiz)
+                {
+                    // Can Ayşe'ye hiç güvenmiyor ve ondan nefret ediyor: bu, Ayşe'nin kararını DEĞİL, yalnızca yazılacak kanıtın gücünü etkiler.
+                    sim.Zihinler["Can"].Uygula(ZihinOlaylari.EksenDegisti(9000, 0, 0, "Can", "Ayse", "guven", -100m, new long[0], "test"));
+                    sim.Zihinler["Can"].Uygula(ZihinOlaylari.ModifierEklendi(9001, 0, 1, "Can", "Ayse", "hakaret_etti", -30m, 500, new long[0], "test"));
+                }
+
+                OyuncuAnlatir(sim, Borc, Kardes);
+                sim.Tick(1);
+                var anlatilar = Anlatilar(sim).Select(o => o.Deger("onerme") + "|" + string.Join(",", o.NedenOlaylar) + "|" + o.Deger("kok") + "|" + o.Deger("gorunurluk"));
+                return (new[] { KararIziYazici.Yaz(sim.KararIzi("Ayse")!), string.Join(";", anlatilar) }, sim.Zihinler["Can"].Kanitlar(Borc).Single().Guc);
+            }
+
+            var iyi = Kos(false);
+            var kotu = Kos(true);
+
+            Assert.Equal(iyi.Karar, kotu.Karar);                // konular, puanlar, nedenler, kök: Ayşe'nin kendi zihninden
+            Assert.Equal(0.49m, iyi.CanKanitGucu);
+            Assert.Equal(0.28m, kotu.CanKanitGucu);             // 0.7 × (0.7 + 0.003 × −100)
+        }
+
         // ---- yalan gizliligi (Teslim 1) ----
 
         // yalan=false: Ayşe Borc'a inanır ve Borc'u anlatır. yalan=true: Ayşe degil(Borc)'a inanır ve Borc'u söyler.
