@@ -15,7 +15,7 @@
 
 ### 1. Yalan gizliliği
 
-Doğru anlatım da yalan da dışarıya **aynı** `anlatti` olay türü ve aynı yük biçimiyle (`onerme`, `kok`, `gorunurluk`) çıkar. Dış olayda, yükte, algı önermesinde (`anlatti(fail,hedef)`; içerik yok) ve kural girdisinde yalan olduğunu belli eden bir iz yoktur.
+Doğru anlatım da yalan da dışarıya **aynı** `anlatti` olay türü ve aynı yük biçimiyle (`onerme`, `kok`, `gorunurluk`) çıkar. Dış olayda, yükte, algı önermesinde (`anlatti(fail,hedef)`; içerik yok) ve kural girdisinde yalan olduğunu belli eden bir iz yoktur. Tek istisna geliştirici bilgisidir: dış olayın `KuralId`'si (`eylem:<id>`; doğru ve yalan ayrı eylem olduğundan farklıdır) ve `kok` değeri (yalanın kökü hep konuşandır). Karar, kural ve algı yolu bunları okumaz (kural dili `kok`/`KuralId` sorgusu içermez); ileride bir `IDialogueRenderer` olay `KuralId`'sini okumamalıdır.
 Yalan bilgisi yalnızca konuşanın zihnine yazılan, algılanmayan ve kural tetiklemeyen bir zihin olayındadır (aktarım kaydı). Yalan **konuşanın kendi inancına** göre tanımlanır, dünya gerçeğine göre değil: yanlış inandığı şeyi anlatan NPC yalancı sayılmaz.
 Doğrulayıcı, `aktarim` alanı olan her eylemin (doğru ya da yalan) `olay_turu` değerinin `anlatti` olmasını zorunlu kılar (M2): doğru anlatım başka bir türle çıksaydı tür farkı yalanı ele verirdi. `anlatti` çekirdeğe ayrılmış bir olay türüdür; `aktarim` alanı olmayan eylem ve senaryo bu adı kullanamaz.
 `why` ve geliştirici çıktısı yalanı `eylem:<id>` ve aktarım kaydından gösterebilir; bu NPC bilgisi değildir.

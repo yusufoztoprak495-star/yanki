@@ -155,11 +155,12 @@ namespace Yanki.Core.Tests.Simulation
         }
 
         [Fact]
-        public void Hedefli_yedek_satir_uyari_verir()
+        public void Hedefli_kriterli_olmayan_satir_yedek_sayilmaz()
         {
             var s = Yukle(Dosya(Satir("y1", "1", "\"y1_oldu\"", "\"en_yakin\"") + ", " + Satir("y2", "2", "\"y2_oldu\"")));
-            Assert.True(s.Basarili);
-            Assert.Contains(s.Uyarilar, u => u.ToString().Contains("yedek"));
+            Assert.False(s.Basarili);
+            Assert.Contains(s.Hatalar, h => h.ToString().Contains("seviye 1 için kriterli olmayan bir yedek satır yok"));
+            Assert.Contains(s.Uyarilar, u => u.ToString().Contains("YEDEK sayılmaz"));
         }
 
         [Fact]

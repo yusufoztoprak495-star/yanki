@@ -69,6 +69,9 @@ Kalan fark (50 NPC: 523.1 / 79.5 ≈ 6.6×) **7. hafta açık kararıdır** (Z3/
 
 ## Açık
 
+- **Kanıt tazelemede `Kaynak` ile `OlayId` ayrışabilir (kod incelemesi bulgusu, Yusuf'un kararı):** aynı kökten daha zayıf bir `duydu` gelirse `Kaynak` güçlü olanda kalır ama `Tick` ve `OlayId` yeni olaya geçer; `why` zinciri bu durumda güçlü kaynağın değil son anlatımın olayına iner ve sönüm yeni tick'ten başlar. Değiştirmek `han-gerilim-1` golden hash'ini etkileyebileceğinden bu PR'da dokunulmadı.
+- **Yedek kriz satırı hedefsiz olmalı:** kriterli olmayan ama hedefli satır yedek sayılmaz (doğrulayıcı hata verir), çünkü hedefi bulunamayan satır elenir ve yedek elenemez.
+
 - **Yalanın kanıt çelişkisinden otomatik yakalanması yok.** Yalanı yakalamak yalnızca yazarın kurallarıyla olur (ör. başka kaynaktan çelişen kanıt gelince `kaynak(...)` ve `inanc(...)` ölçütleriyle) ya da itiraf krizinde. İtiraf kurbanın inancını düzeltmez (açık karar).
 - Duyulan konunun önemi varsayılan 0.5 ve 168 tick'te yenilik sıfırlanır; denge turunda ölçülecek (11. hafta).
 - Hedef türü `npc` ya da `oyuncu`dur; hem NPC hem oyuncuya anlatabilmek için iki eylem yazılır (`anlat`, `anlat_oyuncuya`).

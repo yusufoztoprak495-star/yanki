@@ -79,8 +79,8 @@ namespace Yanki.Core.Simulation
         /// <summary>Olay ve stres düşüşü olaylarının <c>KuralId</c>'si.</summary>
         public string KuralId => KuralIdOneki + Id;
 
-        /// <summary>Kriterli olmayan yedek satır mı.</summary>
-        public bool Yedek => Kriterler.Count == 0;
+        /// <summary>Yedek satır mı: kriterli değil VE hedefsiz (hedefli satır elenebilir, yedek elenemez).</summary>
+        public bool Yedek => Kriterler.Count == 0 && Hedef == KrizHedefTuru.Yok;
 
         /// <summary>Satır kurar.</summary>
         /// <exception cref="ArgumentException">Kimlik/olay türü boşsa ya da seviye 1'den küçükse.</exception>
@@ -397,7 +397,7 @@ namespace Yanki.Core.Simulation
             {
                 uyarilar.Add(new KuralHatasi(
                     kaynak, oge.Satir, kimlik,
-                    "yedek satırın hedefi \"yok\" olmalı: hedefi aynı mekanda olmayan satır elenir ve yedek de elenirse kriz çıkmaz", "kriz"));
+                    "kriterli olmayan ama hedefli satır YEDEK sayılmaz: hedefi aynı mekanda olmayan satır elenir, yedek elenemez (yedeğin hedefi \"yok\" olmalı)", "kriz"));
             }
 
             return new KrizSatiri(kimlik, seviye, olayTuru, hedef, kriterler, etkiler, oge.Satir);

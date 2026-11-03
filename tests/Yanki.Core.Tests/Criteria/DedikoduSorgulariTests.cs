@@ -99,7 +99,7 @@ namespace Yanki.Core.Tests.Criteria
         [InlineData("olay_konusu(degil(borclu(*, *, *)))", "Ayse", false)]  // olumsuzluk uymaz
         [InlineData("olay_konusu(borclu(Mehmet, *, *))", "oyuncu", false)]  // konuşan içeriği "duyan" değildir
         [InlineData("olay_konusu(borclu(Mehmet, *, *))", "Can", false)]     // tanık yalnızca konuşmayı görür
-        public void Olay_konusu_yalnizca_iceriği_duyan_dinleyen_icin_dogrudur(string alan, string ben, bool beklenen)
+        public void Olay_konusu_yalnizca_icerigi_duyan_dinleyen_icin_dogrudur(string alan, string ben, bool beklenen)
         {
             var d = new Duzen();
             var baglam = new SorguBaglami(ben, "oyuncu", olayFail: "oyuncu", olayHedef: "Ayse", olayOnermesi: Borc);
@@ -108,7 +108,7 @@ namespace Yanki.Core.Tests.Criteria
         }
 
         [Fact]
-        public void Olay_konusu_olumsuz_yalan_onermesini_de_eşler()
+        public void Olay_konusu_olumsuz_yalan_onermesini_de_esler()
         {
             var d = new Duzen();
             var baglam = new SorguBaglami("Ayse", "oyuncu", olayFail: "Can", olayHedef: "Ayse", olayOnermesi: "degil(" + Borc + ")");
