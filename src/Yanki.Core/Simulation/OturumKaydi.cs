@@ -35,13 +35,28 @@ namespace Yanki.Core.Simulation
     /// </summary>
     public sealed class OturumKaydi
     {
-        /// <summary>Desteklenen biçim sürümü.</summary>
-        public const int BicimSurumu = 1;
+        /// <summary>Yazılan (güncel) biçim sürümü. Sürüm 1 (yalnızca <c>son_hash</c>) okunmaya devam eder.</summary>
+        public const int BicimSurumu = 2;
 
-        private static readonly string[] Anahtarlar = { "surum", "seed", "senaryo", "tick_sayisi", "eylemler", "son_hash" };
+        private static readonly string[] Anahtarlar =
+        {
+            "surum", "seed", "senaryo", "tick_sayisi", "eylemler", "son_hash", "gunluk_hash", "senaryo_hash", "bekleyen_eylemler",
+        };
 
-        /// <summary>Sürüm.</summary>
-        public int Surum => BicimSurumu;
+        /// <summary>Sürüm: 1 (eski, yalnızca <c>son_hash</c>) ya da 2 (<c>gunluk_hash</c>, <c>senaryo_hash</c>, <c>bekleyen_eylemler</c>).</summary>
+        public int Surum { get; }
+
+        /// <summary>Bütün olay günlüğünün hash'i (<c>karar_verildi</c> ve fren olayları dahil); sürüm 1 kayıtlarda ve eski dosyalarda <c>null</c> (denetim atlanır).</summary>
+        public string? GunlukHash { get; }
+
+        /// <summary>Senaryo, kural, eylem ve kriz dosyalarının içerik hash'i; yoksa <c>null</c> (denetim atlanır).</summary>
+        public string? SenaryoHash { get; }
+
+        /// <summary>
+        /// Kayıt anında <c>Submit</c> edilmiş ama henüz <c>Tick</c> görmemiş oyuncu eylemleri (<c>Submit</c> sırasıyla). Yüklemede, tick
+        /// <see cref="TickSayisi"/>'na kadar oynatıldıktan sonra aynı sırayla yeniden <c>Submit</c> edilir. Sürüm 1'de boş.
+        /// </summary>
+        public IReadOnlyList<PlayerAction> BekleyenEylemler { get; }
 
         /// <summary>Simülasyon seed'i.</summary>
         public ulong Seed { get; }
@@ -60,8 +75,20 @@ namespace Yanki.Core.Simulation
 
         /// <summary>Kayıt kurar.</summary>
         /// <exception cref="ArgumentException">Senaryo boşsa, tick sayısı negatifse, hash biçimi bozuksa ya da eylemler tick sırasında/aralığında değilse.</exception>
-        public OturumKaydi(ulong seed, string senaryo, long tickSayisi, IEnumerable<EylemKaydi> eylemler, string sonHash)
+        public OturumKaydi(
+            ulong seed, string senaryo, long tickSayisi, IEnumerable<EylemKaydi> eylemler, string sonHash,
+            string? gunlukHash = null, string? senaryoHash = null, IEnumerable<PlayerAction>? bekleyenEylemler = null)
         {
+            if (gunlukHash != null && !HashMi(gunlukHash))
+            {
+                throw new ArgumentException($"Günlük hash'i 16 karakterlik küçük harfli onaltılık metin olmalı: \"{gunlukHash}\".", nameof(gunlukHash));
+            }
+
+            if (senaryoHash != null && !HashMi(senaryoHash))
+            {
+                throw new ArgumentException($"Senaryo hash'i 16 karakterlik küçük harfli onaltılık metin olmalı: \"{senaryoHash}\".", nameof(senaryoHash));
+            }
+
             if (string.IsNullOrEmpty(senaryo))
             {
                 throw new ArgumentException("Senaryo yolu boş olamaz.", nameof(senaryo));
@@ -94,17 +121,22 @@ namespace Yanki.Core.Simulation
             TickSayisi = tickSayisi;
             Eylemler = new ReadOnlyCollection<EylemKaydi>(liste);
             SonHash = sonHash;
+            GunlukHash = gunlukHash;
+            SenaryoHash = senaryoHash;
+            BekleyenEylemler = new ReadOnlyCollection<PlayerAction>(new List<PlayerAction>(bekleyenEylemler ?? new PlayerAction[0]));
+            Surum = gunlukHash != null || senaryoHash != null || bekleyenEylemler != null ? 2 : 1;
         }
 
         /// <summary>Çalışmış bir simülasyonun kaydını çıkarır.</summary>
-        public static OturumKaydi Uret(Simulasyon sim, string senaryoYolu)
+        public static OturumKaydi Uret(Simulasyon sim, string senaryoYolu, string? senaryoHash = null)
         {
             if (sim == null)
             {
                 throw new ArgumentNullException(nameof(sim));
             }
 
-            return new OturumKaydi(sim.Seed, senaryoYolu, sim.SimdikiTick, sim.EylemGunlugu, sim.SonHash);
+            return new OturumKaydi(
+                sim.Seed, senaryoYolu, sim.SimdikiTick, sim.EylemGunlugu, sim.SonHash, GunlukHashu.Hesapla(sim.Gunluk), senaryoHash, sim.BekleyenEylemler);
         }
 
         /// <summary>Kaydı kanonik JSON metnine çevirir.</summary>
@@ -118,37 +150,69 @@ namespace Yanki.Core.Simulation
             var eylemler = new List<JsonDegeri>();
             foreach (var k in kayit.Eylemler)
             {
-                var alanlar = new List<(string, JsonDegeri)>
-                {
-                    ("tick", JsonDegeri.Sayi(k.Tick)),
-                    ("tur", JsonDegeri.Metin(k.Eylem.Tur)),
-                };
-                if (k.Eylem.Hedef.Length > 0)
-                {
-                    alanlar.Add(("hedef", JsonDegeri.Metin(k.Eylem.Hedef)));
-                }
-
-                if (k.Eylem.Yuk.Count > 0)
-                {
-                    var yuk = new List<(string, JsonDegeri)>();
-                    foreach (var kv in k.Eylem.Yuk)
-                    {
-                        yuk.Add((kv.Key, JsonDegeri.Metin(kv.Value)));
-                    }
-
-                    alanlar.Add(("yuk", JsonDegeri.Nesne(yuk.ToArray())));
-                }
-
-                eylemler.Add(JsonDegeri.Nesne(alanlar.ToArray()));
+                eylemler.Add(EylemNesnesi(k.Eylem, k.Tick));
             }
 
-            return JsonYazici.Yaz(JsonDegeri.Nesne(
-                ("surum", JsonDegeri.Sayi(BicimSurumu)),
+            var alanlar = new List<(string, JsonDegeri)>
+            {
+                ("surum", JsonDegeri.Sayi(kayit.Surum)),
                 ("seed", JsonDegeri.Sayi(kayit.Seed)),
                 ("senaryo", JsonDegeri.Metin(kayit.Senaryo)),
                 ("tick_sayisi", JsonDegeri.Sayi(kayit.TickSayisi)),
                 ("eylemler", JsonDegeri.Dizi(eylemler.ToArray())),
-                ("son_hash", JsonDegeri.Metin(kayit.SonHash))));
+                ("son_hash", JsonDegeri.Metin(kayit.SonHash)),
+            };
+            if (kayit.Surum >= 2)
+            {
+                if (kayit.GunlukHash != null)
+                {
+                    alanlar.Add(("gunluk_hash", JsonDegeri.Metin(kayit.GunlukHash)));
+                }
+
+                if (kayit.SenaryoHash != null)
+                {
+                    alanlar.Add(("senaryo_hash", JsonDegeri.Metin(kayit.SenaryoHash)));
+                }
+
+                var bekleyen = new List<JsonDegeri>();
+                foreach (var e in kayit.BekleyenEylemler)
+                {
+                    bekleyen.Add(EylemNesnesi(e, null));
+                }
+
+                alanlar.Add(("bekleyen_eylemler", JsonDegeri.Dizi(bekleyen.ToArray())));
+            }
+
+            return JsonYazici.Yaz(JsonDegeri.Nesne(alanlar.ToArray()));
+        }
+
+        // Eylem nesnesi: tick yalnızca işlenmiş eylemlerde yazılır (bekleyen eylemin tick'i yoktur).
+        private static JsonDegeri EylemNesnesi(PlayerAction eylem, long? tick)
+        {
+            var alanlar = new List<(string, JsonDegeri)>();
+            if (tick.HasValue)
+            {
+                alanlar.Add(("tick", JsonDegeri.Sayi(tick.Value)));
+            }
+
+            alanlar.Add(("tur", JsonDegeri.Metin(eylem.Tur)));
+            if (eylem.Hedef.Length > 0)
+            {
+                alanlar.Add(("hedef", JsonDegeri.Metin(eylem.Hedef)));
+            }
+
+            if (eylem.Yuk.Count > 0)
+            {
+                var yuk = new List<(string, JsonDegeri)>();
+                foreach (var kv in eylem.Yuk)
+                {
+                    yuk.Add((kv.Key, JsonDegeri.Metin(kv.Value)));
+                }
+
+                alanlar.Add(("yuk", JsonDegeri.Nesne(yuk.ToArray())));
+            }
+
+            return JsonDegeri.Nesne(alanlar.ToArray());
         }
 
         /// <summary>Oturum dosyasını okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -188,9 +252,26 @@ namespace Yanki.Core.Simulation
             }
 
             var surum = kok.Al("surum");
-            if (surum == null || surum.Tur != JsonTuru.Sayi || surum.SayiDeger != BicimSurumu)
+            var surumDegeri = 0;
+            if (surum == null || surum.Tur != JsonTuru.Sayi || (surum.SayiDeger != 1m && surum.SayiDeger != 2m))
             {
-                Hata(surum?.Satir ?? kok.Satir, $"\"surum\" {BicimSurumu} olmalı");
+                Hata(surum?.Satir ?? kok.Satir, "\"surum\" 1 ya da 2 olmalı");
+            }
+            else
+            {
+                surumDegeri = (int)surum.SayiDeger;
+            }
+
+            if (surumDegeri == 1)
+            {
+                foreach (var yeniAlan in new[] { "gunluk_hash", "senaryo_hash", "bekleyen_eylemler" })
+                {
+                    var d = kok.Al(yeniAlan);
+                    if (d != null)
+                    {
+                        Hata(d.Satir, $"\"{yeniAlan}\" sürüm 2 alanıdır; sürüm 1 dosyada bulunamaz");
+                    }
+                }
             }
 
             var seed = TamSayi(kok, "seed", ulong.MaxValue, Hata);
@@ -205,6 +286,51 @@ namespace Yanki.Core.Simulation
             if (sonHash == null || sonHash.Tur != JsonTuru.Metin || !HashMi(sonHash.MetinDeger))
             {
                 Hata(sonHash?.Satir ?? kok.Satir, "\"son_hash\" 16 karakterlik küçük harfli onaltılık metin olmalı");
+            }
+
+            string? gunlukHash = null;
+            string? senaryoHash = null;
+            foreach (var (ad, hedef) in new[] { ("gunluk_hash", 0), ("senaryo_hash", 1) })
+            {
+                var d = kok.Al(ad);
+                if (d == null)
+                {
+                    continue;
+                }
+
+                if (d.Tur != JsonTuru.Metin || !HashMi(d.MetinDeger))
+                {
+                    Hata(d.Satir, $"\"{ad}\" 16 karakterlik küçük harfli onaltılık metin olmalı");
+                }
+                else if (hedef == 0)
+                {
+                    gunlukHash = d.MetinDeger;
+                }
+                else
+                {
+                    senaryoHash = d.MetinDeger;
+                }
+            }
+
+            var bekleyenler = new List<PlayerAction>();
+            var bekleyenDugumu = kok.Al("bekleyen_eylemler");
+            if (bekleyenDugumu != null)
+            {
+                if (bekleyenDugumu.Tur != JsonTuru.Dizi)
+                {
+                    Hata(bekleyenDugumu.Satir, "\"bekleyen_eylemler\" bir dizi olmalı");
+                }
+                else
+                {
+                    foreach (var e in bekleyenDugumu.Elemanlar)
+                    {
+                        var k = EylemOku(e, Hata, tickli: false);
+                        if (k != null)
+                        {
+                            bekleyenler.Add(k.Eylem);
+                        }
+                    }
+                }
             }
 
             var eylemler = new List<EylemKaydi>();
@@ -244,7 +370,9 @@ namespace Yanki.Core.Simulation
             }
 
             return new OturumOkumaSonucu(
-                new OturumKaydi(seed!.Value, senaryo!.MetinDeger, (long)tickSayisi!.Value, eylemler, sonHash!.MetinDeger),
+                new OturumKaydi(
+                    seed!.Value, senaryo!.MetinDeger, (long)tickSayisi!.Value, eylemler, sonHash!.MetinDeger, gunlukHash, senaryoHash,
+                    surumDegeri == 2 ? bekleyenler : null),
                 hatalar);
         }
 
@@ -260,7 +388,7 @@ namespace Yanki.Core.Simulation
             return (ulong)d.SayiDeger;
         }
 
-        private static EylemKaydi? EylemOku(JsonDegeri e, Action<int, string> hata)
+        private static EylemKaydi? EylemOku(JsonDegeri e, Action<int, string> hata, bool tickli = true)
         {
             if (e.Tur != JsonTuru.Nesne)
             {
@@ -271,15 +399,15 @@ namespace Yanki.Core.Simulation
             var tamam = true;
             foreach (var kv in e.Ozellikler)
             {
-                if (kv.Key != "tick" && kv.Key != "tur" && kv.Key != "hedef" && kv.Key != "yuk")
+                if ((kv.Key != "tick" || !tickli) && kv.Key != "tur" && kv.Key != "hedef" && kv.Key != "yuk")
                 {
-                    hata(kv.Value.Satir, $"Eylemde bilinmeyen alan \"{kv.Key}\" (tick, tur, hedef, yuk)");
+                    hata(kv.Value.Satir, $"Eylemde bilinmeyen alan \"{kv.Key}\" ({(tickli ? "tick, " : string.Empty)}tur, hedef, yuk)");
                     tamam = false;
                 }
             }
 
             var tick = e.Al("tick");
-            if (tick == null || tick.Tur != JsonTuru.Sayi || tick.SayiDeger < 1m || tick.SayiDeger != decimal.Truncate(tick.SayiDeger))
+            if (tickli && (tick == null || tick.Tur != JsonTuru.Sayi || tick.SayiDeger < 1m || tick.SayiDeger != decimal.Truncate(tick.SayiDeger)))
             {
                 hata(tick?.Satir ?? e.Satir, "Eylemde \"tick\" 1 ya da daha büyük tam sayı olmalı");
                 tamam = false;
@@ -326,7 +454,7 @@ namespace Yanki.Core.Simulation
             }
 
             return tamam
-                ? new EylemKaydi((long)tick!.SayiDeger, new PlayerAction(tur!.MetinDeger, hedefDugumu?.MetinDeger ?? string.Empty, yuk))
+                ? new EylemKaydi(tickli ? (long)tick!.SayiDeger : 1, new PlayerAction(tur!.MetinDeger, hedefDugumu?.MetinDeger ?? string.Empty, yuk))
                 : null;
         }
 
@@ -361,11 +489,22 @@ namespace Yanki.Core.Simulation
         /// <summary>İkisi aynı mı.</summary>
         public bool HashTutuyor => string.Equals(BeklenenHash, GercekHash, StringComparison.Ordinal);
 
+        /// <summary>Kayıtlı beklenen günlük hash'i; eski dosyada yok (<c>null</c>).</summary>
+        public string? BeklenenGunlukHash { get; }
+
+        /// <summary>Oynatma sonunda hesaplanan günlük hash'i.</summary>
+        public string GercekGunlukHash { get; }
+
+        /// <summary>Günlük hash'i tutuyor mu; kayıtta yoksa denetim atlanır (tutuyor sayılır).</summary>
+        public bool GunlukHashTutuyor => BeklenenGunlukHash == null || string.Equals(BeklenenGunlukHash, GercekGunlukHash, StringComparison.Ordinal);
+
         /// <summary>Sonuç kurar.</summary>
-        public OynatmaSonucu(string beklenenHash, string gercekHash)
+        public OynatmaSonucu(string beklenenHash, string gercekHash, string? beklenenGunlukHash = null, string gercekGunlukHash = "")
         {
             BeklenenHash = beklenenHash;
             GercekHash = gercekHash;
+            BeklenenGunlukHash = beklenenGunlukHash;
+            GercekGunlukHash = gercekGunlukHash;
         }
     }
 
@@ -378,15 +517,27 @@ namespace Yanki.Core.Simulation
         /// <summary>Kaydı, yeni kurulmuş (tick 0) bir simülasyon üzerinde oynatır.</summary>
         /// <exception cref="ArgumentException">Simülasyonun seed'i kayıttakinden farklıysa.</exception>
         /// <exception cref="InvalidOperationException">Simülasyon tick 0'dan ilerlemişse ya da eylem bekliyorsa.</exception>
-        public static OynatmaSonucu Oynat(Simulasyon sim, OturumKaydi kayit)
+        public static OynatmaSonucu Oynat(Simulasyon sim, OturumKaydi kayit, string? gercekSenaryoHash = null)
         {
             if (kayit == null)
             {
                 throw new ArgumentNullException(nameof(kayit));
             }
 
+            if (kayit.SenaryoHash != null && gercekSenaryoHash != null && !string.Equals(kayit.SenaryoHash, gercekSenaryoHash, StringComparison.Ordinal))
+            {
+                throw new SenaryoDegistiHatasi(kayit.SenaryoHash, gercekSenaryoHash);
+            }
+
             TickeKadarOynat(sim, kayit, kayit.TickSayisi);
-            return new OynatmaSonucu(kayit.SonHash, sim.DurumHash());
+
+            // Kayıt anında bekleyen (Submit edilmiş, Tick görmemiş) eylemler aynı sırayla yeniden bekletilir: devam edince kesintisiz koşuyla aynı olur.
+            foreach (var bekleyen in kayit.BekleyenEylemler)
+            {
+                sim.Submit(bekleyen);
+            }
+
+            return new OynatmaSonucu(kayit.SonHash, sim.DurumHash(), kayit.GunlukHash, GunlukHashu.Hesapla(sim.Gunluk));
         }
 
         /// <summary>

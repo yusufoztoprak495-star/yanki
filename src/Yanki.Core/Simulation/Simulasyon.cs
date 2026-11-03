@@ -96,6 +96,11 @@ namespace Yanki.Core.Simulation
         /// <summary>İşlenmiş oyuncu eylemleri, tick sırasıyla (golden replay ve kayıt satırları). Oyuncu hareketi de buradadır.</summary>
         public IReadOnlyList<EylemKaydi> EylemGunlugu => new ReadOnlyCollection<EylemKaydi>(_eylemGunlugu);
 
+        /// <summary>
+        /// <c>Submit</c> edilmiş ama henüz <c>Tick</c> görmemiş oyuncu eylemleri, <c>Submit</c> sırasıyla (kayıt/yüklemede <c>bekleyen_eylemler</c>).
+        /// </summary>
+        public IReadOnlyList<PlayerAction> BekleyenEylemler => new ReadOnlyCollection<PlayerAction>(new List<PlayerAction>(_bekleyenEylemler));
+
         /// <summary>Yüklü kurallar, kimliğe göre ordinal sıralı.</summary>
         public IReadOnlyList<KuralTanimi> Kurallar => _kuralMotoru.Kurallar;
 

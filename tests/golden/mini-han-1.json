@@ -1,5 +1,5 @@
 {
-  "surum": 1,
+  "surum": 2,
   "seed": 42,
   "senaryo": "../../samples/MiniHan/scenario.json",
   "tick_sayisi": 6,
@@ -15,5 +15,8 @@
       "hedef": "Can"
     }
   ],
-  "son_hash": "cee9956ef06df17f"
+  "son_hash": "cee9956ef06df17f",
+  "gunluk_hash": "1d54f660948cfc18",
+  "senaryo_hash": "7b68157311e70683",
+  "bekleyen_eylemler": []
 }

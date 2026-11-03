@@ -1,5 +1,5 @@
 {
-  "surum": 1,
+  "surum": 2,
   "seed": 42,
   "senaryo": "../../samples/MiniKarar/scenario.json",
   "tick_sayisi": 24,
@@ -15,5 +15,8 @@
       "hedef": "pazar"
     }
   ],
-  "son_hash": "fe29a63d6dfbc307"
+  "son_hash": "fe29a63d6dfbc307",
+  "gunluk_hash": "a7c3ec331d6a5217",
+  "senaryo_hash": "7c36e310cc529867",
+  "bekleyen_eylemler": []
 }
