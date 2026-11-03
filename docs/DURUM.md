@@ -5,7 +5,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-03
-- **PR:** 6. hafta (dedikodu, yalan, stres, kriz; `hafta-06` → `main`), Yusuf'un incelemesini bekliyor. [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
+- **PR:** [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta: dedikodu, yalan, stres, kriz; `hafta-06` → `main`), Yusuf'un incelemesini bekliyor. [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
 
 ## Biten haftalar
 
@@ -52,7 +52,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - ADR-011, notlar (`karar.md`, `tick-dongusu.md`, `algi.md`), `authoring-guide.md` (eylem yazımı, `dinlen`), `criteria-language.md` (eylem bağlamı), `Decision/README.md`. Testler: 1107 (Core) + 50 (senaryo/CLI/golden) = 1157; iki hedef derleniyor, 0 uyarı. `mini-han-1` hash'i değişmedi (`cee9956ef06df17f`, ayrıca testle kilitli).
 - **Plandan sapmalar (ADR-011'de):** hedef katmanı v0.2 sonrası; eylem olayı `KuralId: eylem:<id>`; karar izi günlükte kısa, tam iz replay ile; sonuç kuralları NPC eylemleri için bir sonraki tick'te çalışır (4. haftanın kaskad kararı, plan 6'daki "2. adıma geri besleme" aynı tick'te değil).
 
-### 6. hafta: dedikodu, yalan, stres ve kriz (PR_BAGLANTISI)
+### 6. hafta: dedikodu, yalan, stres ve kriz ([PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10))
 - **Dedikodu:** NPC ve oyuncu `anlatti` olayı ile önerme anlatır; dinleyene `duydu` kanıtı (kök, güç `en güçlü tek kanıt × min(0.95, 0.7 + 0.003 × güven)`, 0.15 altı yazılmaz), konuşana aktarım kaydı (`aktarim_kaydedildi`). Yankı freni (kök), geri anlatmama, aynı önermeyi aynı kişiye iki kez anlatmama. Tek hesap sınıfı `KonuHesabi` (`onem × yenilik × ilgi`, konu sınırı `1 + ⌊sosyallik × 2⌋` (+1 yakın/dost)). Konuşan dinleyenin zihnini okumaz (testle).
 - **Yalan gizliliği:** doğru ve yalan anlatım dışarıdan ayırt edilemez (aynı olay türü, yük, `NedenOlaylar` sayısı, güç); yalan bilgisi yalnızca konuşanın zihnindeki algılanmayan, kural tetiklemeyen aktarım kaydında. Yalan konuşanın kendi inancına göre (yanlış inandığı şeyi anlatan yalancı sayılmaz).
 - **Stres ve kriz:** `stres_tabani`; seçilen çelişen eylem stres yazar. Eşikler 50/80, düşüşler 30/60, `StresAyarlari` değişmezi (`esik[i+1] − dusus[i] ≤ esik[0]`, `100 − dusus[son] < esik[0]`). Tespit adım 4 (`stres ≥ eşik`), kriz seçilmiş eylem gibi adım 6 yolundan; kriz tablosu (`kriz_dosyalari`, `seviye` 1 = alt eşik, 2 = üst eşik; kriterler hepsi tutmalı; hedef `yok`/`yalan_kurbani`/`en_yakin`/`en_soguk`; seviye başına yedek satır zorunlu).
