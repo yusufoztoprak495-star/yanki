@@ -5,7 +5,7 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-02
-- **PR:** [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta: utility AI, NPC'lerin kendi eylemleri, hareket, karar izi; Yusuf'un incelemesini bekliyor). [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) (ADR gerekçeleri, modül notları, Devlog #1) merge edildi.
+- **PR:** [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta: utility AI, NPC'lerin kendi eylemleri, hareket, karar izi) merge edildi. [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) (ADR gerekçeleri, modül notları, Devlog #1) merge edildi.
 
 ## Biten haftalar
 
