@@ -20,15 +20,17 @@ namespace Yanki.Core.Criteria
         private readonly OlayGunlugu _gunluk;
         private readonly long _simdikiTick;
         private readonly DedikoduAyarlari _dedikodu;
+        private KonuHesabi? _konu;
 
         /// <summary>Verilen dünya, zihinler ve günlük üzerinde, <paramref name="simdikiTick"/> anı için çözücü kurar.</summary>
-        public ZihinSorguCozucusu(Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long simdikiTick, DedikoduAyarlari? dedikodu = null)
+        public ZihinSorguCozucusu(Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long simdikiTick, DedikoduAyarlari? dedikodu = null, KonuHesabi? konuHesabi = null)
         {
             _dunyaCozucusu = new DunyaSorguCozucusu(dunya ?? throw new ArgumentNullException(nameof(dunya)));
             _zihinler = zihinler ?? throw new ArgumentNullException(nameof(zihinler));
             _gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
             _simdikiTick = simdikiTick;
             _dedikodu = dedikodu ?? new DedikoduAyarlari();
+            _konu = konuHesabi;
         }
 
         /// <inheritdoc />
@@ -84,9 +86,9 @@ namespace Yanki.Core.Criteria
                         throw new InvalidOperationException("'konu_puani' yalnızca aktarim: dogru eyleminin ön koşul/ölçütlerinde çözülür (konu havuzu eylemden gelir).");
                     }
 
+                    _konu ??= new KonuHesabi(_zihinler, _gunluk, _simdikiTick, _dedikodu);
                     return SorguDegeri.Sayi(
-                        new KonuHesabi(_zihinler, _gunluk, _simdikiTick, _dedikodu)
-                            .EnYuksekKonuPuani(baglam.Coz(Rol.Ben), Varlik(cagri, 0, baglam), baglam.KonuDesenleri));
+                        _konu.EnYuksekKonuPuani(baglam.Coz(Rol.Ben), Varlik(cagri, 0, baglam), baglam.KonuDesenleri));
                 case "yalan_soyledi":
                     return SorguDegeri.Mantiksal(ben.YalanSoyledi(Varlik(cagri, 0, baglam)));
                 case "kaynak":

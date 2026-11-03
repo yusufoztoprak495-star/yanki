@@ -102,6 +102,9 @@ namespace Yanki.Core.Decision
         private readonly long _tick;
         private readonly DedikoduAyarlari _ayar;
 
+        // Tick içi önbellek: yalnızca arama (sıralı gezinti yok); durum hash'ine girmez, hesap saf olduğundan sonucu değiştirmez.
+        private readonly Dictionary<string, KonuSecimi> _onbellek = new Dictionary<string, KonuSecimi>(StringComparer.Ordinal);
+
         /// <summary>Hesabı <paramref name="tick"/> anı için kurar.</summary>
         public KonuHesabi(ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, DedikoduAyarlari? ayar = null)
         {
@@ -137,6 +140,12 @@ namespace Yanki.Core.Decision
             }
 
             var desenListesi = new List<OnermeDeseni>(desenler);
+            var anahtar = "d|" + konusan + "|" + dinleyen + "|" + string.Join(";", desenListesi);
+            if (_onbellek.TryGetValue(anahtar, out var onceki))
+            {
+                return onceki;
+            }
+
             var zihin = _zihinler[konusan];
             var konular = new List<KonuAdayi>();
             var elenenler = new List<ElenenKonu>();
@@ -206,7 +215,9 @@ namespace Yanki.Core.Decision
                 konular.RemoveRange(sinir, konular.Count - sinir);
             }
 
-            return new KonuSecimi(konular, elenenler, sinir);
+            var sonuc = new KonuSecimi(konular, elenenler, sinir);
+            _onbellek[anahtar] = sonuc;
+            return sonuc;
         }
 
         /// <summary>Konuşanın bu dinleyene anlatabileceği en yüksek konu puanı (<c>konu_puani</c>); konu yoksa 0.</summary>
@@ -233,10 +244,17 @@ namespace Yanki.Core.Decision
                 throw new ArgumentNullException(nameof(onermeler));
             }
 
+            var onermeListesi = new List<string>(onermeler);
+            var anahtar = "y|" + konusan + "|" + dinleyen + "|" + seed.ToString(CultureInfo.InvariantCulture) + "|" + string.Join(";", onermeListesi);
+            if (_onbellek.TryGetValue(anahtar, out var onceki))
+            {
+                return onceki;
+            }
+
             var zihin = _zihinler[konusan];
             var sablonlar = new SortedSet<string>(StringComparer.Ordinal);
             var elenenler = new List<ElenenKonu>();
-            foreach (var ham in onermeler)
+            foreach (var ham in onermeListesi)
             {
                 try
                 {
@@ -296,7 +314,9 @@ namespace Yanki.Core.Decision
                 adaylar.Add(secilen);
             }
 
-            return new KonuSecimi(adaylar, elenenler, 1);
+            var yalanSonuc = new KonuSecimi(adaylar, elenenler, 1);
+            _onbellek[anahtar] = yalanSonuc;
+            return yalanSonuc;
         }
 
         /// <summary>

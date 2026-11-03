@@ -132,6 +132,19 @@ namespace Yanki.Core.Mind
             return new OnermeDeseni(new GercekDeseni(s.Substring(0, ac).Trim(), argumanlar), olumsuz);
         }
 
+        /// <summary>Kanonik desen metni (<c>borclu(Mehmet,*,*)</c> / <c>degil(borclu(*,*,*))</c>); önbellek anahtarı olarak kullanılır.</summary>
+        public override string ToString()
+        {
+            var parcalar = new List<string>(_desen.Argumanlar.Count);
+            foreach (var a in _desen.Argumanlar)
+            {
+                parcalar.Add(a ?? "*");
+            }
+
+            var metin = _desen.Yuklem + "(" + string.Join(",", parcalar) + ")";
+            return Olumsuz ? Onerme.OlumsuzOn + metin + ")" : metin;
+        }
+
         /// <summary>Önerme bu desene uyuyor mu: olumsuzluk aynı, yüklem ve argüman sayısı aynı, joker olmayan argümanlar eşit.</summary>
         public bool Uyar(Onerme onerme)
         {

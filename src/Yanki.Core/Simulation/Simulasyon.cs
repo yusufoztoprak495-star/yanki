@@ -600,14 +600,35 @@ namespace Yanki.Core.Simulation
 
         // ---- Adım 5 ve 6: NPC kararları ----
 
+        // Konuşma eyleminin planı: adım 5'te (aynı durum görüntüsünden) konular ve aktarım güçleri belirlenir; 6.1–6.3'te yazılır.
+        private sealed class PlanlananKonu
+        {
+            public PlanlananKonu(KonuAdayi konu, decimal guc)
+            {
+                Konu = konu;
+                Guc = guc;
+            }
+
+            public KonuAdayi Konu { get; }
+
+            // Dinleyene yazılacak duydu kanıtının gücü (adım 5 görüntüsünden); eşik altındaysa kanıt yazılmaz.
+            public decimal Guc { get; }
+
+            public Olay? Anlatti { get; set; }
+        }
+
         private sealed class NpcSecimi
         {
-            public NpcSecimi(string npc, string konum, SecimSonucu sonuc)
+            public NpcSecimi(string npc, string konum, SecimSonucu sonuc, List<PlanlananKonu>? konular = null)
             {
                 Npc = npc;
                 Konum = konum;
                 Sonuc = sonuc;
+                Konular = konular;
             }
+
+            // Seçilen eylem konuşma eylemiyse planlanan konular; değilse null.
+            public List<PlanlananKonu>? Konular { get; }
 
             public string Npc { get; }
 
@@ -625,11 +646,12 @@ namespace Yanki.Core.Simulation
             }
 
             // Adım 5: hiçbir şey yazılmadan önce bütün kararlar aynı durumdan hesaplanır (NPC kimlik sırasıyla).
-            var cozucu = new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick);
+            var konuHesabi = new KonuHesabi(Zihinler, Gunluk, _tick, _dedikodu);
+            var cozucu = new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick, _dedikodu, konuHesabi);
             var secimler = new List<NpcSecimi>();
             foreach (var npc in Senaryo.Npcler)
             {
-                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu);
+                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu, konuHesabi);
                 var uretim = AdayUretici.Uret(baglam, _eylemKatalogu.Eylemler);
                 if (uretim.Adaylar.Count == 0)
                 {
@@ -637,6 +659,7 @@ namespace Yanki.Core.Simulation
                 }
 
                 var sonuc = _secici.Sec(baglam, uretim.Adaylar, uretim.Elenenler);
+                Aday? uretilenAday = null;
                 if (sonuc.Secilen != null)
                 {
                     // Özel bir seçici (GOAP/BT adaptörü) yalnızca ön koşulları tutan adaylardan seçebilir; hedef/hareket doğrulaması buna dayanır.
@@ -646,6 +669,7 @@ namespace Yanki.Core.Simulation
                         if (string.Equals(a.Anahtar, sonuc.Secilen.Anahtar, StringComparison.Ordinal))
                         {
                             adaylarda = true;
+                            uretilenAday = a;
                             break;
                         }
                     }
@@ -657,11 +681,12 @@ namespace Yanki.Core.Simulation
                     }
                 }
 
-                secimler.Add(new NpcSecimi(npc.Id, Dunya.TekDeger("konum!", npc.Id) ?? string.Empty, sonuc));
+                secimler.Add(new NpcSecimi(npc.Id, Dunya.TekDeger("konum!", npc.Id) ?? string.Empty, sonuc, KonusmaPlani(npc.Id, uretilenAday, konuHesabi)));
             }
 
             // Adım 6.1: karar_verildi, eylem ve hareket olayları.
             var disOlaylar = new List<Olay>();
+            var konusmalar = new List<NpcSecimi>();
             var etkiBekleyenler = new List<KeyValuePair<NpcSecimi, Olay>>();
             var konumDegisimleri = new List<KeyValuePair<NpcSecimi, Olay>>();
             foreach (var s in secimler)
@@ -700,6 +725,31 @@ namespace Yanki.Core.Simulation
                     konumDegisimleri.Add(new KeyValuePair<NpcSecimi, Olay>(s, geldi));
                     tetik = geldi;
                 }
+                else if (s.Konular != null)
+                {
+                    // Konuşma: her konu ayrı bir anlatti olayıdır (kurallar konu bazında çalışır). Nedenler: karar olayı ve dayanak kanıt olayı.
+                    // Doğru anlatım da yalan da aynı biçimde yazılır; yalan bilgisi yalnızca 6.3'teki aktarım kaydındadır.
+                    Olay? ilk = null;
+                    foreach (var pk in s.Konular)
+                    {
+                        var yuk = new[]
+                        {
+                            new KeyValuePair<string, string>("gorunurluk", eylem.Gorunurluk),
+                            new KeyValuePair<string, string>("kok", pk.Konu.Kok),
+                            new KeyValuePair<string, string>("onerme", pk.Konu.Onerme),
+                        };
+                        var anlatti = new Olay(
+                            Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), YerlesikTurler.Anlatti, s.Npc, aday.Hedef, s.Konum, yuk,
+                            new[] { karar.Id, pk.Konu.Kanit.OlayId }, eylem.KuralId);
+                        Ekle(anlatti);
+                        disOlaylar.Add(anlatti);
+                        pk.Anlatti = anlatti;
+                        ilk ??= anlatti;
+                    }
+
+                    tetik = ilk!;
+                    konusmalar.Add(s);
+                }
                 else
                 {
                     tetik = new Olay(
@@ -731,9 +781,55 @@ namespace Yanki.Core.Simulation
                 EylemEtkileriniYaz(kv.Key, kv.Value, yazilanGercekler);
             }
 
+            foreach (var s in konusmalar)
+            {
+                KonusmayiYaz(s);
+            }
+
             foreach (var kv in konumDegisimleri)
             {
                 KonumuYaz(kv.Key.Npc, kv.Key.Sonuc.Secilen!.Hedef, kv.Value.Id, kv.Key.Sonuc.Secilen!.Eylem.KuralId);
+            }
+        }
+
+        // Adım 5: seçilen aday konuşma eylemiyse konular aday aşamasında bir kez hesaplanmış olarak gelir; aktarım güçleri aynı durum
+        // görüntüsünden (dinleyenin güveni dahil) şimdi sabitlenir, böylece adım 6.3'teki yazım sırası sonucu etkilemez.
+        private List<PlanlananKonu>? KonusmaPlani(string konusan, Aday? aday, KonuHesabi hesap)
+        {
+            if (aday == null || !aday.Eylem.Konusma)
+            {
+                return null;
+            }
+
+            var konu = aday.Konu ?? throw new InvalidOperationException($"Konuşma adayı \"{aday.Anahtar}\" konu seçimi taşımıyor (AdayUretici'den gelmeli).");
+            var plan = new List<PlanlananKonu>(konu.Konular.Count);
+            foreach (var k in konu.Konular)
+            {
+                var guc = hesap.AktarimGucu(Zihinler[konusan].KanitGucu(k.Kanit, _tick), konusan, aday.Hedef);
+                plan.Add(new PlanlananKonu(k, guc));
+            }
+
+            return plan;
+        }
+
+        // Adım 6.3: dinleyene duydu kanıtı (kök, güç; eşik altındaysa söylenti ölür, dinleyen oyuncuysa zihni yoktur) ve konuşana
+        // aktarım kaydı. Kayıt konuşanın zihnindedir, algılanmaz ve kural tetiklemez (yalan bilgisi yalnızca burada, yalan bayrağıyla).
+        private void KonusmayiYaz(NpcSecimi s)
+        {
+            var aday = s.Sonuc.Secilen!;
+            foreach (var pk in s.Konular!)
+            {
+                var anlatti = pk.Anlatti!;
+                if (Zihinler.Var(aday.Hedef) && pk.Guc >= _dedikodu.GucEsigi)
+                {
+                    Ekle(Mind.ZihinOlaylari.KanitEklendi(
+                        Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), aday.Hedef, pk.Konu.Onerme, "duydu", s.Npc, pk.Guc,
+                        new[] { anlatti.Id }, aday.Eylem.KuralId, s.Konum, pk.Konu.Kok));
+                }
+
+                Ekle(Mind.ZihinOlaylari.AktarimKaydedildi(
+                    Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), s.Npc, aday.Hedef, pk.Konu.Onerme, pk.Konu.Yalan,
+                    new[] { anlatti.Id }, aday.Eylem.KuralId, s.Konum));
             }
         }
 

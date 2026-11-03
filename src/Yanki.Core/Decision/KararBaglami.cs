@@ -36,8 +36,11 @@ namespace Yanki.Core.Decision
         /// <summary>Kriter sözlüğü çözücüsü (zihin ve dünya sorguları).</summary>
         public ISorguCozucu Cozucu { get; }
 
+        /// <summary>Konuşma eylemlerinin konu hesabı (tick içi önbellekli, salt okunur); konuşma eylemi yoksa <c>null</c> olabilir.</summary>
+        public KonuHesabi? KonuHesabi { get; }
+
         /// <summary>Bağlam kurar.</summary>
-        public KararBaglami(string npc, string oyuncuId, ulong seed, long tick, Dunya dunya, Zihin zihin, OlayGunlugu gunluk, ISorguCozucu cozucu)
+        public KararBaglami(string npc, string oyuncuId, ulong seed, long tick, Dunya dunya, Zihin zihin, OlayGunlugu gunluk, ISorguCozucu cozucu, KonuHesabi? konuHesabi = null)
         {
             if (string.IsNullOrEmpty(npc))
             {
@@ -52,6 +55,7 @@ namespace Yanki.Core.Decision
             Zihin = zihin ?? throw new ArgumentNullException(nameof(zihin));
             Gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
             Cozucu = cozucu ?? throw new ArgumentNullException(nameof(cozucu));
+            KonuHesabi = konuHesabi;
         }
 
         /// <summary>Verilen hedef için sorgu bağlamı: <c>ben</c> = karar veren, <c>eylem.hedef</c> = aday hedefi (boşsa tanımsız).</summary>
