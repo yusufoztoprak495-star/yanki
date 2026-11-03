@@ -97,6 +97,10 @@ namespace Yanki.Core.Decision
                 case "kaynak":
                     KanitKaynagi(b, ZihinSorguCozucusu.Desen(cagri, sorgu), ZihinSorguCozucusu.Varlik(cagri, 1, sorgu), olaylar);
                     break;
+                case "ayni_mekanda":
+                    // Dünya durumunu okuyan sorgu (konum! gerçekleri; gercek(...) eylemlerde zaten kullanılamaz) tek bir olaya bağlı tutulmaz; uydurulmaz, kaynaksız raporlanır.
+                    kaynaksiz.Add($"{cagri.Ad}(...): dünya durumunu okur, tek bir kaynak olaya bağlı tutulmuyor");
+                    break;
                 case "hafiza_var":
                     HafizaKaynagi(
                         b, ZihinSorguCozucusu.Ad(cagri, 0), ZihinSorguCozucusu.Varlik(cagri, 1, sorgu), ZihinSorguCozucusu.Tam(cagri, 2), olaylar);

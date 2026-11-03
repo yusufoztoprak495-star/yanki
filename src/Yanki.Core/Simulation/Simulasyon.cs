@@ -385,7 +385,11 @@ namespace Yanki.Core.Simulation
         /// <exception cref="ArgumentOutOfRangeException">Olay günlükte yoksa.</exception>
         public IReadOnlyList<Olay> Neden(long olayId) => Gunluk.Neden(olayId);
 
-        /// <summary>NPC'nin son karar izi (bütün adaylar, puan bileşenleri, seçim); NPC henüz karar vermediyse ya da NPC değilse <c>null</c>.</summary>
+        /// <summary>
+        /// NPC'nin son karar izi (bütün adaylar, puan bileşenleri, seçim); NPC henüz karar vermediyse ya da NPC değilse <c>null</c>.
+        /// İz yalnızca aday olan tick'lerde güncellenir (aday yoksa karar adımı olay yazmaz ve iz değişmez): dönen izin <c>Tick</c> alanı
+        /// onun hangi tick'in kararı olduğunu söyler, şu anki tick olmak zorunda değildir.
+        /// </summary>
         public KararIziVerisi? KararIzi(string npc) => npc != null && _sonKararlar.TryGetValue(npc, out var iz) ? iz : null;
 
         /// <summary>NPC'nin son <c>karar_verildi</c> olayı; yoksa <c>null</c>.</summary>
@@ -912,13 +916,21 @@ namespace Yanki.Core.Simulation
             return en;
         }
 
-        // Krizin NedenOlaylar'ı: bu NPC'nin en yeni 5 stres ARTIŞ olayı (günlükte bulunamayanlar uydurulmaz).
+        // Krizin NedenOlaylar'ı: bu NPC'nin en yeni 5 stres ARTIŞ olayı, ama önceki krizinden (varsa) sonrakiler; günlükte bulunamayanlar uydurulmaz.
         private List<long> KrizNedenleri(string npc)
         {
             var sonuc = new List<long>(5);
             for (var id = Gunluk.Sayi; id >= 1 && sonuc.Count < 5; id--)
             {
                 var o = Gunluk[id];
+
+                // Bu NPC'nin önceki krizi: ondan önceki stres artışları o krizde tüketildi (kriz stresi düşürdü); yeni krizin nedeni değildir.
+                if (string.Equals(o.Fail, npc, StringComparison.Ordinal) && o.KuralId.StartsWith(KrizSatiri.KuralIdOneki, StringComparison.Ordinal)
+                    && !Mind.ZihinOlaylari.ZihinOlayiMi(o.Tur))
+                {
+                    break;
+                }
+
                 if (o.Tur == Mind.ZihinOlaylari.StresDegistiTuru && string.Equals(o.Deger("npc"), npc, StringComparison.Ordinal)
                     && decimal.Parse(o.Deger("delta"), System.Globalization.NumberStyles.AllowLeadingSign | System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.CultureInfo.InvariantCulture) > 0m)
                 {
@@ -1109,10 +1121,29 @@ namespace Yanki.Core.Simulation
             _saklananAlgi = algi;
 
             // Adım 6.3: gecikmeli eylem etkileri, sonra konum! değişimleri.
+            // Etkiler iki aşamada işlenir (tek durum görüntüsü): önce eylem ve kriz etkilerinin hepsi, hiçbiri yazılmadan, adım öncesi durumdan
+            // üretilir (gercek "var/yok" denetimi dahil); sonra aynı sırayla yazılır. İki NPC aynı tick'te aynı tek değerli gerçeği farklı
+            // değerlerle yazarsa ikisi de yazılır ve son kimlik kazanır (NPC kimlik sırası); aynı gerçek aynı adımda tek kez yazılır.
             var yazilanGercekler = new SortedSet<string>(StringComparer.Ordinal);
+            var eylemPlani = new List<List<PlanliEtki>>();
             foreach (var kv in etkiBekleyenler)
             {
-                EylemEtkileriniYaz(kv.Key, kv.Value, yazilanGercekler);
+                var aday = kv.Key.Sonuc.Secilen!;
+                eylemPlani.Add(EtkileriUret(kv.Key.Npc, aday.Eylem.KuralId, kv.Value.Tur, aday.Eylem.Etkiler, kv.Value, aday.Hedef, yazilanGercekler));
+            }
+
+            var krizPlani = new List<List<PlanliEtki>>();
+            foreach (var kv in krizler)
+            {
+                var k = kv.Value;
+                krizPlani.Add(k.Satir.Etkiler.Count > 0
+                    ? EtkileriUret(k.Npc, k.Satir.KuralId, k.Satir.OlayTuru, k.Satir.Etkiler, k.Olay!, k.Hedef, yazilanGercekler)
+                    : new List<PlanliEtki>());
+            }
+
+            foreach (var plan in eylemPlani)
+            {
+                PlaniYaz(plan);
             }
 
             foreach (var s in konusmalar)
@@ -1127,9 +1158,11 @@ namespace Yanki.Core.Simulation
             }
 
             // Kriz: satır etkileri ve stres düşüşü (nedeni kriz olayı). Satır etkileri sonuç kurallarına sıradaki tick'te girer.
+            var krizSirasi = 0;
             foreach (var kv in krizler)
             {
-                KrizEtkileriniYaz(kv.Value, yazilanGercekler);
+                PlaniYaz(krizPlani[krizSirasi++]);
+                KrizDususunuYaz(kv.Value);
             }
 
             foreach (var kv in konumDegisimleri)
@@ -1221,29 +1254,44 @@ namespace Yanki.Core.Simulation
             }
         }
 
-        private void KrizEtkileriniYaz(KrizUygulamasi k, SortedSet<string> yazilanGercekler)
+        private void KrizDususunuYaz(KrizUygulamasi k)
         {
-            if (k.Satir.Etkiler.Count > 0)
-            {
-                EtkileriYaz(k.Npc, k.Satir.KuralId, k.Satir.OlayTuru, k.Satir.Etkiler, k.Olay!, k.Hedef, yazilanGercekler);
-            }
-
             var dusus = _stresAyarlari.Dususler[k.Satir.Seviye - 1];
             Ekle(Mind.ZihinOlaylari.StresDegisti(
                 Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), k.Npc, -dusus, new[] { k.Olay!.Id }, k.Satir.KuralId, k.Konum));
         }
 
-        // Eylem etkileri mevcut kural etkisi biçimiyle ve kural motorunun etki üreticisiyle yazılır; KuralId eylem:<id>, neden eylem olayı.
-        private void EylemEtkileriniYaz(NpcSecimi secim, Olay tetik, SortedSet<string> yazilanGercekler)
+        // Bir etkinin üretilmiş hali: yazılmadan önce adım öncesi durumdan hesaplanır (uretilen null ise yalnızca frenler yazılır).
+        private sealed class PlanliEtki
         {
-            var aday = secim.Sonuc.Secilen!;
-            EtkileriYaz(secim.Npc, aday.Eylem.KuralId, tetik.Tur, aday.Eylem.Etkiler, tetik, aday.Hedef, yazilanGercekler);
+            public PlanliEtki(string kuralId, string npc, Olay tetik, IReadOnlyList<long> nedenler, UretilenEtki? uretilen, List<FrenBilgisi> frenler)
+            {
+                KuralId = kuralId;
+                Npc = npc;
+                Tetik = tetik;
+                Nedenler = nedenler;
+                Uretilen = uretilen;
+                Frenler = frenler;
+            }
+
+            public string KuralId { get; }
+
+            public string Npc { get; }
+
+            public Olay Tetik { get; }
+
+            public IReadOnlyList<long> Nedenler { get; }
+
+            public UretilenEtki? Uretilen { get; }
+
+            public List<FrenBilgisi> Frenler { get; }
         }
 
         // Eylem ya da kriz satırı etkileri: mevcut kural etkisi biçimi ve etki üreticisi; KuralId eylem:<id> / kriz:<id>, neden tetikleyen olay.
-        private void EtkileriYaz(
+        private List<PlanliEtki> EtkileriUret(
             string npc, string kuralId, string tetikTuru, IReadOnlyList<KuralEtkisi> etkiler, Olay tetik, string hedef, SortedSet<string> yazilanGercekler)
         {
+            var plan = new List<PlanliEtki>();
             var sanalKural = new KuralTanimi(kuralId, tetikTuru, new Criteria.Kriter[0], etkiler, new Criteria.Rol[0]);
             var baglam = new Criteria.SorguBaglami(npc, OyuncuId, eylemHedef: hedef);
             var nedenler = new[] { tetik.Id };
@@ -1251,19 +1299,29 @@ namespace Yanki.Core.Simulation
             {
                 var frenler = new List<FrenBilgisi>();
                 var uretilen = KuralMotoru.EtkiUret(sanalKural, etki, npc, tetik, baglam, nedenler, Dunya, yazilanGercekler, frenler, Senaryo.Korumali);
-                FrenleriYaz(frenler);
-                if (uretilen == null)
+                plan.Add(new PlanliEtki(kuralId, npc, tetik, nedenler, uretilen, frenler));
+            }
+
+            return plan;
+        }
+
+        private void PlaniYaz(List<PlanliEtki> plan)
+        {
+            foreach (var p in plan)
+            {
+                FrenleriYaz(p.Frenler);
+                if (p.Uretilen == null)
                 {
                     continue;
                 }
 
-                if (uretilen.Etki.Tur == EtkiTuru.Yay)
+                if (p.Uretilen.Etki.Tur == EtkiTuru.Yay)
                 {
-                    YayEtkisiniYaz(kuralId, npc, uretilen.Etki, tetik, nedenler);
+                    YayEtkisiniYaz(p.KuralId, p.Npc, p.Uretilen.Etki, p.Tetik, p.Nedenler);
                     continue;
                 }
 
-                var olay = KuralMotoru.OlayYap(uretilen, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
+                var olay = KuralMotoru.OlayYap(p.Uretilen, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
                 Ekle(olay);
                 _devredilenler.Add(olay);
             }

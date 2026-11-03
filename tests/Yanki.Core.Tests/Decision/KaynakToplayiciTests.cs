@@ -56,6 +56,21 @@ namespace Yanki.Core.Tests.Decision
         private static Olay Modifier(long id, string hedef, string tur, decimal deger, long sure = 100, long tick = 5) =>
             ZihinOlaylari.ModifierEklendi(id, tick, 0, "Ali", hedef, tur, deger, sure, new long[0], "kural");
 
+        // ---- dünya sorguları (7. hafta, I-b) ----
+
+        [Fact]
+        public void Dunya_sorgulari_kaynak_olay_gostermez_kaynaksiz_olarak_raporlanir()
+        {
+            var d = new Duzen();
+            var (olaylar, kaynaksiz) = Topla(d, Kosullu("ayni_mekanda(eylem.hedef)", "==", "true", "npc"), "Can");
+
+            Assert.Empty(olaylar);                                           // uydurulmaz
+            var not = Assert.Single(kaynaksiz);
+            Assert.Contains("ayni_mekanda", not);
+            Assert.Contains("dünya", not);
+
+        }
+
         // ---- fikir ----
 
         [Fact]
