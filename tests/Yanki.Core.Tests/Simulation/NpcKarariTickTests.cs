@@ -419,10 +419,10 @@ namespace Yanki.Core.Tests.Simulation
             Assert.True(secimler.Count > 1, "farklı seed'ler farklı seçim üretmeli: " + string.Join(",", secimler));
         }
 
-        // ---- çelişen özellikler (5. hafta: yalnızca görünür, stres yazılmaz) ----
+        // ---- çelişen özellikler (6. hafta: seçilince stres yazılır) ----
 
         [Fact]
-        public void Celisen_ozellikler_izde_gorunur_ama_stres_degismez()
+        public void Celisen_ozellikler_izde_gorunur_ve_secilen_eylem_stres_yazar()
         {
             var sim = Kur(Senaryo1(), new[] { Selam("\"celisen_ozellikler\": [ \"durustluk\", \"merhamet\" ], \"stres_tabani\": 10"), Git() });
             sim.Tick(3);
@@ -432,8 +432,13 @@ namespace Yanki.Core.Tests.Simulation
             var celisen = iz.Al("secilen")!.Al("celisen_ozellikler")!.Elemanlar.Select(e => e.MetinDeger).ToArray();
 
             Assert.Equal(new[] { "durustluk", "merhamet" }, celisen);
-            Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur == "stres_degisti");
-            foreach (var npc in new[] { "Ali", "Can", "Veli" })
+            Assert.Equal(12m, iz.Al("secilen")!.Al("stres_artisi")!.SayiDeger);   // 10 × (durustluk 0.7 + merhamet 0.5)
+            Assert.Equal(12m, sim.Zihinler["Ali"].Stres(1));
+            var stres = Assert.Single(sim.Gunluk.Olaylar, o => o.Tur == "stres_degisti");
+            Assert.Equal("Ali", stres.Deger("npc"));
+            Assert.Equal("eylem:selam", stres.KuralId);
+            Assert.Equal(new[] { Tek(sim, "selam_oldu", "Ali", 1).Id }, stres.NedenOlaylar.ToArray());
+            foreach (var npc in new[] { "Can", "Veli" })
             {
                 Assert.Equal(0m, sim.Zihinler[npc].Stres(sim.SimdikiTick));
             }

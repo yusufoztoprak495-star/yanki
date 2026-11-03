@@ -630,6 +630,9 @@ namespace Yanki.Core.Simulation
             // Seçilen eylem konuşma eylemiyse planlanan konular; değilse null.
             public List<PlanlananKonu>? Konular { get; }
 
+            // Seçilen eylemin dış olayı (hareketlerde geldi, konuşmada ilk anlatti); stres olayının nedeni.
+            public Olay? EylemOlayi { get; set; }
+
             public string Npc { get; }
 
             // Adım 5 başındaki konum görüntüsü.
@@ -759,6 +762,7 @@ namespace Yanki.Core.Simulation
                     disOlaylar.Add(tetik);
                 }
 
+                s.EylemOlayi = tetik;
                 if (eylem.Etkiler.Count > 0)
                 {
                     etkiBekleyenler.Add(new KeyValuePair<NpcSecimi, Olay>(s, tetik));
@@ -786,6 +790,12 @@ namespace Yanki.Core.Simulation
                 KonusmayiYaz(s);
             }
 
+            // Stres: kişiliğe aykırı eylem seçildiyse stres_tabani × Σ(çelişen özellik) kadar artar; yalnızca seçilen eylem için.
+            foreach (var s in secimler)
+            {
+                StresYaz(s);
+            }
+
             foreach (var kv in konumDegisimleri)
             {
                 KonumuYaz(kv.Key.Npc, kv.Key.Sonuc.Secilen!.Hedef, kv.Value.Id, kv.Key.Sonuc.Secilen!.Eylem.KuralId);
@@ -810,6 +820,26 @@ namespace Yanki.Core.Simulation
             }
 
             return plan;
+        }
+
+        // Adım 6.3: seçilen eylemin çelişen özellikleri varsa stres artışı. Olay: stres_degisti, KuralId eylem:<id>, nedeni eylem olayı.
+        // Stres olayı algılanmaz ve kural tetiklemez (zihin olayıdır, kuyruğa girmez); kriz bir sonraki tick'in 4. adımında denetlenir.
+        private void StresYaz(NpcSecimi s)
+        {
+            var aday = s.Sonuc.Secilen;
+            if (aday == null || s.EylemOlayi == null)
+            {
+                return;
+            }
+
+            var artis = aday.Eylem.StresArtisi(Zihinler[s.Npc].Kisilik);
+            if (artis <= 0m)
+            {
+                return;
+            }
+
+            Ekle(Mind.ZihinOlaylari.StresDegisti(
+                Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), s.Npc, artis, new[] { s.EylemOlayi.Id }, aday.Eylem.KuralId, s.Konum));
         }
 
         // Adım 6.3: dinleyene duydu kanıtı (kök, güç; eşik altındaysa söylenti ölür, dinleyen oyuncuysa zihni yoktur) ve konuşana
