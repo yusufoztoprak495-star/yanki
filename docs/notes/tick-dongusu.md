@@ -10,14 +10,14 @@ Bir tick'te çalışan adımlar (plan 6):
 
 | Adım | Ne olur                                                                                                                                                                                                                                                             |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Bekleyen oyuncu eylemleri `Submit` sırasıyla olay olur (`KuralId: player`). Oyuncu hareketi burada işlenir: `ayrildi`, `geldi` ve oyuncunun `konum!` gerçeği hemen yazılır; aynı tick'te hareketten sonra gelen eylem varış mekanında olur. NPC konumları değişmez. |
+| 1    | Bekleyen oyuncu eylemleri `Submit` sırasıyla olay olur (`KuralId: player`). Oyuncu anlatımı (`anlatti`) da burada olay olur; `duydu` kanıtı adım 2'de, algıdan sonra yazılır. Oyuncu hareketi burada işlenir: `ayrildi`, `geldi` ve oyuncunun `konum!` gerçeği hemen yazılır; aynı tick'te hareketten sonra gelen eylem varış mekanında olur. NPC konumları değişmez. |
 | 2    | Algı: zihin olayı olmayan olaylar için kanıt + hafıza üretilir. Önceki tick'in adım 6'sında algılanmış NPC olayları atlanır.                                                                                                                                        |
 | 3    | Sonuç kuralları çalışır; çıktılar yazılır ve sıradaki tick'e devredilir.                                                                                                                                                                                            |
-| 4    | Sönüm: ADR-008 gereği yazılacak durum yok, değerler sorgu anında hesaplanır.                                                                                                                                                                                        |
+| 4    | Sönüm: ADR-008 gereği yazılacak durum yok, değerler sorgu anında hesaplanır. **Kriz tespiti** (6. hafta): sönmüş güncel `stres ≥ eşik` ise o NPC için en üst uygun seviyede kriz satırı seçilir; krizdeki NPC bu tick eylem seçmez. Kriz için tick başına olay yazılmaz.                                                                                                                                                                                        |
 | 5    | NPC karar adımı: her NPC için (kimlik sırasıyla) aday üretimi, puanlama, `IActionSelector`. **Hiçbir şey yazılmadan önce** bütün kararlar adım başındaki aynı durumdan hesaplanır.                                                                                  |
-| 6.1  | `karar_verildi`, eylem olayı (hareket eyleminde `ayrildi` + `geldi`) NPC kimlik sırasıyla yazılır.                                                                                                                                                                  |
+| 6.1  | Kriz olayları (`KuralId: kriz:<id>`), sonra `karar_verildi` + eylem olayı (hareket eyleminde `ayrildi` + `geldi`; konuşma eyleminde seçilen konu sayısı kadar `anlatti`) NPC kimlik sırasıyla yazılır.                                                                                                                                                                  |
 | 6.2  | Bu dış olayların algısı yazılır; dünya hâlâ adım 5 başındaki konum görüntüsünü taşır.                                                                                                                                                                               |
-| 6.3  | Eylem etkileri ve `konum!` değişimleri en son yazılır.                                                                                                                                                                                                              |
+| 6.3  | Eylem etkileri, konuşmada dinleyene `duydu` kanıtı + konuşana aktarım kaydı, çelişen eylem için stres artışı, kriz etkileri ve stres düşüşü, en son `konum!` değişimleri yazılır.                                                                                                                                                                                                              |
 | 7    | Durum hash'i alınır, tick'in olayları yayınlanır.                                                                                                                                                                                                                   |
 
 ## Neden böyle?
@@ -30,6 +30,13 @@ Bir tick'te çalışan adımlar (plan 6):
 - **Sıra sabit:** NPC kimliği (ordinal) → tetikleyici kimliği → kural kimliği → algılayan NPC. Zar `AnahtarliRng.Icin(Seed, tick, npcId, "karar")` ile her NPC için bağımsızdır.
 - **Eylemler tick sınırında işlenir.** `Tick(1); Tick(4)` ile `Tick(5)` aynı durumu ve aynı günlüğü verir, testle korunuyor.
 - **`konum!` olayları algılanmaz ve kural tetiklemez;** hareketin dış görünümü `ayrildi`/`geldi` olaylarıdır.
+
+## 6. hafta: konuşma, stres ve kriz
+
+- **Konuşma adım 5'te karar, 6'da yazım.** Konular ve aktarım güçleri bütün NPC'ler için aynı durum görüntüsünden hesaplanır (aday aşamasında bir kez); bir NPC'nin bu tick'te duyduğu, başka NPC'nin bu tick'teki kararını etkilemez (testle). `duydu` kanıtı 6.3'te yazılır, dinleyen onu bir sonraki tick'te kullanır.
+- **Kriz de bu hattan geçer**, ayrı kuyruk yoktur: adım 4'te seçilir, 6.1'de olay, 6.2'de algı (adım 5 başı konum görüntüsü), 6.3'te etkiler ve stres düşüşü, sonuç kuralları sıradaki tick'te. Krizdeki NPC `karar_verildi` yazmaz.
+- **Zihin olayları kural tetiklemez:** `aktarim_kaydedildi`, `stres_degisti`, `kanit_eklendi` kuyruğa girmez; `anlatti` ve kriz olayları dış olaydır ve sıradaki tick'te kurallara girer (`olay_konusu` ile konu bazında).
+- Aynı tick'te iki NPC aynı dinleyene aynı kökü yazarsa sonuç NPC kimlik sırasına bağlıdır, girdi sırasına değil (testle).
 
 ## Yusuf'un kararları
 

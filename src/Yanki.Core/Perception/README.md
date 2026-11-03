@@ -1,6 +1,6 @@
 # Perception
 
-Algı: görünürlük seviyelerine göre doğrudan algı (plan 5.3). Dedikodu, top-n konu sınırı ve aktarımda kanıt gücü düşüşü 6. haftada gelecek.
+Algı: görünürlük seviyelerine göre doğrudan algı (plan 5.3). Dedikodu (anlatma, `duydu` aktarımı, konu sınırı, aktarımda kanıt gücü düşüşü) 6. haftada yapıldı: `anlatti` olayı mevcut algıdan geçer, içerik yalnızca dinleyene `duydu` kanıtıyla gider (`docs/notes/dedikodu.md`).
 
 **Durum:** 3. hafta teslimi tamam (yalnızca doğrudan algı). 5. haftada NPC eylemleri ve hareketleri de aynı algıdan geçer; algı adım 6.2'de, `konum!` değişiminden önce hesaplanır (`DogrudanAlgi`'ye özel durum eklenmedi).
 

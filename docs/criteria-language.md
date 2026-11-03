@@ -30,7 +30,7 @@ Bir kriter JSON nesnesidir:
 
 ## Sorgu fonksiyonu sözlüğü
 
-v0.1'de sabit, belgelenmiş küçük bir set (16 fonksiyon; 15'i v0.1 listesi, `olay_rolu` 4. haftada Yusuf'un kararıyla eklendi). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
+v0.1'de sabit, belgelenmiş küçük bir set (18 fonksiyon; 15'i v0.1 listesi, `olay_rolu` 4. haftada, `konu_puani` ve `olay_konusu` 6. haftada Yusuf'un kararıyla eklendi). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
 İpuçları: ruh hali, stres, mekan, zaman, kimden duydu, kaç kişi biliyor, yalan söylendi mi, bir eylemi en son ne zaman yaptı.
 
 | #   | Fonksiyon                                 | Ne sorar                                                                                                                                                                                   | Döndürdüğü                                     | Örnek kriter                               |
@@ -56,8 +56,8 @@ v0.1'de sabit, belgelenmiş küçük bir set (16 fonksiyon; 15'i v0.1 listesi, `
 
 ## Bağlama durumu (3. hafta)
 
-`ZihinSorguCozucusu` 16 fonksiyonun 14'ünü gerçek veriye bağlar: zihne dayanan 12 (`kisilik`, `eksen`, `fikir`, `fikir_bandi`, `modifier_var`, `olay_rolu`, `duygu`,
-`duygu_hedefi`, `stres`, `inanc`, `kaynak`, `hafiza_var`) ve dünyaya dayanan 2 (`gercek`, `ayni_mekanda`). `yalan_soyledi` (yalan kaydı, 6. hafta) ve
+`ZihinSorguCozucusu` 3. haftada 16 fonksiyonun 14'ünü gerçek veriye bağlıyordu (6. haftada `yalan_soyledi`, `konu_puani` ve `olay_konusu` da bağlandı, yalnızca `yay` kaldı; aşağıda): zihne dayanan 12 (`kisilik`, `eksen`, `fikir`, `fikir_bandi`, `modifier_var`, `olay_rolu`, `duygu`,
+`duygu_hedefi`, `stres`, `inanc`, `kaynak`, `hafiza_var`) ve dünyaya dayanan 2 (`gercek`, `ayni_mekanda`). `yalan_soyledi` (yalan kaydı) 6. haftada bağlandı;
 `yay` (yay değişkenleri, 7. hafta) henüz bağlı değildir. Sözlüğe yeni fonksiyon eklenmedi. `inanc` çelişkide kaybeden önerme için 0 döner;
 `inanc(...)` ve `kaynak(...)` önerme argümanında `degil(yuklem(...))` kabul eder (ör. `inanc(degil(konum!(Ali, han)))` = "Ali handa değil" inancı); `degil` başka yerde ve iç içe geçersizdir. Yeni fonksiyon eklenmedi. Ayrıntı: `docs/notes/zihin.md`.
 
@@ -65,7 +65,7 @@ v0.1'de sabit, belgelenmiş küçük bir set (16 fonksiyon; 15'i v0.1 listesi, `
 
 Kriterler artık JSON nesnesinden okunur (`KriterOkuyucu`; `alan`, `op`, `deger`, isteğe bağlı `agirlik` ve `zorunlu`) ve sonuç kurallarında kullanılır (`docs/notes/kural-motoru.md`).
 Sözlüğe **yeni fonksiyon eklenmedi**. Sonuç kurallarında geçerli roller `ben`, `oyuncu`, `olay.fail`, `olay.hedef`'tir; `konusan` ve `dinleyen` diyalog içindir.
-Çözücüsü henüz bağlı olmayan `yalan_soyledi` ve `yay`, kural doğrulayıcısı tarafından reddedilir.
+Çözücüsü henüz bağlı olmayan `yay`, kural doğrulayıcısı tarafından reddedilir (`yalan_soyledi` 6. haftada bağlandı).
 
 `olay_rolu(rol)` (4. hafta, Yusuf'un kararı) hedef/tanık ayrımını yapar: önceki geçici `inanc(<tür>(olay.fail, ben))` yöntemi kaldırıldı, çünkü NPC'nin geçmişte benzer bir olayın hedefi olması
 onu sonraki olaylarda yanlışlıkla hedef sayıyordu. Rol yalnızca o olaydaki fail/hedef alanlarından belirlenir; olay bağlamı (`olay.fail`) yoksa her rol yanlıştır.
@@ -90,8 +90,21 @@ NPC eylemlerinin `on_kosullar`, `olcutler` ve `etkiler` alanları aynı kriter d
 | `olay.fail`, `olay.hedef`, `konusan`, `dinleyen` rolleri | Eylemin tetikleyici olayı yoktur; diyalog 8. haftada.                                     |
 | `olay_rolu(...)`                                         | Sonuç kuralı bağlamıdır (olay.fail / hedef / tanık).                                      |
 | `gercek(...)`                                            | Nesnel dünya sorgusudur, NPC'nin bilgisini aşar; NPC'nin inancı için `inanc(...)` kullan. |
-| `yay(...)`, `yalan_soyledi(...)`                         | Çözücüleri henüz bağlı değil (7. ve 6. hafta).                                            |
+| `yay(...)`                                               | Çözücüsü henüz bağlı değil (7. hafta).                                                    |
 
 **Ölçütler** (`olcutler[].alan`) yalnızca sayısal ya da doğru/yanlış (1/0) sonuç veren fonksiyonlardır; `fikir_bandi` ve `duygu_hedefi` ölçüt olamaz (ön koşul olarak kullanılabilir).
 
 **Sonuç kuralları** NPC eylemlerinin `olay_turu` türüne `ne_zaman` ile bağlanabilir; `ayrildi` ve `geldi` yerleşik türlerdir ve olayın `Hedef` alanı karşı **mekandır** (kural `olay.hedef`'e modifier/eksen/duygu yazamaz). `karar_verildi` `ne_zaman` olamaz. Ayrıntı: [ADR-011](adr/0011-karar-modeli.md), [`notes/karar.md`](notes/karar.md).
+
+## Dedikodu bağlamı (6. hafta)
+
+Sözlük 16'dan **18 fonksiyona** çıktı (Yusuf'un kararı, ADR-012); `yalan_soyledi(kime)` bağlandı. Yeni fonksiyonlar ve bağlam kuralları:
+
+| Fonksiyon                  | Geçerli bağlam                                                                 | Anlam                                                                                                                                                                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `konu_puani(kime)`         | Yalnızca `aktarim: dogru` eylemlerinin `on_kosullar` ve `olcutler`'i           | Bu NPC'nin (`ben`) o kişiye anlatabileceği en yüksek konu puanı (0..1); konu havuzu eylemin `konu_desenleri`'dir. Başka bağlamda (kural, kriz, yalan ve aktarımsız eylem) doğrulayıcı reddeder; çalışma anında konu havuzu yoksa çözülemez. |
+| `olay_konusu(desen)`       | Yalnızca sonuç kuralı                                                          | Mevcut olay `anlatti` ise, `ben` olayın hedefi (içeriği duyan dinleyen) ise ve anlatılan önerme desene uyuyorsa doğru; konuşan ve tanık için her zaman yanlış. Desen `degil(...)` kabul eder (yalan söylenen olumsuz önerme için). Eylem bağlamında doğrulayıcı reddeder. |
+| `yalan_soyledi(kime)`      | Kural, eylem ve kriz kriterleri                                                | NPC'nin kendi aktarım kaydında o kişiye yalan söylediği bir kayıt var mı. Dinleyen bunu bilmez; `ben` hep konuşandır.                                                                                              |
+
+Kriz satırı kriterlerinde roller `ben`, `oyuncu` ve (hedefli satırda) `eylem.hedef`'tir; `olay_rolu`, `olay_konusu`, `konu_puani`, `gercek` ve `yay` reddedilir. Kriz satırında kriterler ADR-010 gibi **hepsi tutmalıdır**; `agirlik` yalnızca tutan satırlar arasında özgüllük sıralaması içindir.
+Ayrıntı: `docs/notes/dedikodu.md`, `docs/notes/stres.md`.

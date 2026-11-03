@@ -9,11 +9,13 @@ Her NPC'nin bir `Zihin`'i var, hepsi `ZihinDeposu`'nda sıralı durur. Zihin şu
 - **Kişilik:** `acgozluluk`, `durustluk`, `cesaret`, `sosyallik`, `kin_tutma`, `merhamet` (0–1). Senaryodan bir kez okunur, hiçbir olay değiştirmez.
 - **İlişkiler:** kişi başına üç kalıcı eksen (`guven`, `sevgi`, `korku`, −100..100) ve süreli fikir modifier'ları. `Fikir(a, b, tick)` eksenlerin ağırlıklı toplamı + aktif modifier'lardır. `FikirDokumu` her katkıyı neden olayıyla verir.
 - **Ruh hali:** tek baskın duygu (tür, şiddet, hedef, neden olay). Önceki duygu `OncekiDuygu` olarak kalır.
-- **Stres:** 0–100, yavaş söner. Eylem bağlantısı ve kriz 6. haftada.
+- **Stres:** 0–100, yavaş söner. Çelişen eylem seçilince artar (6. hafta, `stres.md`); eşikte kriz çıkar.
 - **İnançlar:** önerme + kanıt listesi (`gordu`, `duydu`, `cikarim`). `Guven = 1 − Π(1 − güç)`. Kanıt silinmez, gücü zayıflar. Tek değerli önermenin farklı değerleri ya da `p` ile `degil(p)` çelişir.
 - **Hafıza:** olay kimliği + önem. Önemi kalıcılık eşiğinin üstündeyse kalıcıdır, diğerleri silikleşir. Unutmak yalnızca sorgudan çıkmaktır; günlükten hiçbir şey silinmez.
 
-Durum altı olayla ilerler: `modifier_eklendi`, `eksen_degisti`, `duygu_degisti`, `stres_degisti`, `kanit_eklendi`, `hafiza_eklendi`.
+Durum yedi olayla ilerler: `modifier_eklendi`, `eksen_degisti`, `duygu_degisti`, `stres_degisti`, `kanit_eklendi`, `hafiza_eklendi` ve (6. hafta) `aktarim_kaydedildi`.
+
+**6. hafta:** `Kanit` söylentinin kökünü taşır (`Kok`; `gordu` için boş, etkin kökü sahibi). Aynı kökten `duydu` varsa yeni kanıt eklenmez, mevcut tazelenir; kökü sahibi olan `duydu` hiç yazılmaz (yankı freni). Zihin ayrıca konuşanın aktarım kaydını tutar (`Aktarimlar`, `YalanSoyledi(kime)`, `AktarimVar(onerme, kime)`); kayıt yokken `KanonikMetin` eskisiyle birebir aynıdır (`T|` satırı yalnızca kayıt varken). `EnGucluKanit` önermenin en güçlü tek güncel kanıtını verir (eşitlikte en küçük olay kimliği). Ayrıntı: `dedikodu.md`.
 
 ## Neden böyle?
 

@@ -17,16 +17,19 @@ namespace Yanki.Core.Simulation
     /// zihinler her olay eklenir eklenmez uygulanır. <see cref="Submit"/> oyuncu eylemini bekletir, <see cref="Tick"/> ilerletir.
     /// <para>1 tick = 1 oyun saati (docs/notes/zihin.md, Karar (Yusuf)); çekirdek bunu varsaymaz, sönme oranları böyle seçilmiştir.</para>
     /// <para>
-    /// Bir tick'te çalışan adımlar (plan 6): (1) bekleyen oyuncu eylemleri olay olur (oyuncu hareketi dahil: oyuncunun konumu hemen
-    /// değişir), (2) algı: dış olayları görenlere kanıt ve hafıza yazılır, (3) sonuç kuralları, (4) sönüm ve süre dolumu (yazılacak durum yok,
-    /// ADR-008), (5) her NPC için eylem seçimi, (6) seçimlerin olaya dönüşmesi, (7) durum hash'i ve olay yayını.
+    /// Bir tick'te çalışan adımlar (plan 6): (1) bekleyen oyuncu eylemleri olay olur (oyuncu hareketi ve anlatımı dahil: hareketle oyuncunun konumu hemen değişir),
+    /// (2) algı: dış olayları görenlere kanıt ve hafıza yazılır; oyuncunun anlattığı önerme dinleyene <c>duydu</c> kanıtı olur, (3) sonuç kuralları,
+    /// (4) sönüm ve süre dolumu (yazılacak durum yok, ADR-008) ve kriz tespiti (sönmüş stres ≥ eşik), (5) her NPC için eylem seçimi (krizdeki NPC eylem seçmez),
+    /// (6) seçimlerin ve krizlerin olaya dönüşmesi, (7) durum hash'i ve olay yayını.
     /// </para>
     /// <para>
     /// Adım 5: bütün NPC'ler adım başındaki AYNI durumu görür; kararlar NPC kimlik sırasıyla hesaplanır ve hiçbiri yazılmadan önce
-    /// hepsi hesaplanır. Aday yoksa olay yazılmaz; aday var ama seçim yoksa boş seçimli <c>karar_verildi</c> yazılır.
-    /// Adım 6, sırayla: (1) <c>karar_verildi</c>, eylem olayı (hareket eyleminde <c>ayrildi</c> ve <c>geldi</c>) NPC kimlik sırasıyla;
-    /// (2) bu dış olayların algısı, adım 5 başındaki konum görüntüsüyle (<c>konum!</c> henüz değişmedi); (3) eylem etkileri ve <c>konum!</c>
-    /// değişimleri, en son. Böylece aynı tick'te mekandan ayrılan tanık olayı görür, aynı tick'te varan görmez ve sonuç NPC işleme
+    /// hepsi hesaplanır. Konuşma eyleminin konuları ve aktarım güçleri de burada (aynı görüntüden) belirlenir. Aday yoksa olay yazılmaz;
+    /// aday var ama seçim yoksa boş seçimli <c>karar_verildi</c> yazılır.
+    /// Adım 6, sırayla: (1) kriz olayları, sonra <c>karar_verildi</c>, eylem olayı (hareket eyleminde <c>ayrildi</c> ve <c>geldi</c>; konuşmada seçilen konu
+    /// sayısı kadar <c>anlatti</c>) NPC kimlik sırasıyla; (2) bu dış olayların algısı, adım 5 başındaki konum görüntüsüyle (<c>konum!</c> henüz değişmedi);
+    /// (3) eylem etkileri, konuşmada dinleyene <c>duydu</c> kanıtı ve konuşana aktarım kaydı, çelişen eylemin stres artışı, kriz etkileri ve stres düşüşü,
+    /// en son <c>konum!</c> değişimleri. Böylece aynı tick'te mekandan ayrılan tanık olayı görür, aynı tick'te varan görmez ve sonuç NPC işleme
     /// sırasına bağlı olmaz.
     /// </para>
     /// <para>

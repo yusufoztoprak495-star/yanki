@@ -20,7 +20,7 @@ namespace Yanki.Core.Perception
     /// <summary>
     /// Doğrudan algı (plan 5.3): bir olay olduğunda görünürlük seviyesini karşılayan NPC'ler olayı algılar; her biri için
     /// <c>gordu</c> kanıtı ve hafıza kaydı olayı üretilir. Görünürlük olayın yükünde <c>gorunurluk</c> anahtarıyla tutulur:
-    /// <c>acik</c> (yoksa varsayılan), <c>sessiz</c>, <c>gizli</c>. Dedikodu (<c>duydu</c> kanıtı aktarımı) 6. haftanın işidir.
+    /// <c>acik</c> (yoksa varsayılan), <c>sessiz</c>, <c>gizli</c>. Dedikodu (<c>duydu</c> kanıtı aktarımı) algıdan değil, konuşma adımından gelir: <c>anlatti</c> olayı burada yalnızca içeriksiz <c>anlatti(fail,hedef)</c> gözlemi üretir.
     /// </summary>
     public static class DogrudanAlgi
     {

@@ -2,7 +2,7 @@
 
 Ortak kriter dili: Valve tarzı ağırlıklı kriterlerin ayrıştırıcısı, doğrulayıcısı ve puanlayıcısı. Sonuç kuralları, diyalog şablonları ve eylem ön koşulları aynı yapıyı kullanır (plan 5.9, [ADR-003](../../../docs/adr/0003-birlesik-kriter-dili.md)). Dil referansı ve 15 fonksiyonluk sözlük: [`docs/criteria-language.md`](../../../docs/criteria-language.md).
 
-**Durum:** 2. hafta teslimi tamam. Kriterler bu hafta **C# ile kurulur**; JSON okuma yok. Kural motoru 4. hafta.
+**Durum:** 2. hafta teslimi tamam; sözlük 6. haftada 18 fonksiyon (`konu_puani`, `olay_konusu`), `yalan_soyledi` bağlandı. Kriterler bu hafta **C# ile kurulur**; JSON okuma yok. Kural motoru 4. hafta.
 
 ## Akış
 

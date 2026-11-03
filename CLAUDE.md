@@ -41,8 +41,10 @@ dotnet run --project src/Yanki.Cli -- --version
 - Paket sürümleri yalnızca `Directory.Packages.props` içinde. Planda olmayan paket ekleme (önce sor).
 - **Her PR'da `docs/DURUM.md` güncellenir. PR bunsuz açılmaz.**
 - **Karar değişirse yeni ADR** yaz (`docs/adr/`, şablon: `0000-sablon.md`). Eski ADR'yi silme, durumunu "Yerini aldı" yap.
-  ADR'lerdeki "Gerekçe (Yusuf)" bölümünü Yusuf yazar; sen doldurma.
-  ADR'ler Yusuf gerekçeyi yazana kadar "Önerildi" kalır; kararlar yine de bağlayıcıdır.
+  ADR'lerdeki "Gerekçe (Yusuf)" bölümünü Yusuf yazar; sen doldurma. İstisna: Yusuf bir görev metninde gerekçe yazımını açıkça sana devrettiyse
+  (6. hafta: ADR-011 ve ADR-012) devredilen ADR'lerin gerekçesini plandan ve Yusuf'un kararlarından derlersin, bölümün başına bunu belirten bir not düşersin ve
+  kararları Yusuf'un yazmadığı bir gerekçe uydurmazsın. Devir yalnızca o görev metni içindir, sonraki ADR'lere uzanmaz.
+  ADR'ler Yusuf onaylayana kadar "Önerildi" kalır (devredilenler dahil); durumları sen değiştirmezsin; kararlar yine de bağlayıcıdır.
 - **`docs/prompts/` altına yalnızca Yusuf'un verdiği görev metinleri birebir kaydedilir. Claude Code görev metni yazmaz veya tamamlamaz. Yeni bir haftanın görev metni verildiğinde onu `docs/prompts/hafta-NN.md` olarak kaydet.**
 - **Yusuf bir PR'ın merge edildiğini söylediğinde `main`'e geç, pull et ve o PR'ın yerel dalını sil.**
 - **Her modül bittiğinde** `docs/notes/` altına "bu modül ne yapıyor, neden böyle" taslak notu bırak; Yusuf kendi
