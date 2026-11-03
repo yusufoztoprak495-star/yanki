@@ -74,13 +74,13 @@ namespace Yanki.Core.Tests.Brakes
         [Fact]
         public void Kapsam_kural_tum_npcler_icin_tek_sayac_kapsam_npc_npc_basina()
         {
-            var kural = Yap("\"cooldown\": 10, \"cooldown_kapsam\": \"kural\"");
+            var kural = Yap("\"cooldown\": 10, \"kapsam\": \"kural\"");
             kural.Submit(Y);
             kural.Tick(1);
             Assert.Equal(new[] { "Ali" }, Mod(kural, 1).Select(o => o.Deger("npc")).ToArray());    // ordinal ilk NPC
             Assert.Equal(new[] { "Veli" }, Fren(kural, "cooldown", 1).Select(o => o.Deger("npc")).ToArray());
 
-            var npc = Yap("\"cooldown\": 10, \"cooldown_kapsam\": \"npc\"");
+            var npc = Yap("\"cooldown\": 10, \"kapsam\": \"npc\"");
             npc.Submit(Y);
             npc.Tick(1);
             Assert.Equal(2, Mod(npc, 1).Length);
@@ -97,20 +97,78 @@ namespace Yanki.Core.Tests.Brakes
         }
 
         [Fact]
-        public void Tick_basina_en_fazla_ayni_tickte_cok_tetigi_sinirlar()
+        public void Tick_basina_en_fazla_kural_genelinde_sayilir_ikinci_NPC_tick_siniri_freni_alir()
+        {
+            var s = Yap("\"tick_basina_en_fazla\": 1");                 // kapsam varsayılanı npc: tick sınırı yine kural geneli
+            s.Submit(Y);
+            s.Tick(1);
+
+            Assert.Equal(new[] { "Ali" }, Mod(s, 1).Select(o => o.Deger("npc")).ToArray());                 // ordinal ilk NPC
+            Assert.Equal(new[] { "Veli" }, Fren(s, "tick_siniri", 1).Select(o => o.Deger("npc")).ToArray());
+
+            var kural = Yap("\"tick_basina_en_fazla\": 1, \"kapsam\": \"kural\"");
+            kural.Submit(Y);
+            kural.Tick(1);
+            Assert.Equal(new[] { "Ali" }, Mod(kural, 1).Select(o => o.Deger("npc")).ToArray());          // kapsamdan bağımsız: aynı sonuç
+            Assert.Single(Fren(kural, "tick_siniri", 1));
+        }
+
+        [Fact]
+        public void Tick_basina_en_fazla_ayni_tickte_cok_tetigi_sinirlar_yeni_tickte_sifirlanir()
         {
             var s = Yap("\"tick_basina_en_fazla\": 2");
             s.Submit(Y);
             s.Submit(Y);
-            s.Submit(Y);
             s.Tick(1);
 
-            Assert.Equal(4, Mod(s, 1).Length);                          // Ali 2, Veli 2
-            Assert.Equal(2, Fren(s, "tick_siniri", 1).Length);          // üçüncü tetik: Ali, Veli
+            // Kural geneli 2 tetikleme: ilk tetik Ali + Veli = 2; ikinci tetik her iki NPC için tick_siniri.
+            Assert.Equal(2, Mod(s, 1).Length);
+            Assert.Equal(2, Fren(s, "tick_siniri", 1).Length);
 
             s.Submit(Y);
             s.Tick(1);
             Assert.Equal(2, Mod(s, 2).Length);                          // yeni tick: sayaç tick başına sıfırlanır
+        }
+
+        [Fact]
+        public void Tick_basina_en_fazla_sayaci_tick_icidir_kanonik_metne_girmez()
+        {
+            var s = Yap("\"tick_basina_en_fazla\": 1");
+            s.Submit(Y);
+            s.Tick(2);
+
+            Assert.Equal(string.Empty, s.SayaclarKanonikMetni);
+        }
+
+        [Fact]
+        public void Genel_sinir_varsayilani_max_32_ve_8_kere_NPC_sayisidir_ayarlanabilir()
+        {
+            var a = new Yanki.Core.Brakes.FrenAyarlari();
+            Assert.Equal(32, a.VarsayilanGenelSinir(3));
+            Assert.Equal(32, a.VarsayilanGenelSinir(4));
+            Assert.Equal(64, a.VarsayilanGenelSinir(8));
+            Assert.Equal(400, a.VarsayilanGenelSinir(50));
+            Assert.Equal(10, new Yanki.Core.Brakes.FrenAyarlari(genelSinirTabani: 10, genelSinirNpcCarpani: 1).VarsayilanGenelSinir(3));
+        }
+
+        [Fact]
+        public void Senaryo_M_yazmadiysa_FrenAyarlari_varsayilani_uygulanir_yazdiysa_senaryo_kazanir()
+        {
+            var senaryo = SimFikstur.Senaryo();
+            var kurallar = KuralYukleyici.Yukle(Kural(string.Empty), "k.json", senaryo.OlayTurleri).Kurallar;
+            var dar = Simulasyon.Olustur(senaryo, kurallar, 42, frenAyarlari: new Yanki.Core.Brakes.FrenAyarlari(genelSinirTabani: 1, genelSinirNpcCarpani: 0));
+            dar.Submit(Y);
+            dar.Tick(1);
+            Assert.Single(Mod(dar, 1));                                   // M=1: Ali fırlar, Veli genel_sinir
+            Assert.Single(Fren(dar, "genel_sinir", 1));
+
+            var json = SimFikstur.SenaryoJson.Replace("\"gercekler\": [],", "\"gercekler\": [], \"frenler\": { \"tick_basina_en_fazla_sonuc\": 2 },");
+            var yazili = Simulasyon.Olustur(
+                SenaryoYukleyici.Yukle(json, "s.json").Senaryo!, kurallar, 42, frenAyarlari: new Yanki.Core.Brakes.FrenAyarlari(genelSinirTabani: 1, genelSinirNpcCarpani: 0));
+            yazili.Submit(Y);
+            yazili.Tick(1);
+            Assert.Equal(2, Mod(yazili, 1).Length);                       // senaryonun M=2'si ayar varsayılanını ezer
+            Assert.Empty(Fren(yazili, "genel_sinir"));
         }
 
         [Fact]
@@ -196,10 +254,10 @@ namespace Yanki.Core.Tests.Brakes
             satirlar.Insert(ilk, string.Join(",\n", npcSatirlari));
             var ters = string.Join("\n", satirlar);
 
-            var a = Yap("\"cooldown\": 10, \"cooldown_kapsam\": \"kural\"");
+            var a = Yap("\"cooldown\": 10, \"kapsam\": \"kural\"");
             a.Submit(Y);
             a.Tick(2);
-            var b = Yap("\"cooldown\": 10, \"cooldown_kapsam\": \"kural\"", senaryoJson: ters);
+            var b = Yap("\"cooldown\": 10, \"kapsam\": \"kural\"", senaryoJson: ters);
             b.Submit(Y);
             b.Tick(2);
 
@@ -279,8 +337,8 @@ namespace Yanki.Core.Tests.Brakes
         [InlineData("\"cooldown\": 1.5")]
         [InlineData("\"en_fazla\": -1")]
         [InlineData("\"tick_basina_en_fazla\": \"iki\"")]
-        [InlineData("\"cooldown_kapsam\": \"npc\"")]
-        [InlineData("\"cooldown\": 5, \"cooldown_kapsam\": \"hedef\"")]
+        [InlineData("\"kapsam\": \"npc\"")]
+        [InlineData("\"cooldown\": 5, \"kapsam\": \"hedef\"")]
         public void Dogrulayici_gecersiz_fren_alanlarini_reddeder(string ek)
         {
             var sonuc = KuralYukleyici.Yukle(Kural(ek), "k.json", SimFikstur.Senaryo().OlayTurleri);

@@ -81,6 +81,8 @@ namespace Yanki.Core.Brakes
         private static string KuralAnahtari(string id, string npc, SinirKapsami kapsam) =>
             kapsam == SinirKapsami.Kural ? "k|" + id : "k|" + id + "|" + npc;
 
+        private static string KuralTickAnahtari(string id) => "kt|" + id;
+
         private static string EylemAnahtari(string id, string npc, string hedef, SinirKapsami kapsam) =>
             kapsam == SinirKapsami.Hedef ? "e|" + id + "|" + npc + "|" + hedef : "e|" + id + "|" + npc;
 
@@ -129,6 +131,10 @@ namespace Yanki.Core.Brakes
                 {
                     _sonKuralImzasi[olay.KuralId] = imza;
                     Say(KuralAnahtari(olay.KuralId, npc, kuralSiniri.Kapsam), olay);
+                    if (kuralSiniri.TickBasinaEnFazla > 0)
+                    {
+                        Say(KuralTickAnahtari(olay.KuralId), olay);   // tick içi sayaç: kapsamdan bağımsız, kanonik metne girmez
+                    }
                 }
             }
         }
@@ -254,22 +260,29 @@ namespace Yanki.Core.Brakes
                 }
 
                 var k = Oku(KuralAnahtari(kural.Id, npc, s.Kapsam));
-                if (k == null)
-                {
-                    return null;
-                }
-
-                if (s.Cooldown > 0 && tick - k.SonTick < s.Cooldown)
+                if (k != null && s.Cooldown > 0 && tick - k.SonTick < s.Cooldown)
                 {
                     return FrenTurleri.Cooldown;
                 }
 
-                if (s.EnFazla > 0 && k.Toplam >= s.EnFazla)
+                if (k != null && s.EnFazla > 0 && k.Toplam >= s.EnFazla)
                 {
                     return FrenTurleri.EnFazla;
                 }
 
-                return s.TickBasinaEnFazla > 0 && k.SonTick == tick && k.SonTickSayisi >= s.TickBasinaEnFazla ? FrenTurleri.TickSiniri : null;
+                var t = s.TickBasinaEnFazla > 0 ? Oku(KuralTickAnahtari(kural.Id)) : null;
+                return t != null && t.SonTick == tick && t.SonTickSayisi >= s.TickBasinaEnFazla ? FrenTurleri.TickSiniri : null;
+            }
+
+            private void YerelSay(string anahtar, long tick)
+            {
+                if (!_yerel.TryGetValue(anahtar, out var k))
+                {
+                    k = _temel.Al(anahtar)?.Kopya() ?? new Kayit();
+                    _yerel[anahtar] = k;
+                }
+
+                k.Say(tick);
             }
 
             /// <summary>Kuralın bu NPC için tetiklendiğini adım içinde hemen kaydeder.</summary>
@@ -281,14 +294,11 @@ namespace Yanki.Core.Brakes
                     return;
                 }
 
-                var anahtar = KuralAnahtari(kural.Id, npc, s.Kapsam);
-                if (!_yerel.TryGetValue(anahtar, out var k))
+                YerelSay(KuralAnahtari(kural.Id, npc, s.Kapsam), tick);
+                if (s.TickBasinaEnFazla > 0)
                 {
-                    k = _temel.Al(anahtar)?.Kopya() ?? new Kayit();
-                    _yerel[anahtar] = k;
+                    YerelSay(KuralTickAnahtari(kural.Id), tick);
                 }
-
-                k.Say(tick);
             }
         }
     }

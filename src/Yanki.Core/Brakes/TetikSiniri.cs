@@ -19,17 +19,17 @@ namespace Yanki.Core.Brakes
     /// <summary>
     /// Bir kuralın ya da eylemin cooldown ve tetiklenme sınırları (7. hafta, ADR-013). "Tetiklendi": kural için bütün kriterler tuttu ve
     /// en az bir etki üretildi; eylem için karar başına bir (konuşmadaki çoklu <c>anlatti</c>, hareketin <c>ayrildi</c> + <c>geldi</c> olayları tek sayılır).
-    /// <see cref="Kapsam"/> üç sınırın hepsi için geçerlidir. 0 = tanımsız.
+    /// <see cref="Kapsam"/> (JSON: <c>kapsam</c>) yalnızca <c>cooldown</c> ve <c>en_fazla</c> için geçerlidir; <c>tick_basina_en_fazla</c> her zaman kural genelinde sayılır (plan 5.10) ve kapsamdan bağımsızdır. 0 = tanımsız.
     /// </summary>
     public sealed class TetikSiniri
     {
         /// <summary>Son tetiklemeden sonra kaç tick kapalı kalınacağı (t=10, cooldown 24: t=33 kapalı, t=34 açık); 0 tanımsız.</summary>
         public long Cooldown { get; }
 
-        /// <summary>Sayma kapsamı.</summary>
+        /// <summary>Cooldown ve en_fazla sayma kapsamı (tick_basina_en_fazla'yı etkilemez).</summary>
         public SinirKapsami Kapsam { get; }
 
-        /// <summary>Tick başına en fazla tetikleme (yalnızca kurallar); 0 tanımsız.</summary>
+        /// <summary>Kural genelinde tick başına en fazla tetikleme (kapsamdan bağımsız, yalnızca kurallar); 0 tanımsız.</summary>
         public int TickBasinaEnFazla { get; }
 
         /// <summary>Toplam en fazla tetikleme; 0 tanımsız.</summary>
@@ -56,7 +56,7 @@ namespace Yanki.Core.Brakes
         }
 
         /// <summary>
-        /// Kural ya da eylem öğesinin <c>cooldown</c>, <c>cooldown_kapsam</c>, <c>tick_basina_en_fazla</c> (yalnızca kural) ve <c>en_fazla</c>
+        /// Kural ya da eylem öğesinin <c>cooldown</c>, <c>kapsam</c> (cooldown ve en_fazla için), <c>tick_basina_en_fazla</c> (yalnızca kural) ve <c>en_fazla</c>
         /// alanlarını okur ve doğrular; hiçbiri yoksa <c>null</c> (fren alanı olmayan tanımın davranışı değişmez).
         /// </summary>
         public static TetikSiniri? Oku(JsonDegeri oge, bool eylem, Action<int, string> hata)
@@ -64,7 +64,7 @@ namespace Yanki.Core.Brakes
             var cooldown = TamSayi(oge, "cooldown", hata);
             var tick = eylem ? null : TamSayi(oge, "tick_basina_en_fazla", hata);
             var enFazla = TamSayi(oge, "en_fazla", hata);
-            var kapsamDugumu = oge.Al("cooldown_kapsam");
+            var kapsamDugumu = oge.Al("kapsam");
             var kapsam = eylem ? SinirKapsami.Hedef : SinirKapsami.Npc;
             if (kapsamDugumu != null)
             {
@@ -72,7 +72,7 @@ namespace Yanki.Core.Brakes
                 if (kapsamDugumu.Tur != JsonTuru.Metin
                     || !(kapsamDugumu.MetinDeger == "npc" || (eylem ? kapsamDugumu.MetinDeger == "hedef" : kapsamDugumu.MetinDeger == "kural")))
                 {
-                    hata(kapsamDugumu.Satir, $"\"cooldown_kapsam\" {izinli} olmalı");
+                    hata(kapsamDugumu.Satir, $"\"kapsam\" {izinli} olmalı");
                 }
                 else
                 {
@@ -84,7 +84,7 @@ namespace Yanki.Core.Brakes
             {
                 if (kapsamDugumu != null)
                 {
-                    hata(kapsamDugumu.Satir, "\"cooldown_kapsam\" tek başına anlamsız: cooldown, en_fazla" + (eylem ? string.Empty : " ya da tick_basina_en_fazla") + " gerekli");
+                    hata(kapsamDugumu.Satir, "\"kapsam\" tek başına anlamsız: cooldown ya da en_fazla gerekli");
                 }
 
                 return null;

@@ -91,11 +91,11 @@ namespace Yanki.Core.Tests.Brakes
         [Fact]
         public void Kapsam_npc_tum_hedefleri_kapatir_kapsam_hedef_yalnizca_o_hedefi()
         {
-            var npc = Kur(new[] { KararFikstur.Eylem("dost", "npc", "\"cooldown\": 100, \"cooldown_kapsam\": \"npc\"") });
+            var npc = Kur(new[] { KararFikstur.Eylem("dost", "npc", "\"cooldown\": 100, \"kapsam\": \"npc\"") });
             npc.Tick(4);
             Assert.Single(npc.Gunluk.Olaylar, o => o.Tur == "dost_oldu" && o.Fail == "Ayse");
 
-            var hedef = Kur(new[] { KararFikstur.Eylem("dost", "npc", "\"cooldown\": 100, \"cooldown_kapsam\": \"hedef\"") });
+            var hedef = Kur(new[] { KararFikstur.Eylem("dost", "npc", "\"cooldown\": 100, \"kapsam\": \"hedef\"") });
             hedef.Tick(4);
             var olaylar = hedef.Gunluk.Olaylar.Where(o => o.Tur == "dost_oldu" && o.Fail == "Ayse").ToArray();
             Assert.Equal(2, olaylar.Length);                                   // Can ve Zeki: biri kapanınca diğeri açık
@@ -113,7 +113,7 @@ namespace Yanki.Core.Tests.Brakes
         [Fact]
         public void Hareket_ayrildi_ve_geldi_sayaci_bir_kez_artirir_en_fazla_2_iki_hareket_demektir()
         {
-            var s = Kur(new[] { KararFikstur.Eylem("git", "komsu_mekan", "\"en_fazla\": 2, \"cooldown_kapsam\": \"npc\"") });
+            var s = Kur(new[] { KararFikstur.Eylem("git", "komsu_mekan", "\"en_fazla\": 2, \"kapsam\": \"npc\"") });
             s.Tick(5);
 
             Assert.Equal(2, s.Gunluk.Olaylar.Count(o => o.Tur == "geldi" && o.Fail == "Ayse"));
@@ -127,7 +127,7 @@ namespace Yanki.Core.Tests.Brakes
         public void Konusmada_cok_konulu_anlatti_olaylari_sayaci_bir_kez_artirir()
         {
             var anlat = "{ \"id\": \"anlat\", \"olay_turu\": \"anlatti\", \"hedef\": \"npc\", \"taban\": 1, \"aktarim\": \"dogru\", \"en_fazla\": 2, "
-                + "\"cooldown_kapsam\": \"npc\", \"konu_desenleri\": [\"borclu(*,*,*)\", \"kardes(*,*)\"] }";
+                + "\"kapsam\": \"npc\", \"konu_desenleri\": [\"borclu(*,*,*)\", \"kardes(*,*)\"] }";
             var k = new KonusmaAdimiTests.Kaydedici().Sec("Ayse", 2, "anlat|Can").Sec("Ayse", 3, "anlat|Zeki");
             var senaryo = SenaryoYukleyici.Yukle(KonusmaAdimiTests.Senaryo(), "s.json").Senaryo!;
             var sim = Simulasyon.Olustur(

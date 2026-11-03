@@ -628,7 +628,8 @@ namespace Yanki.Core.Simulation
             }
 
             var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId,
-                new FrenBaglami(_sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc, _zincir, _frenAyarlari.ZincirDerinligi));
+                new FrenBaglami(
+                    _sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc ?? _frenAyarlari.VarsayilanGenelSinir(Senaryo.Npcler.Count), _zincir, _frenAyarlari.ZincirDerinligi));
             foreach (var etki in degerlendirme.Etkiler)
             {
                 var olay = KuralMotoru.OlayYap(etki, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));

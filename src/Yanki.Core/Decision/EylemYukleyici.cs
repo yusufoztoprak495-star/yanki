@@ -26,7 +26,7 @@ namespace Yanki.Core.Decision
         private static readonly string[] EylemAnahtarlari =
         {
             "id", "olay_turu", "hedef", "taban", "on_kosullar", "olcutler", "kisilik_carpani", "fikir_carpani",
-            "ruh_hali_carpani", "celisen_ozellikler", "etkiler", "aktarim", "konu_desenleri", "yalan_onermeleri", "gorunurluk", "stres_tabani", "cooldown", "cooldown_kapsam", "en_fazla",
+            "ruh_hali_carpani", "celisen_ozellikler", "etkiler", "aktarim", "konu_desenleri", "yalan_onermeleri", "gorunurluk", "stres_tabani", "cooldown", "kapsam", "en_fazla",
         };
 
         private static readonly string[] OlcutAnahtarlari = { "alan", "min", "max", "egri" };

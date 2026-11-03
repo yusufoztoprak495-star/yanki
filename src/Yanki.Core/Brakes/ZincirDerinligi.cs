@@ -16,9 +16,35 @@ namespace Yanki.Core.Brakes
         /// </summary>
         public int ZincirDerinligi { get; }
 
+        /// <summary>Genel sınır M varsayılanının tabanı (senaryoda <c>frenler.tick_basina_en_fazla_sonuc</c> yoksa).</summary>
+        public const int VarsayilanGenelSinirTabani = 32;
+
+        /// <summary>Genel sınır M varsayılanının NPC başına çarpanı.</summary>
+        public const int VarsayilanGenelSinirNpcCarpani = 8;
+
+        /// <summary>
+        /// Senaryo M'yi yazmadıysa uygulanan tick başına en fazla sonuç çıktısı: <c>max(taban, çarpan × NPC sayısı)</c> (Yusuf'un kararı,
+        /// 3 golden'da en çok 6, 8 NPC stres fikstüründe 13 çıktı ölçüldü).
+        /// </summary>
+        public int GenelSinirTabani { get; }
+
+        /// <summary>M varsayılanının NPC başına çarpanı.</summary>
+        public int GenelSinirNpcCarpani { get; }
+
+        /// <summary>Varsayılan M'yi NPC sayısı için hesaplar.</summary>
+        public int VarsayilanGenelSinir(int npcSayisi) => Math.Max(GenelSinirTabani, GenelSinirNpcCarpani * npcSayisi);
+
         /// <summary>Ayar kurar.</summary>
-        public FrenAyarlari(int zincirDerinligi = VarsayilanZincirDerinligi)
+        public FrenAyarlari(
+            int zincirDerinligi = VarsayilanZincirDerinligi, int genelSinirTabani = VarsayilanGenelSinirTabani, int genelSinirNpcCarpani = VarsayilanGenelSinirNpcCarpani)
         {
+            if (genelSinirTabani < 1 || genelSinirNpcCarpani < 0)
+            {
+                throw new ArgumentException("Genel sınır tabanı en az 1, NPC çarpanı en az 0 olmalı.");
+            }
+
+            GenelSinirTabani = genelSinirTabani;
+            GenelSinirNpcCarpani = genelSinirNpcCarpani;
             if (zincirDerinligi < 1)
             {
                 throw new ArgumentException("Zincir derinliği en az 1 olmalı.", nameof(zincirDerinligi));

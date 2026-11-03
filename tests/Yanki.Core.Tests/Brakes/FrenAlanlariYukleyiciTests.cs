@@ -8,7 +8,7 @@ using Yanki.Core.Tests.Simulation;
 
 namespace Yanki.Core.Tests.Brakes
 {
-    /// <summary>7. hafta (B): senaryo <c>frenler</c> nesnesi ile eylem <c>cooldown</c>/<c>cooldown_kapsam</c>/<c>en_fazla</c> şeması ve doğrulayıcı.</summary>
+    /// <summary>7. hafta (B): senaryo <c>frenler</c> nesnesi ile eylem <c>cooldown</c>/<c>kapsam</c>/<c>en_fazla</c> şeması ve doğrulayıcı.</summary>
     public class FrenAlanlariYukleyiciTests
     {
         private static SenaryoYuklemeSonucu Senaryo(string frenler) =>
@@ -45,11 +45,11 @@ namespace Yanki.Core.Tests.Brakes
         }
 
         [Theory]
-        [InlineData("\"cooldown_kapsam\": \"kural\", \"cooldown\": 5")]
+        [InlineData("\"kapsam\": \"kural\", \"cooldown\": 5")]
         [InlineData("\"tick_basina_en_fazla\": 2")]
         [InlineData("\"cooldown\": 0")]
         [InlineData("\"en_fazla\": 1.5")]
-        [InlineData("\"cooldown_kapsam\": \"npc\"")]
+        [InlineData("\"kapsam\": \"npc\"")]
         public void Eylem_gecersiz_fren_alanlari_reddedilir(string ek)
         {
             var sonuc = EylemYukleyici.Yukle(KararFikstur.Dosya(KararFikstur.Eylem("selam", "yok", ek)), "e.json");
