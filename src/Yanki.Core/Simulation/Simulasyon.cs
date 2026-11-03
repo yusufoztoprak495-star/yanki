@@ -829,7 +829,7 @@ namespace Yanki.Core.Simulation
             }
 
             // Adım 5: hiçbir şey yazılmadan önce bütün kararlar aynı durumdan hesaplanır (NPC kimlik sırasıyla).
-            var konuHesabi = new KonuHesabi(Zihinler, Gunluk, _tick, _dedikodu);
+            var konuHesabi = new KonuHesabi(Zihinler, Gunluk, _tick, _dedikodu, onbellekli: true);
             var cozucu = new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick, _dedikodu, konuHesabi);
             var secimler = new List<NpcSecimi>();
             foreach (var npc in Senaryo.Npcler)

@@ -101,13 +101,22 @@ namespace Yanki.Core.Decision
         private readonly OlayGunlugu _gunluk;
         private readonly long _tick;
         private readonly DedikoduAyarlari _ayar;
+        private readonly bool _onbellekli;
+
+        // Konuşan başına önerme görüntüsü (yalnızca onbellekli modda sonraki çağrılarda yeniden kullanılır).
+        private readonly SortedDictionary<string, KonusanGoruntusu> _goruntuler = new SortedDictionary<string, KonusanGoruntusu>(StringComparer.Ordinal);
 
         // Tick içi önbellek: yalnızca arama (ordinal sıralı sözlük); durum hash'ine girmez, hesap saf olduğundan sonucu değiştirmez.
         private readonly SortedDictionary<string, KonuSecimi> _onbellek = new SortedDictionary<string, KonuSecimi>(StringComparer.Ordinal);
 
-        /// <summary>Hesabı <paramref name="tick"/> anı için kurar.</summary>
-        public KonuHesabi(ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, DedikoduAyarlari? ayar = null)
+        /// <summary>
+        /// Hesabı <paramref name="tick"/> anı için kurar. <paramref name="onbellekli"/> true ise konuşan başına ayrıştırılmış önermeler ve
+        /// inanılan listesi bir kez hesaplanıp (NPC, dinleyen) çiftleri için yeniden kullanılır. Bu yalnızca tick içi, adım 5'te kullanılacak
+        /// bir hızlandırmadır: örnek tek tick için kurulur, zihin durumuna ve hash'e girmez, sonuç önbelleksizle birebir aynıdır.
+        /// </summary>
+        public KonuHesabi(ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, DedikoduAyarlari? ayar = null, bool onbellekli = false)
         {
+            _onbellekli = onbellekli;
             _zihinler = zihinler ?? throw new ArgumentNullException(nameof(zihinler));
             _gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
             _tick = tick;
@@ -149,23 +158,24 @@ namespace Yanki.Core.Decision
             var zihin = _zihinler[konusan];
             var konular = new List<KonuAdayi>();
             var elenenler = new List<ElenenKonu>();
-            List<Onerme>? inanilanlar = null;
+            var g = Goruntu(konusan);
 
-            foreach (var metin in zihin.Onermeler)
+            for (var i = 0; i < g.Metinler.Count; i++)
             {
-                var onerme = Onerme.Ayristir(metin);
+                var metin = g.Metinler[i];
+                var onerme = g.Onermeler[i];
                 if (string.Equals(onerme.Yuklem, "anlatti", StringComparison.Ordinal) || !DesenlerdenBiriUyar(desenListesi, onerme))
                 {
                     continue;
                 }
 
-                if (!zihin.Inanilan(metin, _tick))
+                if (!g.Inanilan(i))
                 {
                     elenenler.Add(new ElenenKonu(metin, "konusan buna inanmiyor"));
                     continue;
                 }
 
-                var guven = zihin.Guven(metin, _tick);
+                var guven = g.Guven(i);
                 if (guven < _ayar.AnlatmaGuveniEsigi)
                 {
                     elenenler.Add(new ElenenKonu(metin, "guven " + Metin(guven) + " < " + Metin(_ayar.AnlatmaGuveniEsigi)));
@@ -184,16 +194,15 @@ namespace Yanki.Core.Decision
                     continue;
                 }
 
-                var kanit = zihin.EnGucluKanit(metin, _tick);
+                var kanit = g.EnGucluKanit(i);
                 if (kanit == null)
                 {
                     continue;
                 }
 
-                inanilanlar ??= Inanilanlar(zihin);
-                var onem = Onem(zihin, kanit);
+                                var onem = Onem(zihin, kanit);
                 var yenilik = Yenilik(kanit);
-                var ilgi = Ilgi(konusan, dinleyen, onerme, inanilanlar);
+                var ilgi = Ilgi(konusan, dinleyen, onerme, g.InanilanOnermeler());
                 var puan = Math.Round(onem * yenilik * ilgi, 6, MidpointRounding.ToEven);
                 if (puan < _ayar.KonuEsigi)
                 {
@@ -270,6 +279,7 @@ namespace Yanki.Core.Decision
             foreach (var metin in sablonlar)
             {
                 var yalan = Onerme.Ayristir(metin);
+                var g = Goruntu(konusan);
                 if (zihin.AktarimVar(metin, dinleyen))
                 {
                     elenenler.Add(new ElenenKonu(metin, "bu kisiye daha once soylendi"));
@@ -283,14 +293,14 @@ namespace Yanki.Core.Decision
                 }
 
                 Kanit? dayanak = null;
-                foreach (var q in zihin.Onermeler)
+                for (var qi = 0; qi < g.Metinler.Count; qi++)
                 {
-                    if (!Onerme.Celisir(yalan, Onerme.Ayristir(q)) || !zihin.Inanilan(q, _tick))
+                    if (!Onerme.Celisir(yalan, g.Onermeler[qi]) || !g.Inanilan(qi))
                     {
                         continue;
                     }
 
-                    var aday = zihin.EnGucluKanit(q, _tick);
+                    var aday = g.EnGucluKanit(qi);
                     if (aday != null && (dayanak == null || Daha(zihin, aday, dayanak)))
                     {
                         dayanak = aday;
@@ -416,19 +426,107 @@ namespace Yanki.Core.Decision
             return Icerir(onerme, konusan) ? _ayar.IlgiKonusan : _ayar.IlgiYok;
         }
 
-        private List<Onerme> Inanilanlar(Zihin zihin)
+        // Konuşanın önerme görüntüsü: ayrıştırılmış önermeler, inanılan bayrağı, ham güven, en güçlü kanıt ve "ilgi" için inanılan liste.
+        // Hepsi tembel ve saf (zihni değiştirmez); durum hash'ine girmez.
+        private KonusanGoruntusu Goruntu(string konusan)
         {
-            var sonuc = new List<Onerme>();
-            foreach (var metin in zihin.Onermeler)
+            if (_onbellekli && _goruntuler.TryGetValue(konusan, out var onceki))
             {
-                var o = Onerme.Ayristir(metin);
-                if (!string.Equals(o.Yuklem, "anlatti", StringComparison.Ordinal) && zihin.Inanilan(metin, _tick))
-                {
-                    sonuc.Add(o);
-                }
+                return onceki;
             }
 
-            return sonuc;
+            var yeni = new KonusanGoruntusu(_zihinler[konusan], _tick);
+            if (_onbellekli)
+            {
+                _goruntuler[konusan] = yeni;
+            }
+
+            return yeni;
+        }
+
+        private sealed class KonusanGoruntusu
+        {
+            private readonly Zihin _zihin;
+            private readonly long _tick;
+            private readonly bool?[] _inanilan;
+            private readonly decimal?[] _guven;
+            private readonly Kanit?[] _kanit;
+            private readonly bool[] _kanitHesaplandi;
+            private List<Onerme>? _inanilanOnermeler;
+
+            public KonusanGoruntusu(Zihin zihin, long tick)
+            {
+                _zihin = zihin;
+                _tick = tick;
+                var metinler = new List<string>(zihin.Onermeler);
+                var onermeler = new List<Onerme>(metinler.Count);
+                foreach (var m in metinler)
+                {
+                    onermeler.Add(Onerme.Ayristir(m));
+                }
+
+                Metinler = metinler;
+                Onermeler = onermeler;
+                _inanilan = new bool?[metinler.Count];
+                _guven = new decimal?[metinler.Count];
+                _kanit = new Kanit?[metinler.Count];
+                _kanitHesaplandi = new bool[metinler.Count];
+            }
+
+            public IReadOnlyList<string> Metinler { get; }
+
+            public IReadOnlyList<Onerme> Onermeler { get; }
+
+            public bool Inanilan(int i)
+            {
+                if (_inanilan[i] == null)
+                {
+                    _inanilan[i] = _zihin.Inanilan(Metinler[i], _tick);
+                }
+
+                return _inanilan[i]!.Value;
+            }
+
+            public decimal Guven(int i)
+            {
+                if (_guven[i] == null)
+                {
+                    _guven[i] = _zihin.Guven(Metinler[i], _tick);
+                }
+
+                return _guven[i]!.Value;
+            }
+
+            public Kanit? EnGucluKanit(int i)
+            {
+                if (!_kanitHesaplandi[i])
+                {
+                    _kanit[i] = _zihin.EnGucluKanit(Metinler[i], _tick);
+                    _kanitHesaplandi[i] = true;
+                }
+
+                return _kanit[i];
+            }
+
+            // anlatti olmayan, konuşanın inandığı önermeler ("ilgi" için tek adım bağ).
+            public List<Onerme> InanilanOnermeler()
+            {
+                if (_inanilanOnermeler == null)
+                {
+                    var sonuc = new List<Onerme>();
+                    for (var i = 0; i < Metinler.Count; i++)
+                    {
+                        if (!string.Equals(Onermeler[i].Yuklem, "anlatti", StringComparison.Ordinal) && Inanilan(i))
+                        {
+                            sonuc.Add(Onermeler[i]);
+                        }
+                    }
+
+                    _inanilanOnermeler = sonuc;
+                }
+
+                return _inanilanOnermeler;
+            }
         }
 
         private static bool Icerir(Onerme onerme, string varlik)
