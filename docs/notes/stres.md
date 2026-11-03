@@ -17,7 +17,7 @@ Seçilince `stres += stres_tabani × Σ(çelişen özelliklerin kişilik değeri
 
 ## Kriz
 
-- **Eşikler 50 ve 80** (seviye 1 ve 2), **kriz sonrası düşüş 30 ve 60** (`StresAyarlari`, denge alanı). Değişmez: her seviyede kriz sonrası stres en alt eşiğin altında kalır; yoksa her tick yeniden kriz çıkar.
+- **Eşikler 50 ve 80** (`seviye` 1 = alt eşik, 2 = üst eşik; doğrulayıcı başka değeri reddeder), **kriz sonrası düşüş 30 ve 60** (`StresAyarlari`, denge alanı). Değişmez: her seviyede kriz sonrası stres en alt eşiğin altında kalır; yoksa her tick yeniden kriz çıkar.
   Üst seviye dışındaki her `i` için `esik[i+1] − dusus[i] ≤ esik[0]`, en üst seviye için `100 − dusus[son] < esik[0]` (50/30 ve 80/60 geçer, 50/20 ve 80/20 reddedilir). `Simulasyon.Olustur` aykırı ayarı reddeder.
 - **Tespit adım 4'te, tek kural:** sönmüş güncel `stres(t) ≥ esik` ise o NPC için en üst uygun seviyede kriz seçilir (iki eşik birden aşıldıysa üstteki). Geçiş durumu tutulmaz; tick başına kriz için olay yazılmaz. Senaryo yüksek stresle başlarsa (ör. oturum yükleyen bir oyun) kriz ilk tick'te çıkar.
   Tam eşikte (`stres = 50`) kriz çıkar; eşiğin altında çıkmaz; sönümle eşiğin altına düşen stres kriz üretmez.

@@ -53,7 +53,7 @@ namespace Yanki.Scenarios.Tests
             var sim = Calistir();
 
             Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "anlatti" && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == Borc && o.KuralId == "eylem:anlat");
-            Assert.True(sim.Zihinler["Can"].Kanitlar(Borc).Any(k => k.Kaynak == "Ayse" && k.Kok == "oyuncu"));
+            Assert.Contains(sim.Zihinler["Can"].Kanitlar(Borc), k => k.Kaynak == "Ayse" && k.Kok == "oyuncu");
             var modifier = sim.Gunluk.Olaylar.First(o => o.Tur == "modifier_eklendi" && o.Deger("npc") == "Can" && o.Deger("tur") == "aileme_iftira");
             Assert.Equal("oyuncu", modifier.Deger("hedef"));
             Assert.Equal("-22", modifier.Deger("deger"));
@@ -148,7 +148,7 @@ namespace Yanki.Scenarios.Tests
 
             var tehditler = Olaylar(sim, "tehdit_etti", "Can").ToList();
             Assert.InRange(tehditler.Count, 1, 2);
-            var kriz = Assert.Single(sim.Gunluk.Olaylar.Where(o => o.Fail == "Can" && o.KuralId.StartsWith("kriz:", StringComparison.Ordinal) && !Core.Mind.ZihinOlaylari.ZihinOlayiMi(o.Tur)));
+            var kriz = Assert.Single(sim.Gunluk.Olaylar, o => o.Fail == "Can" && o.KuralId.StartsWith("kriz:", StringComparison.Ordinal) && !Core.Mind.ZihinOlaylari.ZihinOlayiMi(o.Tur));
             Assert.DoesNotContain(tehditler, t => t.Tick > kriz.Tick);
         }
 

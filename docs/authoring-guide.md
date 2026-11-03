@@ -141,7 +141,7 @@ Stres yavaş söner (0.2/tick); eşik 50 ve 80'dir (denge alanı).
 ] }
 ```
 
-- `seviye`: 1 = ilk eşik (50), 2 = ikinci eşik (80). `hedef`: `yok`, `yalan_kurbani` (en son yalan söylenen kişi), `en_yakin` / `en_soguk` (aynı mekandaki en yüksek / en düşük fikirli kişi; oyuncu dahil). Hedefi aynı mekanda olmayan satır elenir.
+- `seviye`: **1 = alt eşik (50), 2 = üst eşik (80)**; doğrulayıcı başka değeri (0, 3, kesirli, metin) reddeder. `hedef`: `yok`, `yalan_kurbani` (en son yalan söylenen kişi), `en_yakin` / `en_soguk` (aynı mekandaki en yüksek / en düşük fikirli kişi; oyuncu dahil). Hedefi aynı mekanda olmayan satır elenir.
 - **Her seviye için kriterli olmayan bir yedek satır zorunludur** (örnekte `sakinles`, `kac`); yedeğin hedefi `yok` olmalıdır. Kriterler **hepsi tutmalı**dır (ADR-010); birden çok satır uyuyorsa en özgül (ağırlık toplamı yüksek) kazanır, eşitlikte anahtarlı RNG.
 - Kriz olayı (`olay_turu`) sıradaki tick'te sonuç kurallarını tetikler: `{ "ne_zaman": "itiraf_etti", "kriterler": [ { "alan": "olay_rolu(hedef)", ... } ], ... }`. Kurban yalanı **yalnızca** bu tür kurallarla öğrenir; itiraf otomatik olarak inancı düzeltmez.
 - Kriz satırı kriterlerinde `olay_rolu`, `olay_konusu`, `konu_puani`, `gercek`, `yay` kullanılamaz. Hata biçimi: `dosya:satir: kriz "id": mesaj`.

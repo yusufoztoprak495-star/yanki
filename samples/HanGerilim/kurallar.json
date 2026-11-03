@@ -1,0 +1,99 @@
+{
+  "kurallar": [
+    {
+      "id": "aile_iftirasi",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(borclu(Mehmet, *, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "inanc(kardes(Mehmet, ben))",
+          "op": ">",
+          "deger": 0.3
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "aileme_iftira",
+          "deger": -22,
+          "sure": 18
+        }
+      ]
+    },
+    {
+      "id": "yalan_yakalandi",
+      "ne_zaman": "itiraf_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "yalanini_yakaladim",
+          "deger": -30,
+          "sure": 30
+        },
+        {
+          "tur": "eksen",
+          "hedef": "olay.fail",
+          "eksen": "guven",
+          "delta": -10
+        },
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.6,
+          "hedef": "olay.fail"
+        }
+      ]
+    },
+    {
+      "id": "hakarete_kirgin",
+      "ne_zaman": "hakaret_et",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "eksen",
+          "hedef": "oyuncu",
+          "eksen": "guven",
+          "delta": -60
+        }
+      ]
+    },
+    {
+      "id": "patlamadan_korku",
+      "ne_zaman": "patladi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "eksen",
+          "hedef": "olay.fail",
+          "eksen": "korku",
+          "delta": 10
+        }
+      ]
+    }
+  ]
+}

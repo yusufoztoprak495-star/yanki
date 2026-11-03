@@ -54,8 +54,18 @@ Kanıt kök taşır (`kanit_eklendi.kok`): aynı önerme için aynı kökten `du
 Ayrıca `anlat` tabanı düşükken (hiç seçilmedi, yalnızca aday hesabı çalıştı) 603 ms/tick.
 
 **Bulgu 1: bilgi patlaması yok (olay hacminde).** Dedikodu tüm kanıtların ≈%0.8'i (1 011 `duydu` / 120 233): kanıt ve olay hacmini algı belirler (`gordu` ≈%99; Z4, 7. hafta). `duydu` ile yayılan önerme sayısı oyuncunun tohumladığı 4'tür; yankı freni ve "geri anlatmama" kuralı aynı söylentiyi aynı kişiye iki kez yazmıyor (testle).
-**Bulgu 2: tick süresi 79.5 → 3105.6 ms (≈40×).** Neden ölçümle bulundu: konu hesabı aday aşamasında her (NPC, dinleyen) çifti için çalışır, NPC başına önerme sayısı 347'ye çıktığı için (algıdan gelen `gordu` kanıtları) (a) konuşanın tüm önermelerinin parse edilmesi ve (b) "ilgi" için inanılan önermelerin listesinin (her biri `Inanilan` = tüm önermelerle çelişki taraması, O(n²)) her dinleyen için yeniden kurulması baskın maliyettir.
-Bir deneyle (geri alındı, kodda yok): inanılan listesini konuşan başına tick'te bir kez hesaplamak 3105 → 588 ms/tick'e indirdi (hâlâ ≈7×); kalan maliyet önermelerin tekrar parse edilmesi ve yalan şablonlarının her önermeyi taraması. **Optimizasyon bu hafta yazılmadı** (görev metni); seçenekler: konuşan başına önerme dizini/ayrıştırılmış önerme önbelleği, "ilgi" için bağ dizini, yüklem ön filtresi. Karar Yusuf'un (7. hafta, Z3/Z4 ile birlikte).
+**Bulgu 2: tick süresi 79.5 → 3105.6 ms (≈40×); düzeltildi, aşağıda.** Neden ölçümle bulundu: konu hesabı aday aşamasında her (NPC, dinleyen) çifti için çalışır, NPC başına önerme sayısı 347'ye çıktığı için (algıdan gelen `gordu` kanıtları) (a) konuşanın tüm önermelerinin parse edilmesi ve (b) "ilgi" için inanılan önermelerin listesinin (her biri `Inanilan` = tüm önermelerle çelişki taraması, O(n²)) her dinleyen için yeniden kurulması baskın maliyettir.
+Bir deneyle (geri alındı, kodda yok): inanılan listesini konuşan başına tick'te bir kez hesaplamak 3105 → 588 ms/tick'e indirdi (hâlâ ≈7×); kalan maliyet önermelerin tekrar parse edilmesi ve yalan şablonlarının her önermeyi taraması. **Düzeltme (Yusuf'un kararı, ayrı commit):** konuşan başına ayrıştırılmış önermeler, inanılan bayrakları, ham güven ve en güçlü kanıt tek tick içinde bir kez hesaplanıp (NPC, dinleyen) çiftleri için yeniden kullanılır (`KonuHesabi(..., onbellekli: true)`). Önbellek yalnızca adım 5'te kullanılır, her tick yeniden kurulur, zihin durumuna ve hash'e girmez; olay biçimine ve anlatılabilirlik kurallarına dokunulmadı. Testle: önbellekli ve önbelleksiz hesap aynı konuları ve puanları verir, sonuç NPC/önerme ekleme sırasından bağımsızdır. Olay sayısı ve son durum hash'i değişmedi (`2fc28bc53bba632b`, 270 804 olay).
+
+| 50 NPC, dedikodulu | önce | sonra |
+| --- | --- | --- |
+| tick başına süre | 3105.6 ms | **523.1 ms** |
+
+| 8 NPC | dedikodusuz | dedikodulu önce | dedikodulu sonra |
+| --- | --- | --- | --- |
+| tick başına süre (3 çalıştırma ortancası) | 2.52 ms | 6.87 ms | **4.62 ms** |
+
+Kalan fark (50 NPC: 523.1 / 79.5 ≈ 6.6×) **7. hafta açık kararıdır** (Z3/Z4 ile birlikte): artık baskın maliyet konuşan başına O(n²) inanılan taraması (347 önerme) ve yalan şablonlarının her önermeyi taraması; seçenekler önerme dizini, yüklem ön filtresi, "ilgi" için bağ dizini.
 
 ## Açık
 
