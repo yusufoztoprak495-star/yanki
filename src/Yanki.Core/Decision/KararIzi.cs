@@ -105,6 +105,9 @@ namespace Yanki.Core.Decision
         /// <summary>Seçilen eylemin çeliştiği kişilik özellikleri, ordinal sıralı; seçim yoksa boş.</summary>
         public IReadOnlyList<string> CelisenOzellikler { get; }
 
+        /// <summary>Seçilen eylem uygulanırsa konuşanın stresine eklenecek miktar (<c>stres_tabani × Σ çelişen özellik</c>); yoksa 0.</summary>
+        public decimal StresArtisi { get; }
+
         /// <summary>Karara katkı veren zihin kaynaklarının olay kimlikleri (aktif modifier'ı doğuran olay, ruh halinin nedeni vb.), artan ve tekrarsız.</summary>
         public IReadOnlyList<long> KaynakOlaylar { get; }
 
@@ -122,8 +125,10 @@ namespace Yanki.Core.Decision
             Aday? secilen,
             IEnumerable<string> celisenOzellikler,
             IEnumerable<long> kaynakOlaylar,
-            IEnumerable<string> kaynaksiz)
+            IEnumerable<string> kaynaksiz,
+            decimal stresArtisi = 0m)
         {
+            StresArtisi = stresArtisi;
             Npc = npc ?? throw new ArgumentNullException(nameof(npc));
             Tick = tick;
             Ayarlar = ayarlar ?? throw new ArgumentNullException(nameof(ayarlar));
@@ -162,7 +167,8 @@ namespace Yanki.Core.Decision
                 secilen,
                 secilen.Eylem.CelisenOzellikler,
                 new long[0],
-                new string[0]);
+                new string[0],
+                secilen.Eylem.StresArtisi(baglam.Zihin.Kisilik));
         }
     }
 

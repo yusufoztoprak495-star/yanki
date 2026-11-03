@@ -226,6 +226,31 @@ namespace Yanki.Core.Decision
         /// <summary>Stres tabanı (0..100); yoksa <c>null</c>. <see cref="CelisenOzellikler"/> varsa zorunludur.</summary>
         public decimal? StresTabani { get; }
 
+        /// <summary>
+        /// Bu eylem seçilince konuşanın stresine eklenecek miktar: <c>StresTabani × Σ(çelişen özelliklerin kişilik değeri)</c>, 6 ondalığa yuvarlanmış.
+        /// Çelişen özellik ya da taban yoksa 0.
+        /// </summary>
+        public decimal StresArtisi(Kisilik kisilik)
+        {
+            if (kisilik == null)
+            {
+                throw new ArgumentNullException(nameof(kisilik));
+            }
+
+            if (StresTabani == null || CelisenOzellikler.Count == 0)
+            {
+                return 0m;
+            }
+
+            var toplam = 0m;
+            foreach (var ozellik in CelisenOzellikler)
+            {
+                toplam += kisilik.Deger(ozellik);
+            }
+
+            return Math.Round(StresTabani.Value * toplam, 6, MidpointRounding.ToEven);
+        }
+
         /// <summary>Konuşma eylemi mi.</summary>
         public bool Konusma => Aktarim != AktarimTuru.Yok;
 
