@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Yanki.Core.Decision;
+using Yanki.Core.Criteria;
 using Yanki.Core.Events;
 using Yanki.Core.Mind;
 using Yanki.Core.Perception;
@@ -41,6 +42,8 @@ namespace Yanki.Core.Simulation
         private readonly EylemKatalogu _eylemKatalogu;
         private readonly IActionSelector _secici;
         private readonly AlgiAyarlari _algiAyarlari;
+        private readonly DedikoduAyarlari _dedikodu;
+        private readonly StresAyarlari _stresAyarlari;
         private readonly List<PlayerAction> _bekleyenEylemler = new List<PlayerAction>();
         private readonly List<EylemKaydi> _eylemGunlugu = new List<EylemKaydi>();
         private readonly List<Olay> _devredilenler = new List<Olay>();
@@ -95,7 +98,9 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public event Action<Olay>? OlayYayinlandi;
 
-        private Simulasyon(SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, IActionSelector secici, ulong seed, AlgiAyarlari algi)
+        private Simulasyon(
+            SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, IActionSelector secici, ulong seed, AlgiAyarlari algi,
+            DedikoduAyarlari dedikodu, StresAyarlari stres)
         {
             Senaryo = senaryo;
             _kuralMotoru = motor;
@@ -103,6 +108,8 @@ namespace Yanki.Core.Simulation
             _secici = secici;
             Seed = seed;
             _algiAyarlari = algi;
+            _dedikodu = dedikodu;
+            _stresAyarlari = stres;
             _eylemTurleri = new SortedSet<string>(senaryo.OlayTurleri, StringComparer.Ordinal);
             SonHash = string.Empty;
         }
@@ -116,7 +123,8 @@ namespace Yanki.Core.Simulation
         /// </exception>
         public static Simulasyon Olustur(
             SenaryoTanimi senaryo, IEnumerable<KuralTanimi> kurallar, ulong seed, ZihinAyarlari? zihinAyarlari = null, AlgiAyarlari? algiAyarlari = null,
-            IEnumerable<EylemTanimi>? eylemler = null, IActionSelector? secici = null)
+            IEnumerable<EylemTanimi>? eylemler = null, IActionSelector? secici = null,
+            DedikoduAyarlari? dedikoduAyarlari = null, StresAyarlari? stresAyarlari = null)
         {
             if (senaryo == null)
             {
@@ -127,7 +135,11 @@ namespace Yanki.Core.Simulation
             var katalog = new EylemKatalogu(eylemler ?? new EylemTanimi[0]);
             KurallariDenetle(senaryo, motor, katalog);
             EylemleriDenetle(senaryo, katalog);
-            var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari());
+            var dedikodu = dedikoduAyarlari ?? new DedikoduAyarlari();
+            dedikodu.Dogrula();
+            var stres = stresAyarlari ?? new StresAyarlari();
+            stres.Dogrula();
+            var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari(), dedikodu, stres);
             sim.Kur(zihinAyarlari);
             sim.SonHash = sim.DurumHash();
             return sim;
@@ -149,6 +161,13 @@ namespace Yanki.Core.Simulation
             if (eylem.Tur == YerlesikTurler.OyuncuHareketi)
             {
                 HareketiDenetle(eylem);
+                _bekleyenEylemler.Add(eylem);
+                return;
+            }
+
+            if (eylem.Tur == YerlesikTurler.Anlatti)
+            {
+                AnlatimiDenetle(eylem);
                 _bekleyenEylemler.Add(eylem);
                 return;
             }
@@ -180,6 +199,70 @@ namespace Yanki.Core.Simulation
                 {
                     throw new ArgumentException($"Bilinmeyen görünürlük \"{kv.Value}\" (acik, sessiz, gizli).", nameof(eylem));
                 }
+            }
+        }
+
+        // Oyuncu anlatımı: hedef oyuncuyla aynı mekandaki (bekleyen harekete göre varış mekanı) bir NPC olmalı; yük yalnızca gecerli bir
+        // "onerme" ve isteğe bağlı "gorunurluk" (sessiz | acik) taşır. "kok" motor tarafından yazılır, oyuncu gönderemez.
+        private void AnlatimiDenetle(PlayerAction eylem)
+        {
+            if (eylem.Hedef.Length == 0 || Dunya.TurOf(eylem.Hedef) != VarlikTuru.Npc)
+            {
+                throw new ArgumentException($"Anlatımın hedefi dünyada var olan bir NPC olmalı: \"{eylem.Hedef}\".", nameof(eylem));
+            }
+
+            var konum = Dunya.TekDeger("konum!", OyuncuId) ?? string.Empty;
+            foreach (var bekleyen in _bekleyenEylemler)
+            {
+                if (bekleyen.Tur == YerlesikTurler.OyuncuHareketi)
+                {
+                    konum = bekleyen.Hedef;
+                }
+            }
+
+            if (!string.Equals(Dunya.TekDeger("konum!", eylem.Hedef), konum, StringComparison.Ordinal))
+            {
+                throw new ArgumentException($"Anlatımın hedefi oyuncuyla aynı mekanda olmalı: \"{eylem.Hedef}\" \"{konum}\" mekanında değil.", nameof(eylem));
+            }
+
+            string? onerme = null;
+            foreach (var kv in eylem.Yuk)
+            {
+                if (kv.Key == "onerme")
+                {
+                    onerme = kv.Value;
+                }
+                else if (kv.Key == "gorunurluk")
+                {
+                    if (kv.Value != "sessiz" && kv.Value != "acik")
+                    {
+                        throw new ArgumentException($"Anlatımın görünürlüğü sessiz ya da acik olmalı: \"{kv.Value}\".", nameof(eylem));
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException($"Anlatım yalnızca \"onerme\" ve \"gorunurluk\" yükü alır; \"{kv.Key}\" yazılamaz.", nameof(eylem));
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(onerme))
+            {
+                throw new ArgumentException("Anlatımın yükünde gecerli bir \"onerme\" gerekli.", nameof(eylem));
+            }
+
+            Mind.Onerme gecerli;
+            try
+            {
+                gecerli = Mind.Onerme.Ayristir(onerme!);
+            }
+            catch (ArgumentException e)
+            {
+                throw new ArgumentException($"Anlatımın önermesi geçersiz: {e.Message}", nameof(eylem));
+            }
+
+            if (string.Equals(gecerli.Yuklem, "anlatti", StringComparison.Ordinal))
+            {
+                throw new ArgumentException("anlatti önermesi anlatılamaz (konuşma içeriği dedikodu konusu olmaz).", nameof(eylem));
             }
         }
 
@@ -317,6 +400,7 @@ namespace Yanki.Core.Simulation
             // 2. Algı: kimin neyi gördüğü hesaplanır, kanıt ve hafıza yazılır. Saklanan olaylar zaten algılanmıştı (önceki tick'in 6. adımı).
             var algi = Algi(kuyruk, saklananKimlikler);
             algi.Birlestir(saklananAlgi);
+            OyuncuAnlatimiKanitlari(kuyruk, saklananKimlikler);
 
             // 3. Sonuç kuralları. Çıktılar sıradaki tick'e devredilir (v0 kaskad kuralı).
             SonucKurallari(kuyruk, algi, saklananKimlikler);
@@ -340,6 +424,10 @@ namespace Yanki.Core.Simulation
                 {
                     OyuncuHareketi(eylem, kuyruk);
                 }
+                else if (eylem.Tur == YerlesikTurler.Anlatti)
+                {
+                    OyuncuAnlatimi(eylem, kuyruk);
+                }
                 else
                 {
                     // Önceki bir hareket oyuncunun konumunu değiştirdiyse eylem varış mekanında olur.
@@ -354,6 +442,61 @@ namespace Yanki.Core.Simulation
             }
 
             _bekleyenEylemler.Clear();
+        }
+
+        // Oyuncu anlatımı: dışarıya npc anlatımıyla aynı biçimde (anlatti: onerme, kok, gorunurluk) çıkar. Dinleyene duydu kanıtı adım 2'de,
+        // algıdan sonra yazılır. Oyuncunun zihni yoktur: aktarım/yalan kaydı tutulmaz; kök oyuncudur.
+        private void OyuncuAnlatimi(PlayerAction eylem, List<Olay> kuyruk)
+        {
+            var mekan = Dunya.TekDeger("konum!", OyuncuId) ?? string.Empty;
+            var onerme = string.Empty;
+            var gorunurluk = "sessiz";
+            foreach (var kv in eylem.Yuk)
+            {
+                if (kv.Key == "onerme")
+                {
+                    onerme = Mind.Onerme.Ayristir(kv.Value).ToString();
+                }
+                else if (kv.Key == "gorunurluk")
+                {
+                    gorunurluk = kv.Value;
+                }
+            }
+
+            var yuk = new[]
+            {
+                new KeyValuePair<string, string>("gorunurluk", gorunurluk),
+                new KeyValuePair<string, string>("kok", OyuncuId),
+                new KeyValuePair<string, string>("onerme", onerme),
+            };
+            var olay = new Olay(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), YerlesikTurler.Anlatti, OyuncuId, eylem.Hedef, mekan, yuk, new long[0], "player");
+            Ekle(olay);
+            kuyruk.Add(olay);
+        }
+
+        // Adım 2'nin devamı: oyuncunun anlattığı önermeyi dinleyen NPC'ye duydu kanıtı olarak yazar (güç: oyuncu kanıt gücü × güven çarpanı).
+        // Eşik altı güçte kanıt yazılmaz (söylenti ölür). Saklanan (önceki tick'ten gelen) NPC anlatımları 6.3'te zaten yazılmıştı.
+        private void OyuncuAnlatimiKanitlari(List<Olay> kuyruk, SortedSet<long> saklananKimlikler)
+        {
+            var hesap = new KonuHesabi(Zihinler, Gunluk, _tick, _dedikodu);
+            foreach (var olay in kuyruk)
+            {
+                if (olay.Tur != YerlesikTurler.Anlatti || saklananKimlikler.Contains(olay.Id) || !string.Equals(olay.Fail, OyuncuId, StringComparison.Ordinal)
+                    || !Zihinler.Var(olay.Hedef))
+                {
+                    continue;
+                }
+
+                var guc = hesap.AktarimGucu(_dedikodu.OyuncuKanitGucu, OyuncuId, olay.Hedef);
+                if (guc < _dedikodu.GucEsigi)
+                {
+                    continue;
+                }
+
+                Ekle(Mind.ZihinOlaylari.KanitEklendi(
+                    Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), olay.Hedef, olay.Deger("onerme"), "duydu", OyuncuId, guc,
+                    new[] { olay.Id }, "player", olay.Mekan, OyuncuId));
+            }
         }
 
         // Hareket: ayrildi + geldi (dış olaylar, algılanır) ve oyuncunun konum! gerçeği ayrı olayla hemen değişir.
