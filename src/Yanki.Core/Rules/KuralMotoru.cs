@@ -152,7 +152,7 @@ namespace Yanki.Core.Rules
                 throw new ArgumentNullException(nameof(tetikler));
             }
 
-            var cozucu = new ZihinSorguCozucusu(dunya, zihinler, gunluk, tick);
+            var cozucu = new ZihinSorguCozucusu(dunya, zihinler, gunluk, tick, yay: fren?.Yay);
             var yazilanGercekler = new SortedSet<string>(StringComparer.Ordinal);
             var sonuc = new List<UretilenEtki>();
             var frenler = new List<FrenBilgisi>();
@@ -277,6 +277,8 @@ namespace Yanki.Core.Rules
                     return ZihinOlaylari.EksenDegisti(id, tick, sira, e.Npc, e.Hedef, e.Etki.Ad, e.Etki.Deger, e.Nedenler, kuralId, mekan);
                 case EtkiTuru.Duygu:
                     return ZihinOlaylari.DuyguDegisti(id, tick, sira, e.Npc, e.Etki.Ad, e.Etki.Deger, e.Hedef, e.Nedenler, kuralId, mekan);
+                case EtkiTuru.Yay:
+                    throw new InvalidOperationException("yay etkisi Simulasyon tarafından (değişkenin şimdiki değerine göre kırpılarak) yazılır.");
                 case EtkiTuru.Hafiza:
                     return ZihinOlaylari.HafizaEklendi(id, tick, sira, e.Npc, e.Tetik.Id, e.Etki.Deger, e.Nedenler, kuralId, mekan);
                 default:
@@ -387,6 +389,7 @@ namespace Yanki.Core.Rules
                 }
 
                 case EtkiTuru.Hafiza:
+                case EtkiTuru.Yay:
                     return new UretilenEtki(kural, etki, npc, tetik, string.Empty, string.Empty, nedenler);
                 default:
                 {

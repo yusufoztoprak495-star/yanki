@@ -10,7 +10,7 @@ namespace Yanki.Core.Criteria
     /// <summary>
     /// Sözlükteki zihne dayanan fonksiyonları gerçek veriye bağlar: <c>kisilik</c>, <c>eksen</c>, <c>fikir</c>, <c>fikir_bandi</c>,
     /// <c>modifier_var</c>, <c>olay_rolu</c>, <c>yalan_soyledi</c>, <c>duygu</c>, <c>duygu_hedefi</c>, <c>stres</c>, <c>inanc</c>, <c>kaynak</c>, <c>hafiza_var</c>.
-    /// <c>gercek</c> ve <c>ayni_mekanda</c> dünya çözücüsüne devredilir. <c>yay</c> (7. hafta) henüz yoktur. "Ben" rolünün zihni sorgulanır; süreli değerler verilen tick'te hesaplanır (ADR-008).
+    /// <c>gercek</c> ve <c>ayni_mekanda</c> dünya çözücüsüne devredilir. <c>yay</c> (7. hafta) yay değişkenleri deposundan okunur. "Ben" rolünün zihni sorgulanır; süreli değerler verilen tick'te hesaplanır (ADR-008).
     /// Çözücü tek tick için kurulur; tick ilerleyince yenisi kurulur.
     /// </summary>
     public sealed class ZihinSorguCozucusu : ISorguCozucu
@@ -22,9 +22,14 @@ namespace Yanki.Core.Criteria
         private readonly DedikoduAyarlari _dedikodu;
         private KonuHesabi? _konu;
 
+        private readonly Brakes.YayDegiskenleri? _yay;
+
         /// <summary>Verilen dünya, zihinler ve günlük üzerinde, <paramref name="simdikiTick"/> anı için çözücü kurar.</summary>
-        public ZihinSorguCozucusu(Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long simdikiTick, DedikoduAyarlari? dedikodu = null, KonuHesabi? konuHesabi = null)
+        public ZihinSorguCozucusu(
+            Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long simdikiTick, DedikoduAyarlari? dedikodu = null, KonuHesabi? konuHesabi = null,
+            Brakes.YayDegiskenleri? yay = null)
         {
+            _yay = yay;
             _dunyaCozucusu = new DunyaSorguCozucusu(dunya ?? throw new ArgumentNullException(nameof(dunya)));
             _zihinler = zihinler ?? throw new ArgumentNullException(nameof(zihinler));
             _gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
@@ -56,7 +61,15 @@ namespace Yanki.Core.Criteria
                 case "olay_konusu":
                     return SorguDegeri.Mantiksal(OlayKonusuMu(cagri, baglam));
                 case "yay":
-                    throw new NotSupportedException("'yay' yay değişkenleri gerektirir; 7. haftada eklenecek.");
+                {
+                    var ad = Ad(cagri, 0);
+                    if (_yay == null || !_yay.Var(ad))
+                    {
+                        throw new KriterHatasi($"Yay değişkeni tanımlı değil: \"{ad}\"", cagri.Argumanlar[0].Konum);
+                    }
+
+                    return SorguDegeri.Sayi(_yay.Deger(ad));
+                }
             }
 
             var ben = _zihinler[baglam.Coz(Rol.Ben)];

@@ -123,9 +123,13 @@ namespace Yanki.Core.Brakes
         /// <summary>Korumalı varlıklar.</summary>
         public Korumalilik Korumali { get; }
 
+        /// <summary>Yay değişkenleri (kriter <c>yay(ad)</c> okur).</summary>
+        public YayDegiskenleri Yay { get; }
+
         /// <summary>Kurar.</summary>
-        public FrenBaglami(TetikSayaclari? sayaclar, int? genelSinir, ZincirDerinligi? zincir, int zincirSiniri, Korumalilik? korumali = null)
+        public FrenBaglami(TetikSayaclari? sayaclar, int? genelSinir, ZincirDerinligi? zincir, int zincirSiniri, Korumalilik? korumali = null, YayDegiskenleri? yay = null)
         {
+            Yay = yay ?? YayDegiskenleri.Yok;
             Korumali = korumali ?? Korumalilik.Yok;
             Sayaclar = sayaclar;
             GenelSinir = genelSinir;

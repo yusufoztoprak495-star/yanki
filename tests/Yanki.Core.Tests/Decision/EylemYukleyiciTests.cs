@@ -312,10 +312,9 @@ namespace Yanki.Core.Tests.Decision
         public void Gercek_sorgusu_npc_zihnini_astigi_icin_reddedilir() =>
             HataVar(Kosul("gercek(konum!(Ali, han))"), "'gercek'");
 
-        [Theory]
-        [InlineData("yay(gerginlik)", "<", "5", "yay")]
-        public void Bagli_olmayan_fonksiyonlar_acik_mesajla_reddedilir(string alan, string op, string deger, string ad) =>
-            HataVar(Kosul(alan, op, deger), $"'{ad}' fonksiyonu henüz bağlı değil");
+        [Fact]
+        public void Yay_eylem_on_kosulunda_gecerlidir_7_hafta() =>
+            Gecer(Kosul("yay(gerginlik)", "<", "5"));
 
         [Fact]
         public void Yalan_soyledi_eylem_on_kosulunda_gecerlidir() =>
@@ -384,7 +383,6 @@ namespace Yanki.Core.Tests.Decision
         {
             HataVar(Olcut("\"alan\": \"fikir(olay.hedef)\"", "npc"), "'olay.hedef' rolü eylemlerde tanımsız");
             HataVar(Olcut("\"alan\": \"gercek(konum!(Ali, han))\""), "'gercek'");
-            HataVar(Olcut("\"alan\": \"yay(g)\""), "'yay' fonksiyonu henüz bağlı değil");
             HataVar(Olcut("\"alan\": \"fikir(eylem.hedef)\""), "hedefsiz");
         }
 

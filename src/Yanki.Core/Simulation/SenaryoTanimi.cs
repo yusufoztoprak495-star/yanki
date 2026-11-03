@@ -68,6 +68,9 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public IReadOnlyList<string> EylemDosyalari { get; }
 
+        /// <summary>Yay değişkenleri (<c>yay_degiskenleri</c>), ad sırasıyla; yoksa boş.</summary>
+        public IReadOnlyList<Brakes.YayTanimi> YayDegiskenleri { get; }
+
         /// <summary>Korumalı varlıklar (<c>korumali</c>).</summary>
         public Brakes.Korumalilik Korumali { get; }
 
@@ -92,8 +95,10 @@ namespace Yanki.Core.Simulation
             IEnumerable<string>? krizDosyalari = null,
             Brakes.GenelFrenler? frenler = null,
             Brakes.Korumalilik? korumali = null,
-            IEnumerable<KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>>? oyuncuIhlalleri = null)
+            IEnumerable<KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>>? oyuncuIhlalleri = null,
+            IEnumerable<Brakes.YayTanimi>? yayDegiskenleri = null)
         {
+            YayDegiskenleri = new ReadOnlyCollection<Brakes.YayTanimi>(new List<Brakes.YayTanimi>(yayDegiskenleri ?? new Brakes.YayTanimi[0]));
             Korumali = korumali ?? Brakes.Korumalilik.Yok;
             var oi = new SortedDictionary<string, IReadOnlyList<Brakes.IhlalBayragi>>(StringComparer.Ordinal);
             foreach (var kv in oyuncuIhlalleri ?? new KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>[0])

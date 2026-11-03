@@ -221,17 +221,17 @@ namespace Yanki.Core.Tests.Mind
             Assert.False(Mantik(d, "yalan_soyledi(Veli)"));
         }
 
-        // 15. yay: 7. hafta
-        [Theory]
-        [InlineData("yay(kasaba_gerginligi)")]
-        public void Sonraki_haftalarin_fonksiyonlari_net_hata_verir(string alan)
+        // 16. yay: 7. hafta (bağlandı). Tanımlı olmayan değişken açık hata verir.
+        [Fact]
+        public void Yay_tanimli_degiskeni_okur_tanimsiz_degiskende_net_hata_verir()
         {
             var d = new Duzen();
-            var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0);
-            var cagri = IfadeAyristirici.Ayristir(alan);
+            var yay = new Yanki.Core.Brakes.YayDegiskenleri(new[] { new Yanki.Core.Brakes.YayTanimi("kasaba_gerginligi", 3m, 0m, 10m) });
+            var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0, yay: yay);
 
-            var hata = Assert.Throws<NotSupportedException>(() => cozucu.Coz(cagri, new SorguBaglami("Can")));
-            Assert.Contains("hafta", hata.Message);
+            Assert.Equal(3m, cozucu.Coz(IfadeAyristirici.Ayristir("yay(kasaba_gerginligi)"), new SorguBaglami("Can")).SayiDegeri);
+            var hata = Assert.Throws<KriterHatasi>(() => cozucu.Coz(IfadeAyristirici.Ayristir("yay(yok)"), new SorguBaglami("Can")));
+            Assert.Contains("tanımlı değil", hata.Message);
         }
 
         // 13. ayni_mekanda, 14. gercek: dünyadan, aynı çözücü üzerinden
@@ -262,9 +262,9 @@ namespace Yanki.Core.Tests.Mind
         [Fact]
         public void Her_zihin_fonksiyonu_zihin_ya_da_dunya_cozucusunde_karsilik_bulur()
         {
-            // Hiçbir fonksiyon "bilinmiyor" diye düşmemeli; yalnızca yay (7. hafta) NotSupported verir.
+            // Hiçbir fonksiyon "bilinmiyor" diye düşmemeli (yay 7. haftada bağlandı).
             var d = new Duzen();
-            var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0);
+            var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0, yay: new Yanki.Core.Brakes.YayDegiskenleri(new[] { new Yanki.Core.Brakes.YayTanimi("x", 0m, 0m, 1m) }));
             var baglam = new SorguBaglami(
                 "Ali", oyuncu: "Ayse", konusan: "Ali", dinleyen: "Can", olayFail: "Ali", olayHedef: "Can",
                 konuDesenleri: new[] { OnermeDeseni.Ayristir("borclu(*,*,*)") }, olayOnermesi: "borclu(Mehmet,Ayse,5)");
@@ -286,7 +286,7 @@ namespace Yanki.Core.Tests.Mind
                 ["olay_rolu"] = "olay_rolu(hedef)",
                 ["stres"] = "stres()",
                 ["yalan_soyledi"] = "yalan_soyledi(oyuncu)",
-                ["yay"] = "yay(x)",
+                ["yay"] = "yay(x)",   // 7. hafta: çözücü yay deposuyla kurulur (aşağıda)
                 ["konu_puani"] = "konu_puani(Can)",
                 ["olay_konusu"] = "olay_konusu(borclu(*, *, *))",
             };
@@ -304,7 +304,7 @@ namespace Yanki.Core.Tests.Mind
                 }
             }
 
-            Assert.Equal(new[] { "yay" }, desteklenmeyen);
+            Assert.Empty(desteklenmeyen);
         }
 
         [Fact]

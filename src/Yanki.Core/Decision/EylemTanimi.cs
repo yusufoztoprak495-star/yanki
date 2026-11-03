@@ -120,7 +120,7 @@ namespace Yanki.Core.Decision
         /// <summary>Ad çekirdeğe ayrılmış mı (dünya/zihin olayları dahil).</summary>
         public static bool AyrilmisMi(string tur)
         {
-            if (tur == Brakes.FrenOlayi.Tur || tur == Ayrildi || tur == Geldi || tur == KararVerildi || tur == OyuncuHareketi || tur == Anlatti || tur == AktarimKaydi)
+            if (tur == Brakes.FrenOlayi.Tur || tur == Brakes.YayDegiskenleri.OlayTuru || tur == Ayrildi || tur == Geldi || tur == KararVerildi || tur == OyuncuHareketi || tur == Anlatti || tur == AktarimKaydi)
             {
                 return true;
             }

@@ -23,6 +23,9 @@ namespace Yanki.Core.Rules
 
         /// <summary>Dünya gerçeği ekler ya da kaldırır (<c>gercek_eklendi</c> / <c>gercek_kaldirildi</c>).</summary>
         Gercek,
+
+        /// <summary>Yay değişkenini değiştirir (<c>yay_degisti</c>, 7. hafta): <c>Ad</c> değişken, <c>Deger</c> delta.</summary>
+        Yay,
     }
 
     /// <summary>
@@ -86,6 +89,10 @@ namespace Yanki.Core.Rules
         /// <summary>Gerçek etkisi.</summary>
         public static KuralEtkisi Gercek(string sablon, bool kaldir, int satir = 0) =>
             new KuralEtkisi(EtkiTuru.Gercek, string.Empty, string.Empty, 0m, 0, sablon, kaldir, satir);
+
+        /// <summary>Yay değişkeni etkisi (delta, değişken aralığına kırpılır).</summary>
+        public static KuralEtkisi Yay(string degisken, decimal delta, int satir = 0) =>
+            new KuralEtkisi(EtkiTuru.Yay, string.Empty, degisken, delta, 0, string.Empty, false, satir);
     }
 
     /// <summary>

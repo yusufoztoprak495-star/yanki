@@ -19,7 +19,7 @@ namespace Yanki.Core.Simulation
 
         private static readonly string[] KokAnahtarlari =
         {
-            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler", "korumali", "oyuncu_ihlalleri",
+            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler", "korumali", "oyuncu_ihlalleri", "yay_degiskenleri",
         };
 
         /// <summary>Senaryo metnini okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -362,8 +362,68 @@ namespace Yanki.Core.Simulation
                 }
             }
 
+            var yayTanimlari = new List<Brakes.YayTanimi>();
+            var yayDugumu = kok.Al("yay_degiskenleri");
+            if (yayDugumu != null)
+            {
+                if (yayDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(yayDugumu.Satir, "\"yay_degiskenleri\" bir nesne olmalı: { \"ad\": { \"baslangic\", \"min\", \"max\" } }");
+                }
+                else
+                {
+                    foreach (var kv in yayDugumu.Ozellikler)
+                    {
+                        var d = kv.Value;
+                        if (!Kimlik.GecerliKimlikMi(kv.Key))
+                        {
+                            Hata(d.Satir, $"yay_degiskenleri: geçersiz değişken adı \"{kv.Key}\"");
+                            continue;
+                        }
+
+                        decimal? Say(string anahtar)
+                        {
+                            var n = d.Tur == JsonTuru.Nesne ? d.Al(anahtar) : null;
+                            if (n == null || n.Tur != JsonTuru.Sayi)
+                            {
+                                Hata(n?.Satir ?? d.Satir, $"yay_degiskenleri \"{kv.Key}\": \"{anahtar}\" sayı olmalı");
+                                return null;
+                            }
+
+                            return n.SayiDeger;
+                        }
+
+                        var b = Say("baslangic");
+                        var mn = Say("min");
+                        var mx = Say("max");
+                        if (d.Tur == JsonTuru.Nesne)
+                        {
+                            foreach (var alan in d.Ozellikler)
+                            {
+                                if (alan.Key != "baslangic" && alan.Key != "min" && alan.Key != "max")
+                                {
+                                    Hata(alan.Value.Satir, $"yay_degiskenleri \"{kv.Key}\": bilinmeyen alan \"{alan.Key}\" (baslangic, min, max)");
+                                }
+                            }
+                        }
+
+                        if (b.HasValue && mn.HasValue && mx.HasValue)
+                        {
+                            if (mn.Value > mx.Value || b.Value < mn.Value || b.Value > mx.Value)
+                            {
+                                Hata(d.Satir, $"yay_degiskenleri \"{kv.Key}\": min ≤ baslangic ≤ max olmalı");
+                            }
+                            else
+                            {
+                                yayTanimlari.Add(new Brakes.YayTanimi(kv.Key, b.Value, mn.Value, mx.Value));
+                            }
+                        }
+                    }
+                }
+            }
+
             return new SenaryoYuklemeSonucu(
-                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler, new Brakes.Korumalilik(korumaGirdisi), oyuncuIhlalleri),
+                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler, new Brakes.Korumalilik(korumaGirdisi), oyuncuIhlalleri, yayTanimlari),
                 hatalar);
         }
 
