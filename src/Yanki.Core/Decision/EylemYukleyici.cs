@@ -31,10 +31,10 @@ namespace Yanki.Core.Decision
 
         private static readonly string[] OlcutAnahtarlari = { "alan", "min", "max", "egri" };
 
-        private static readonly RolKumesi HedefsizRoller = new RolKumesi(
+        internal static readonly RolKumesi HedefsizRoller = new RolKumesi(
             r => r == Rol.Ben || r == Rol.Oyuncu, "hedefsiz eylemlerde", "ben, oyuncu");
 
-        private static readonly RolKumesi HedefliRoller = new RolKumesi(
+        internal static readonly RolKumesi HedefliRoller = new RolKumesi(
             r => r == Rol.Ben || r == Rol.Oyuncu || r == Rol.EylemHedef, "eylemlerde", "ben, oyuncu, eylem.hedef");
 
         /// <summary>Eylem dosyasını okur ve doğrular.</summary>
@@ -591,7 +591,7 @@ namespace Yanki.Core.Decision
 
         // ---- kriter/ölçüt alanı: eylem bağlamı denetimleri ----
 
-        private static void AlanBaglamDenetle(
+        internal static void AlanBaglamDenetle(
             SorguCagrisi alan, EylemHedefTuru hedef, bool hedefGecerli, int satir, string onek, Action<int, string> hata, AktarimTuru aktarim)
         {
             if (alan.Ad == "olay_konusu")
