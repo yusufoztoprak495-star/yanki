@@ -185,7 +185,8 @@ namespace Yanki.Scenarios.Tests
         [Fact]
         public void Query_eylemsiz_senaryoda_son_karar_satiri_yazmaz()
         {
-            var senaryo = Senaryo.Replace(",\n  \"eylem_dosyalari\": [\"eylemler.json\"]", string.Empty);
+            // Kaynak dosyanın satır sonundan bağımsız (CRLF/LF): satır sonu ve boşluk regex ile eşleşir.
+            var senaryo = Regex.Replace(Senaryo, @",\s*""eylem_dosyalari"": \[""eylemler\.json""\]", string.Empty);
             File.WriteAllText(Yol("senaryo2.json"), senaryo);
             File.WriteAllText(Yol("kurallar.json"), "{ \"kurallar\": [] }");
             var oturum = Yol("oturum2.json");
