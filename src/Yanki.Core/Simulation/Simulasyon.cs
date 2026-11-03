@@ -159,6 +159,7 @@ namespace Yanki.Core.Simulation
             var krizListesi = KrizleriDenetle(senaryo, krizler, stres);
             KurallariDenetle(senaryo, motor, katalog, krizListesi);
             EylemleriDenetle(senaryo, katalog);
+            KorumaliDenetle(senaryo, motor, katalog);
             var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari(), dedikodu, stres, krizListesi, frenAyarlari ?? new FrenAyarlari());
             sim.Kur(zihinAyarlari);
             sim.SonHash = sim.DurumHash();
@@ -177,6 +178,8 @@ namespace Yanki.Core.Simulation
             {
                 throw new ArgumentNullException(nameof(eylem));
             }
+
+            OyuncuIhlaliniDenetle(eylem);
 
             if (eylem.Tur == YerlesikTurler.OyuncuHareketi)
             {
@@ -204,6 +207,33 @@ namespace Yanki.Core.Simulation
 
             YukuDenetle(eylem);
             _bekleyenEylemler.Add(eylem);
+        }
+
+        // Korumalı varlık: oyuncu hareketi mekandan_ayrilamaz oyuncuyu, senaryonun oyuncu_ihlalleri'nde bildirilen tür korumalı varlığı ihlal edemez.
+        private void OyuncuIhlaliniDenetle(PlayerAction eylem)
+        {
+            var k = Senaryo.Korumali;
+            if (k.Bos)
+            {
+                return;
+            }
+
+            if (eylem.Tur == YerlesikTurler.OyuncuHareketi && k.Korunuyor(OyuncuId, Brakes.KorumaBayraklari.MekandanAyrilamaz))
+            {
+                throw new ArgumentException($"Oyuncu \"{OyuncuId}\" mekandan_ayrilamaz korumalıdır: hareket reddedildi.", nameof(eylem));
+            }
+
+            if (Senaryo.OyuncuIhlalleri.TryGetValue(eylem.Tur, out var ihlaller))
+            {
+                foreach (var ib in ihlaller)
+                {
+                    var v = ib.Coz(OyuncuId, eylem.Hedef, string.Empty, string.Empty);
+                    if (v.Length > 0 && k.Korunuyor(v, ib.Bayrak))
+                    {
+                        throw new ArgumentException($"Eylem \"{eylem.Tur}\" korumalı varlığı ihlal eder: {v} {ib.Bayrak} (oyuncu_ihlalleri).", nameof(eylem));
+                    }
+                }
+            }
         }
 
         private static void YukuDenetle(PlayerAction eylem)
@@ -629,7 +659,7 @@ namespace Yanki.Core.Simulation
 
             var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId,
                 new FrenBaglami(
-                    _sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc ?? _frenAyarlari.VarsayilanGenelSinir(Senaryo.Npcler.Count), _zincir, _frenAyarlari.ZincirDerinligi));
+                    _sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc ?? _frenAyarlari.VarsayilanGenelSinir(Senaryo.Npcler.Count), _zincir, _frenAyarlari.ZincirDerinligi, Senaryo.Korumali));
             foreach (var etki in degerlendirme.Etkiler)
             {
                 var olay = KuralMotoru.OlayYap(etki, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
@@ -893,7 +923,7 @@ namespace Yanki.Core.Simulation
                     continue;   // eylem yok ya da krizdeki NPC bu tick eylem seçmez (karar_verildi yazılmaz)
                 }
 
-                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu, konuHesabi, _sayaclar);
+                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu, konuHesabi, _sayaclar, Senaryo.Korumali);
                 var uretim = AdayUretici.Uret(baglam, _eylemKatalogu.Eylemler);
                 if (uretim.Frenler.Count > 0)
                 {
@@ -1195,7 +1225,7 @@ namespace Yanki.Core.Simulation
             foreach (var etki in etkiler)
             {
                 var frenler = new List<FrenBilgisi>();
-                var uretilen = KuralMotoru.EtkiUret(sanalKural, etki, npc, tetik, baglam, nedenler, Dunya, yazilanGercekler, frenler);
+                var uretilen = KuralMotoru.EtkiUret(sanalKural, etki, npc, tetik, baglam, nedenler, Dunya, yazilanGercekler, frenler, Senaryo.Korumali);
                 FrenleriYaz(frenler);
                 if (uretilen == null)
                 {
@@ -1391,6 +1421,72 @@ namespace Yanki.Core.Simulation
                     }
                 }
             }
+        }
+
+        // korumali ve ihlal_bayraklari: bayrak-varlık uyumu ve sabit varlıkların senaryoda bulunması (bilinmeyen sabit kimlik Olustur'da reddedilir).
+        private static void KorumaliDenetle(SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog)
+        {
+            var kisiler = new SortedSet<string>(StringComparer.Ordinal) { senaryo.OyuncuId };
+            foreach (var n in senaryo.Npcler)
+            {
+                kisiler.Add(n.Id);
+            }
+
+            foreach (var varlik in senaryo.Korumali.Varliklar)
+            {
+                foreach (var bayrak in senaryo.Korumali.Bayraklar(varlik))
+                {
+                    if (bayrak != Brakes.KorumaBayraklari.Calinamaz && !kisiler.Contains(varlik))
+                    {
+                        throw new ArgumentException($"korumali \"{varlik}\" {bayrak}: bu bayrak yalnızca NPC ya da oyuncu için geçerlidir.", nameof(senaryo));
+                    }
+                }
+            }
+
+            void Sabit(string sahip, Brakes.IhlalBayragi ib)
+            {
+                if (!ib.Rolu.HasValue && !kisiler.Contains(ib.Varlik) && !Contains(senaryo.Korumali.Varliklar, ib.Varlik))
+                {
+                    throw new ArgumentException($"{sahip}: ihlal_bayraklari varlığı \"{ib.Varlik}\" bu senaryoda yok (NPC, oyuncu ya da korumali varlık olmalı).", nameof(senaryo));
+                }
+            }
+
+            foreach (var k in motor.Kurallar)
+            {
+                foreach (var ib in k.IhlalBayraklari)
+                {
+                    Sabit($"Kural \"{k.Id}\"", ib);
+                }
+            }
+
+            foreach (var e in katalog.Eylemler)
+            {
+                foreach (var ib in e.IhlalBayraklari)
+                {
+                    Sabit($"Eylem \"{e.Id}\"", ib);
+                }
+            }
+
+            foreach (var kv in senaryo.OyuncuIhlalleri)
+            {
+                foreach (var ib in kv.Value)
+                {
+                    Sabit($"oyuncu_ihlalleri \"{kv.Key}\"", ib);
+                }
+            }
+        }
+
+        private static bool Contains(IEnumerable<string> liste, string deger)
+        {
+            foreach (var x in liste)
+            {
+                if (string.Equals(x, deger, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool RolAdiMi(string ad) => Criteria.RolAdlari.TryCoz(ad, out _);

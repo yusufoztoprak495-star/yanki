@@ -115,10 +115,14 @@ namespace Yanki.Core.Rules
         /// <summary>Cooldown ve tetiklenme sınırları (7. hafta); fren alanı yazılmadıysa <c>null</c> ve kural eskisi gibi çalışır.</summary>
         public TetikSiniri? TetikSiniri { get; }
 
+        /// <summary>Bu kuralın ihlal edebileceği korumalı bayraklar (<c>ihlal_bayraklari</c>); ihlal eden kural çalışmaz, <c>korumali</c> freni yazılır.</summary>
+        public IReadOnlyList<IhlalBayragi> IhlalBayraklari { get; }
+
         /// <summary>Kural kurar.</summary>
         /// <exception cref="ArgumentException">Kimlik ya da olay türü boşsa, etki yoksa.</exception>
         public KuralTanimi(
-            string id, string neZaman, IEnumerable<Kriter> kriterler, IEnumerable<KuralEtkisi> etkiler, IEnumerable<Rol> gerekliRoller, int satir = 0, TetikSiniri? tetikSiniri = null)
+            string id, string neZaman, IEnumerable<Kriter> kriterler, IEnumerable<KuralEtkisi> etkiler, IEnumerable<Rol> gerekliRoller, int satir = 0, TetikSiniri? tetikSiniri = null,
+            IReadOnlyList<IhlalBayragi>? ihlalBayraklari = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -145,6 +149,7 @@ namespace Yanki.Core.Rules
             GerekliRoller = new ReadOnlyCollection<Rol>(roller);
             Satir = satir;
             TetikSiniri = tetikSiniri;
+            IhlalBayraklari = ihlalBayraklari ?? new IhlalBayragi[0];
         }
     }
 

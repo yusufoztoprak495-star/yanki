@@ -9,7 +9,7 @@ namespace Yanki.Core.Decision
     /// <summary>
     /// Aday üretiminin TEK noktası (ADR-011): her eylem için hedefleri bulur, ön koşulları değerlendirir (hepsi tutmalı, ADR-010),
     /// tutmayanı elenen listesine nedeniyle yazar. Yalnızca karar verenin zihni ve kriter sözlüğünün izin verdiği sorgular kullanılır.
-    /// 7. haftadaki korumalı bayrak filtresi tam burada, ön koşul değerlendirmesinin yanına takılacak (bu hafta yazılmadı).
+    /// Korumalı bayrak filtresi (7. hafta) ön koşullardan önce çalışır: ihlal eden aday <c>Adaylar</c>'a girmez, nedeni <c>Elenenler</c>'de yazılır.
     /// <para>
     /// Hedef türleri: <c>yok</c> → tek aday (hedef boş); <c>npc</c> → karar verenle aynı mekandaki diğer NPC'ler;
     /// <c>oyuncu</c> → oyuncu, aynı mekandaysa; <c>komsu_mekan</c> → karar verenin mekanına bağlı komşu mekanlar.
@@ -50,6 +50,22 @@ namespace Yanki.Core.Decision
                 foreach (var hedef in hedefler)
                 {
                     var neden = OnKosulSonucu(eylem, hedef, baglam, onbellek);
+
+                    // Korumalı bayrak filtresi (ön koşullardan önce çalışır, aday adaylar'a hiç girmez): neden her durumda elenen listesinde ve izde
+                    // görünür; fren olayı yalnızca ön koşullar (ve konuşmada konu) tutsaydı aday olacaksa yazılır.
+                    var ihlal = KorumaIhlali(eylem, hedef, baglam);
+                    if (ihlal != null)
+                    {
+                        var olacakti = neden == null && (!eylem.Konusma || KonuSec(eylem, hedef, baglam).Konular.Count > 0);
+                        elenenler.Add(new ElenenAday(eylem, hedef, $"korumali: {ihlal.Value.Varlik} {ihlal.Value.Bayrak}" + (neden == null ? string.Empty : "; " + neden)));
+                        if (olacakti)
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.Korumali, eylem.Id, baglam.Npc, ihlal.Value.Varlik, konum ?? string.Empty, new long[0]));
+                        }
+
+                        continue;
+                    }
+
                     var engel = baglam.Sayaclar?.EylemEngeli(eylem, baglam.Npc, hedef, baglam.Tick);
                     if (engel != null)
                     {
@@ -95,6 +111,32 @@ namespace Yanki.Core.Decision
             }
 
             return new AdayUretimi(adaylar, elenenler, frenler);
+        }
+
+        // Eylemin (yerleşik hareket dahil) bu hedefte ihlal ettiği ilk korumalı bayrak; yoksa null.
+        private static (string Varlik, string Bayrak)? KorumaIhlali(EylemTanimi eylem, string hedef, KararBaglami baglam)
+        {
+            var k = baglam.Korumali;
+            if (k == null || k.Bos)
+            {
+                return null;
+            }
+
+            if (eylem.Hareket && k.Korunuyor(baglam.Npc, KorumaBayraklari.MekandanAyrilamaz))
+            {
+                return (baglam.Npc, KorumaBayraklari.MekandanAyrilamaz);
+            }
+
+            foreach (var ib in eylem.IhlalBayraklari)
+            {
+                var v = ib.Coz(baglam.Npc, hedef, string.Empty, string.Empty);
+                if (v.Length > 0 && k.Korunuyor(v, ib.Bayrak))
+                {
+                    return (v, ib.Bayrak);
+                }
+            }
+
+            return null;
         }
 
         private static string EngelNedeni(string engel, EylemTanimi eylem)

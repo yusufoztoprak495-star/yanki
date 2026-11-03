@@ -229,6 +229,9 @@ namespace Yanki.Core.Decision
         /// <summary>Cooldown ve en_fazla sınırları (7. hafta); fren alanı yazılmadıysa <c>null</c> ve eylem eskisi gibi çalışır.</summary>
         public Brakes.TetikSiniri? TetikSiniri { get; }
 
+        /// <summary>Bu eylemin ihlal edebileceği korumalı bayraklar (<c>ihlal_bayraklari</c>); ihlal eden aday adaylar listesine girmez.</summary>
+        public IReadOnlyList<Brakes.IhlalBayragi> IhlalBayraklari { get; }
+
         /// <summary>
         /// Bu eylem seçilince konuşanın stresine eklenecek miktar: <c>StresTabani × Σ(çelişen özelliklerin kişilik değeri)</c>, 6 ondalığa yuvarlanmış.
         /// Çelişen özellik ya da taban yoksa 0.
@@ -306,7 +309,8 @@ namespace Yanki.Core.Decision
             IEnumerable<string>? yalanOnermeleri = null,
             string gorunurluk = "",
             decimal? stresTabani = null,
-            Brakes.TetikSiniri? tetikSiniri = null)
+            Brakes.TetikSiniri? tetikSiniri = null,
+            IReadOnlyList<Brakes.IhlalBayragi>? ihlalBayraklari = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -369,6 +373,7 @@ namespace Yanki.Core.Decision
             Gorunurluk = aktarim == AktarimTuru.Yok ? string.Empty : (string.IsNullOrEmpty(gorunurluk) ? "sessiz" : gorunurluk);
             StresTabani = stresTabani;
             TetikSiniri = tetikSiniri;
+            IhlalBayraklari = ihlalBayraklari ?? new Brakes.IhlalBayragi[0];
             Id = id;
             OlayTuru = olayTuru ?? string.Empty;
             Hedef = hedef;

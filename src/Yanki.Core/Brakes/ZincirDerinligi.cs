@@ -120,9 +120,13 @@ namespace Yanki.Core.Brakes
         /// <summary>Zincir derinliği sınırı D.</summary>
         public int ZincirSiniri { get; }
 
+        /// <summary>Korumalı varlıklar.</summary>
+        public Korumalilik Korumali { get; }
+
         /// <summary>Kurar.</summary>
-        public FrenBaglami(TetikSayaclari? sayaclar, int? genelSinir, ZincirDerinligi? zincir, int zincirSiniri)
+        public FrenBaglami(TetikSayaclari? sayaclar, int? genelSinir, ZincirDerinligi? zincir, int zincirSiniri, Korumalilik? korumali = null)
         {
+            Korumali = korumali ?? Korumalilik.Yok;
             Sayaclar = sayaclar;
             GenelSinir = genelSinir;
             Zincir = zincir;

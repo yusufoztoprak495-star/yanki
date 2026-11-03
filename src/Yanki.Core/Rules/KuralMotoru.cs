@@ -188,6 +188,13 @@ namespace Yanki.Core.Rules
                             continue;
                         }
 
+                        // Korumalı varlık ihlali: kural çalışmaz, korumali freni yazılır (kriterleri tutmuş kural için).
+                        if (fren != null && !fren.Korumali.Bos && IhlalVarMi(kural, npc, tetik.Olay, fren.Korumali, out var ihlalVarligi))
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.Korumali, kural.Id, npc, ihlalVarligi, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                            continue;
+                        }
+
                         var nedenler = new SortedSet<long> { tetik.Olay.Id };
                         foreach (var n in tetik.AlgiNedenleri(npc))
                         {
@@ -209,11 +216,17 @@ namespace Yanki.Core.Rules
                         var denemeFrenleri = new List<FrenBilgisi>();
                         foreach (var etki in kural.Etkiler)
                         {
-                            var uretilen = EtkiUret(kural, etki, npc, tetik.Olay, baglam, nedenListesi, dunya, denemeGercekleri, denemeFrenleri);
+                            var uretilen = EtkiUret(kural, etki, npc, tetik.Olay, baglam, nedenListesi, dunya, denemeGercekleri, denemeFrenleri, fren?.Korumali);
                             if (uretilen != null)
                             {
                                 deneme.Add(uretilen);
                             }
+                        }
+
+                        if (denemeFrenleri.Exists(f => f.Tur == FrenTurleri.Korumali))
+                        {
+                            frenler.AddRange(denemeFrenleri);   // etki korumalı varlığın konum! gerçeğini yazacaktı: kural çalışmaz
+                            continue;
                         }
 
                         if (deneme.Count == 0)
@@ -340,7 +353,8 @@ namespace Yanki.Core.Rules
 
         internal static UretilenEtki? EtkiUret(
             KuralTanimi kural, KuralEtkisi etki, string npc, Olay tetik, SorguBaglami baglam,
-            IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler, List<FrenBilgisi>? frenler = null)
+            IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler, List<FrenBilgisi>? frenler = null,
+            Korumalilik? korumali = null)
         {
             switch (etki.Tur)
             {
@@ -348,6 +362,14 @@ namespace Yanki.Core.Rules
                 {
                     var g = Gercek.Ayristir(GercekSablonu.Doldur(etki.GercekSablonu, rol => baglam.Coz(rol), RolKumesi.Hepsi));
                     var metin = g.ToString();
+
+                    // Korumalı varlığın konum! gerçeğini yazmak mekandan_ayrilamaz ihlalidir (motor uygular, yazar bildirmez).
+                    if (korumali != null && g.Yuklem == "konum!" && g.Argumanlar.Count > 0 && korumali.Korunuyor(g.Argumanlar[0], KorumaBayraklari.MekandanAyrilamaz))
+                    {
+                        frenler?.Add(new FrenBilgisi(FrenTurleri.Korumali, kural.Id, npc, g.Argumanlar[0], tetik.Mekan, new[] { tetik.Id }));
+                        return null;
+                    }
+
                     var varMi = dunya.Var(g);
 
                     // Değişiklik yapmayan etki (zaten var olanı eklemek, olmayanı kaldırmak) ve aynı adımda zaten üretilen etki atlanır.
@@ -382,6 +404,22 @@ namespace Yanki.Core.Rules
                     return new UretilenEtki(kural, etki, npc, tetik, hedef, string.Empty, nedenler);
                 }
             }
+        }
+
+        private static bool IhlalVarMi(KuralTanimi kural, string npc, Olay olay, Korumalilik korumali, out string varlik)
+        {
+            foreach (var ib in kural.IhlalBayraklari)
+            {
+                var v = ib.Coz(npc, string.Empty, olay.Fail, olay.Hedef);
+                if (v.Length > 0 && korumali.Korunuyor(v, ib.Bayrak))
+                {
+                    varlik = v;
+                    return true;
+                }
+            }
+
+            varlik = string.Empty;
+            return false;
         }
 
         private static bool KisiMi(Dunya dunya, string kimlik)

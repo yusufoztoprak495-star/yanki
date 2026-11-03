@@ -19,7 +19,7 @@ namespace Yanki.Core.Simulation
 
         private static readonly string[] KokAnahtarlari =
         {
-            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler",
+            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler", "korumali", "oyuncu_ihlalleri",
         };
 
         /// <summary>Senaryo metnini okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -301,8 +301,69 @@ namespace Yanki.Core.Simulation
                 }
             }
 
+            var korumaGirdisi = new List<KeyValuePair<string, IEnumerable<string>>>();
+            var korumaDugumu = kok.Al("korumali");
+            if (korumaDugumu != null)
+            {
+                if (korumaDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(korumaDugumu.Satir, "\"korumali\" bir nesne olmalı: { \"Varlik\": [\"oldurulemez\", ...] }");
+                }
+                else
+                {
+                    foreach (var kv in korumaDugumu.Ozellikler)
+                    {
+                        if (!Kimlik.GecerliKimlikMi(kv.Key))
+                        {
+                            Hata(kv.Value.Satir, $"korumali: geçersiz varlık kimliği \"{kv.Key}\"");
+                            continue;
+                        }
+
+                        var bayraklar = new List<string>();
+                        if (kv.Value.Tur != JsonTuru.Dizi || kv.Value.Elemanlar.Count == 0)
+                        {
+                            Hata(kv.Value.Satir, $"korumali \"{kv.Key}\": boş olmayan bayrak dizisi bekleniyor (oldurulemez, calinamaz, mekandan_ayrilamaz)");
+                            continue;
+                        }
+
+                        foreach (var b in kv.Value.Elemanlar)
+                        {
+                            if (b.Tur != JsonTuru.Metin || !Brakes.KorumaBayraklari.Gecerli(b.MetinDeger))
+                            {
+                                Hata(b.Satir, $"korumali \"{kv.Key}\": bilinmeyen bayrak (oldurulemez, calinamaz, mekandan_ayrilamaz)");
+                            }
+                            else
+                            {
+                                bayraklar.Add(b.MetinDeger);
+                            }
+                        }
+
+                        korumaGirdisi.Add(new KeyValuePair<string, IEnumerable<string>>(kv.Key, bayraklar));
+                    }
+                }
+            }
+
+            var oyuncuIhlalleri = new List<KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>>();
+            var oiDugumu = kok.Al("oyuncu_ihlalleri");
+            if (oiDugumu != null)
+            {
+                if (oiDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(oiDugumu.Satir, "\"oyuncu_ihlalleri\" bir nesne olmalı: { \"eylem_turu\": [ { \"bayrak\", \"varlik\" } ] }");
+                }
+                else
+                {
+                    foreach (var kv in oiDugumu.Ozellikler)
+                    {
+                        var sarma = JsonDegeri.Nesne(("oyuncu_ihlalleri." + kv.Key, kv.Value));
+                        oyuncuIhlalleri.Add(new KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>(
+                            kv.Key, Brakes.IhlalBayragi.OkuDizi(sarma, "oyuncu_ihlalleri." + kv.Key, new[] { "ben", "eylem.hedef" }, Hata)));
+                    }
+                }
+            }
+
             return new SenaryoYuklemeSonucu(
-                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler),
+                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler, new Brakes.Korumalilik(korumaGirdisi), oyuncuIhlalleri),
                 hatalar);
         }
 

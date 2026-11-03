@@ -17,7 +17,7 @@ namespace Yanki.Core.Rules
     /// </summary>
     public static class KuralYukleyici
     {
-        private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler", "cooldown", "kapsam", "tick_basina_en_fazla", "en_fazla" };
+        private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler", "cooldown", "kapsam", "tick_basina_en_fazla", "en_fazla", "ihlal_bayraklari" };
 
         // Sözlükte olup çözücüsü henüz bağlı olmayan fonksiyonlar (ZihinSorguCozucusu): çalışma anında patlamasınlar diye baştan reddedilir.
         internal static readonly string[] BagliOlmayanFonksiyonlar = { "yay" };
@@ -151,7 +151,7 @@ namespace Yanki.Core.Rules
             {
                 if (Array.IndexOf(KuralAnahtarlari, kv.Key) < 0)
                 {
-                    Hata(kv.Value.Satir, $"Kuralda bilinmeyen alan \"{kv.Key}\" (id, ne_zaman, kriterler, etkiler, cooldown, kapsam, tick_basina_en_fazla, en_fazla)");
+                    Hata(kv.Value.Satir, $"Kuralda bilinmeyen alan \"{kv.Key}\" (id, ne_zaman, kriterler, etkiler, cooldown, kapsam, tick_basina_en_fazla, en_fazla, ihlal_bayraklari)");
                 }
             }
 
@@ -257,7 +257,21 @@ namespace Yanki.Core.Rules
                 return null;
             }
 
-            return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir, Brakes.TetikSiniri.Oku(oge, false, Hata));
+            var ihlaller = Brakes.IhlalBayragi.OkuDizi(oge, "ihlal_bayraklari", new[] { "ben", "olay.fail", "olay.hedef" }, Hata);
+            foreach (var ib in ihlaller)
+            {
+                if (ib.Rolu.HasValue)
+                {
+                    roller.Add(ib.Rolu.Value);
+                }
+            }
+
+            if (hatalar.Count > once)
+            {
+                return null;
+            }
+
+            return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir, Brakes.TetikSiniri.Oku(oge, false, Hata), ihlaller);
         }
 
         // ayrildi/geldi olaylarının Hedef alanı karşı mekandır; mekana modifier/eksen/duygu yazılamaz.
