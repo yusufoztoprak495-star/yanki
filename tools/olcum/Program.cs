@@ -222,6 +222,19 @@ namespace Yanki.Olcum
             Console.WriteLine("|---|---|");
             Console.WriteLine($"| tick başına ortalama süre | {(ortanca / TickSayisi).ToString("F3", ic)} ms (toplam {ortanca.ToString("F1", ic)} ms, {tekrar} çalıştırmanın ortancası) |");
             Console.WriteLine($"| olay sayısı | {olaylar.Count} (karar_verildi {kararSayisi}) |");
+            var kuralKimlikleri = new SortedSet<string>(son.Kurallar.Select(k => k.Id), StringComparer.Ordinal);
+            var kuralCikti = new SortedDictionary<long, int>();
+            foreach (var o in olaylar)
+            {
+                if (kuralKimlikleri.Contains(o.KuralId))
+                {
+                    kuralCikti.TryGetValue(o.Tick, out var n);
+                    kuralCikti[o.Tick] = n + 1;
+                }
+            }
+
+            var enYuksek = kuralCikti.Count == 0 ? new KeyValuePair<long, int>(0, 0) : kuralCikti.OrderByDescending(k => k.Value).ThenBy(k => k.Key).First();
+            Console.WriteLine($"| tick başına en yüksek kural çıktısı (M için) | {enYuksek.Value} (tick {enYuksek.Key}); fren olayı {olaylar.Count(o => o.Tur == "fren_uygulandi")} |");
             Console.WriteLine($"| günlük boyutu | {(toplam / 1024.0).ToString("F1", ic)} KiB |");
             Console.WriteLine($"| karar_verildi boyutu | {(karar / 1024.0).ToString("F1", ic)} KiB = %{(100.0 * karar / toplam).ToString("F1", ic)} |");
             Console.WriteLine($"| karar_verildi bayt/olay | {(kararSayisi == 0 ? 0 : karar / kararSayisi)} |");

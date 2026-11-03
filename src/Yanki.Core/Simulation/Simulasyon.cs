@@ -43,6 +43,7 @@ namespace Yanki.Core.Simulation
     public sealed class Simulasyon
     {
         private readonly KuralMotoru _kuralMotoru;
+        private readonly TetikSayaclari _sayaclar;
         private readonly EylemKatalogu _eylemKatalogu;
         private readonly IActionSelector _secici;
         private readonly AlgiAyarlari _algiAyarlari;
@@ -109,6 +110,7 @@ namespace Yanki.Core.Simulation
         {
             Senaryo = senaryo;
             _kuralMotoru = motor;
+            _sayaclar = new TetikSayaclari(motor.Kurallar, katalog.Eylemler);
             _eylemKatalogu = katalog;
             _secici = secici;
             Seed = seed;
@@ -389,7 +391,10 @@ namespace Yanki.Core.Simulation
             npc + "@" + tick.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>Şu anki dünya ve zihin durumunun hash'i (16 karakter onaltılık).</summary>
-        public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler);
+        public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler, _sayaclar.KanonikMetin());
+
+        /// <summary>Cooldown/en_fazla sayaçlarının kanonik metni (durum hash'ine girer); sınırlı kural/eylem yoksa boş.</summary>
+        public string SayaclarKanonikMetni => _sayaclar.KanonikMetin();
 
         // ---- Tick döngüsü ----
 
@@ -608,7 +613,7 @@ namespace Yanki.Core.Simulation
                 tetikler.Add(new TetikBilgisi(olay, kimler, npc => new List<long>(algi.Nedenler(kimlik, npc))));
             }
 
-            var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId);
+            var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId, _sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc);
             foreach (var etki in degerlendirme.Etkiler)
             {
                 var olay = KuralMotoru.OlayYap(etki, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
@@ -864,6 +869,7 @@ namespace Yanki.Core.Simulation
             var konuHesabi = new KonuHesabi(Zihinler, Gunluk, _tick, _dedikodu, onbellekli: true);
             var cozucu = new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick, _dedikodu, konuHesabi);
             var secimler = new List<NpcSecimi>();
+            var adayFrenleri = new SortedDictionary<string, IReadOnlyList<FrenBilgisi>>(StringComparer.Ordinal);
             foreach (var npc in Senaryo.Npcler)
             {
                 if (_eylemKatalogu.Eylemler.Count == 0 || krizler.ContainsKey(npc.Id))
@@ -871,8 +877,13 @@ namespace Yanki.Core.Simulation
                     continue;   // eylem yok ya da krizdeki NPC bu tick eylem seçmez (karar_verildi yazılmaz)
                 }
 
-                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu, konuHesabi);
+                var baglam = new KararBaglami(npc.Id, OyuncuId, Seed, _tick, Dunya, Zihinler[npc.Id], Gunluk, cozucu, konuHesabi, _sayaclar);
                 var uretim = AdayUretici.Uret(baglam, _eylemKatalogu.Eylemler);
+                if (uretim.Frenler.Count > 0)
+                {
+                    adayFrenleri[npc.Id] = uretim.Frenler;   // adım 5 saf: yalnızca bilgi taşınır, olaylar 6.1'de yazılır
+                }
+
                 if (uretim.Adaylar.Count == 0)
                 {
                     continue;
@@ -923,8 +934,25 @@ namespace Yanki.Core.Simulation
 
             var etkiBekleyenler = new List<KeyValuePair<NpcSecimi, Olay>>();
             var konumDegisimleri = new List<KeyValuePair<NpcSecimi, Olay>>();
-            foreach (var s in secimler)
+            var secimlerNpcye = new SortedDictionary<string, NpcSecimi>(StringComparer.Ordinal);
+            foreach (var x in secimler)
             {
+                secimlerNpcye[x.Npc] = x;
+            }
+
+            foreach (var npcTanimi in Senaryo.Npcler)
+            {
+                // Aday frenleri NPC kimlik sırasıyla, o NPC'nin karar olayından önce yazılır (kararı olmayan NPC için de: tüm adayları kapalı olabilir).
+                if (adayFrenleri.TryGetValue(npcTanimi.Id, out var bu))
+                {
+                    AdayFrenleriniYaz(bu);
+                }
+
+                if (!secimlerNpcye.TryGetValue(npcTanimi.Id, out var s))
+                {
+                    continue;
+                }
+
                 var karar = KararOlayi.Yap(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), s.Sonuc.Iz, s.Konum);
                 Ekle(karar);
                 _sonKararlar[s.Npc] = s.Sonuc.Iz;
@@ -1036,6 +1064,28 @@ namespace Yanki.Core.Simulation
             foreach (var kv in konumDegisimleri)
             {
                 KonumuYaz(kv.Key.Npc, kv.Key.Sonuc.Secilen!.Hedef, kv.Value.Id, kv.Key.Sonuc.Secilen!.Eylem.KuralId);
+            }
+        }
+
+        // Aday frenleri: aynı (fren, eylem, NPC, hedef) için son tetiklemeden sonra bir kez yazılır (engel kalkıp yeniden başlarsa bir kez daha).
+        private void AdayFrenleriniYaz(IReadOnlyList<FrenBilgisi> frenler)
+        {
+            foreach (var fren in frenler)
+            {
+                EylemTanimi? eylem = null;
+                foreach (var e in _eylemKatalogu.Eylemler)
+                {
+                    if (string.Equals(e.Id, fren.Kimlik, StringComparison.Ordinal))
+                    {
+                        eylem = e;
+                        break;
+                    }
+                }
+
+                if (eylem == null || _sayaclar.AdayFreniYazilmali(fren, eylem))
+                {
+                    Ekle(FrenOlayi.Yap(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), fren));
+                }
             }
         }
 
@@ -1204,6 +1254,7 @@ namespace Yanki.Core.Simulation
         private void Ekle(Olay olay)
         {
             Gunluk.Ekle(olay);
+            _sayaclar.Isle(olay);
             if (!Dunya.Uygula(olay))
             {
                 Zihinler.Uygula(olay);

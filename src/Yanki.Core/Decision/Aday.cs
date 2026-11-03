@@ -63,8 +63,14 @@ namespace Yanki.Core.Decision
         /// <summary>Elenenler ve nedenleri.</summary>
         public IReadOnlyList<ElenenAday> Elenenler { get; }
 
+        /// <summary>
+        /// Aday frenleri (cooldown, en_fazla): yalnızca ön koşulları (ve konuşmada konusu) tutsaydı aday olacak eylemler için; üretim saf kalır,
+        /// olayları 6.1'de <c>Simulasyon</c> yazar.
+        /// </summary>
+        public IReadOnlyList<Brakes.FrenBilgisi> Frenler { get; }
+
         /// <summary>Kurar; listeleri sıralar.</summary>
-        public AdayUretimi(IEnumerable<Aday> adaylar, IEnumerable<ElenenAday> elenenler)
+        public AdayUretimi(IEnumerable<Aday> adaylar, IEnumerable<ElenenAday> elenenler, IEnumerable<Brakes.FrenBilgisi>? frenler = null)
         {
             var a = new List<Aday>(adaylar ?? throw new ArgumentNullException(nameof(adaylar)));
             a.Sort((x, y) => Karsilastir(x.Eylem.Id, x.Hedef, y.Eylem.Id, y.Hedef));
@@ -72,6 +78,7 @@ namespace Yanki.Core.Decision
             e.Sort((x, y) => Karsilastir(x.Eylem.Id, x.Hedef, y.Eylem.Id, y.Hedef));
             Adaylar = new ReadOnlyCollection<Aday>(a);
             Elenenler = new ReadOnlyCollection<ElenenAday>(e);
+            Frenler = new ReadOnlyCollection<Brakes.FrenBilgisi>(new List<Brakes.FrenBilgisi>(frenler ?? new Brakes.FrenBilgisi[0]));
         }
 
         /// <summary>Sabit sıra: eylem kimliği, sonra hedef; ikisi de ordinal.</summary>

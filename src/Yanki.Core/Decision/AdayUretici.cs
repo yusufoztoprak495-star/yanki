@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Yanki.Core.Brakes;
 using Yanki.Core.Criteria;
 using Yanki.Core.World;
 
@@ -32,6 +33,7 @@ namespace Yanki.Core.Decision
 
             var adaylar = new List<Aday>();
             var elenenler = new List<ElenenAday>();
+            var frenler = new List<FrenBilgisi>();
             var konum = baglam.Dunya.TekDeger("konum!", baglam.Npc);
 
             foreach (var eylem in eylemler)
@@ -48,6 +50,24 @@ namespace Yanki.Core.Decision
                 foreach (var hedef in hedefler)
                 {
                     var neden = OnKosulSonucu(eylem, hedef, baglam, onbellek);
+                    var engel = baglam.Sayaclar?.EylemEngeli(eylem, baglam.Npc, hedef, baglam.Tick);
+                    if (engel != null)
+                    {
+                        // Cooldown/en_fazla filtresi ön koşullardan önce çalışır ama fren olayı yalnızca ön koşullar tutsaydı (ve konuşmada konu
+                        // olsaydı) aday olacak eylem için yazılır. Elenme nedeni her durumda görünür.
+                        var adayOlacakti = neden == null && (!eylem.Konusma || KonuSec(eylem, hedef, baglam).Konular.Count > 0);
+                        var engelNedeni = EngelNedeni(engel, eylem);
+                        elenenler.Add(new ElenenAday(eylem, hedef, neden == null ? engelNedeni : engelNedeni + "; " + neden));
+                        if (adayOlacakti)
+                        {
+                            var sonTetik = baglam.Sayaclar!.EylemSonTetiklemeOlayi(eylem, baglam.Npc, hedef);
+                            frenler.Add(new FrenBilgisi(
+                                engel, eylem.Id, baglam.Npc, hedef, konum ?? string.Empty, sonTetik > 0 ? new[] { sonTetik } : new long[0]));
+                        }
+
+                        continue;
+                    }
+
                     if (neden == null)
                     {
                         if (!eylem.Konusma)
@@ -74,7 +94,15 @@ namespace Yanki.Core.Decision
                 }
             }
 
-            return new AdayUretimi(adaylar, elenenler);
+            return new AdayUretimi(adaylar, elenenler, frenler);
+        }
+
+        private static string EngelNedeni(string engel, EylemTanimi eylem)
+        {
+            var s = eylem.TetikSiniri!;
+            return engel == FrenTurleri.Cooldown
+                ? $"cooldown: {s.Cooldown.ToString(System.Globalization.CultureInfo.InvariantCulture)} tick bekleme sürüyor (kapsam {(s.Kapsam == SinirKapsami.Hedef ? "hedef" : "npc")})"
+                : $"en_fazla: {s.EnFazla.ToString(System.Globalization.CultureInfo.InvariantCulture)} kez tetiklendi, sınır doldu (kapsam {(s.Kapsam == SinirKapsami.Hedef ? "hedef" : "npc")})";
         }
 
         private static KonuSecimi KonuSec(EylemTanimi eylem, string hedef, KararBaglami baglam)

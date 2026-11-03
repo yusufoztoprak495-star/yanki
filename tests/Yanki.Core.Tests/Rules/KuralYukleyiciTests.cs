@@ -153,7 +153,7 @@ namespace Yanki.Core.Tests.Rules
         [Fact]
         public void Bilinmeyen_alan_sema_hatasidir()
         {
-            HataVar(Tek("\"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ], \"cooldown\": 5"), "cooldown");
+            HataVar(Tek("\"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ], \"bilinmeyen_fren\": 5"), "bilinmeyen_fren");
             HataVar(Tek("\"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3, \"fazla\": 1 } ]"), "fazla");
         }
 

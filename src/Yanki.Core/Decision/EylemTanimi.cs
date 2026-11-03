@@ -226,6 +226,9 @@ namespace Yanki.Core.Decision
         /// <summary>Stres tabanı (0..100); yoksa <c>null</c>. <see cref="CelisenOzellikler"/> varsa zorunludur.</summary>
         public decimal? StresTabani { get; }
 
+        /// <summary>Cooldown ve en_fazla sınırları (7. hafta); fren alanı yazılmadıysa <c>null</c> ve eylem eskisi gibi çalışır.</summary>
+        public Brakes.TetikSiniri? TetikSiniri { get; }
+
         /// <summary>
         /// Bu eylem seçilince konuşanın stresine eklenecek miktar: <c>StresTabani × Σ(çelişen özelliklerin kişilik değeri)</c>, 6 ondalığa yuvarlanmış.
         /// Çelişen özellik ya da taban yoksa 0.
@@ -302,7 +305,8 @@ namespace Yanki.Core.Decision
             IEnumerable<OnermeDeseni>? konuDesenleri = null,
             IEnumerable<string>? yalanOnermeleri = null,
             string gorunurluk = "",
-            decimal? stresTabani = null)
+            decimal? stresTabani = null,
+            Brakes.TetikSiniri? tetikSiniri = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -364,6 +368,7 @@ namespace Yanki.Core.Decision
             YalanOnermeleri = new ReadOnlyCollection<string>(yalanlar);
             Gorunurluk = aktarim == AktarimTuru.Yok ? string.Empty : (string.IsNullOrEmpty(gorunurluk) ? "sessiz" : gorunurluk);
             StresTabani = stresTabani;
+            TetikSiniri = tetikSiniri;
             Id = id;
             OlayTuru = olayTuru ?? string.Empty;
             Hedef = hedef;

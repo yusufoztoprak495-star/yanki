@@ -19,7 +19,7 @@ namespace Yanki.Core.Simulation
 
         private static readonly string[] KokAnahtarlari =
         {
-            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari",
+            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler",
         };
 
         /// <summary>Senaryo metnini okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -270,8 +270,39 @@ namespace Yanki.Core.Simulation
                 return new SenaryoYuklemeSonucu(null, hatalar);
             }
 
+            Brakes.GenelFrenler? genelFrenler = null;
+            var frenDugumu = kok.Al("frenler");
+            if (frenDugumu != null)
+            {
+                if (frenDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(frenDugumu.Satir, "\"frenler\" bir nesne olmalı (tick_basina_en_fazla_sonuc)");
+                }
+                else
+                {
+                    int? m = null;
+                    foreach (var kv in frenDugumu.Ozellikler)
+                    {
+                        if (kv.Key != "tick_basina_en_fazla_sonuc")
+                        {
+                            Hata(kv.Value.Satir, $"\"frenler\" içinde bilinmeyen alan \"{kv.Key}\" (tick_basina_en_fazla_sonuc)");
+                        }
+                        else if (kv.Value.Tur != JsonTuru.Sayi || kv.Value.SayiDeger < 1m || kv.Value.SayiDeger != decimal.Truncate(kv.Value.SayiDeger) || kv.Value.SayiDeger > 1000000m)
+                        {
+                            Hata(kv.Value.Satir, "\"tick_basina_en_fazla_sonuc\" 1 ile 1000000 arasında bir tam sayı olmalı");
+                        }
+                        else
+                        {
+                            m = (int)kv.Value.SayiDeger;
+                        }
+                    }
+
+                    genelFrenler = m == null ? null : new Brakes.GenelFrenler(m);
+                }
+            }
+
             return new SenaryoYuklemeSonucu(
-                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari),
+                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler),
                 hatalar);
         }
 

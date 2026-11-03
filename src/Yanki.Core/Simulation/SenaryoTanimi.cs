@@ -68,6 +68,9 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public IReadOnlyList<string> EylemDosyalari { get; }
 
+        /// <summary>Senaryo düzeyindeki genel frenler (<c>frenler</c>); yazılmadıysa hiçbir sınır yok.</summary>
+        public Brakes.GenelFrenler Frenler { get; }
+
         /// <summary>Senaryo kurar. Tutarlılık denetimi <c>SenaryoYukleyici</c>'dadır.</summary>
         public SenaryoTanimi(
             string ad,
@@ -80,8 +83,10 @@ namespace Yanki.Core.Simulation
             IEnumerable<string> olayTurleri,
             IEnumerable<string> kuralDosyalari,
             IEnumerable<string>? eylemDosyalari = null,
-            IEnumerable<string>? krizDosyalari = null)
+            IEnumerable<string>? krizDosyalari = null,
+            Brakes.GenelFrenler? frenler = null)
         {
+            Frenler = frenler ?? Brakes.GenelFrenler.Yok;
             Ad = ad ?? string.Empty;
             Mekanlar = new ReadOnlyCollection<string>(new List<string>(mekanlar));
             Baglantilar = new ReadOnlyCollection<KeyValuePair<string, string>>(new List<KeyValuePair<string, string>>(baglantilar));

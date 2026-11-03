@@ -17,7 +17,7 @@ namespace Yanki.Core.Rules
     /// </summary>
     public static class KuralYukleyici
     {
-        private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler" };
+        private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler", "cooldown", "cooldown_kapsam", "tick_basina_en_fazla", "en_fazla" };
 
         // Sözlükte olup çözücüsü henüz bağlı olmayan fonksiyonlar (ZihinSorguCozucusu): çalışma anında patlamasınlar diye baştan reddedilir.
         internal static readonly string[] BagliOlmayanFonksiyonlar = { "yay" };
@@ -151,7 +151,7 @@ namespace Yanki.Core.Rules
             {
                 if (Array.IndexOf(KuralAnahtarlari, kv.Key) < 0)
                 {
-                    Hata(kv.Value.Satir, $"Kuralda bilinmeyen alan \"{kv.Key}\" (id, ne_zaman, kriterler, etkiler)");
+                    Hata(kv.Value.Satir, $"Kuralda bilinmeyen alan \"{kv.Key}\" (id, ne_zaman, kriterler, etkiler, cooldown, cooldown_kapsam, tick_basina_en_fazla, en_fazla)");
                 }
             }
 
@@ -257,7 +257,7 @@ namespace Yanki.Core.Rules
                 return null;
             }
 
-            return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir);
+            return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir, Brakes.TetikSiniri.Oku(oge, false, Hata));
         }
 
         // ayrildi/geldi olaylarının Hedef alanı karşı mekandır; mekana modifier/eksen/duygu yazılamaz.

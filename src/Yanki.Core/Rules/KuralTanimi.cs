@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Yanki.Core.Brakes;
 using Yanki.Core.Criteria;
 
 namespace Yanki.Core.Rules
@@ -111,10 +112,13 @@ namespace Yanki.Core.Rules
         /// <summary>Kaynak dosyadaki 1 tabanlı satır; bilinmiyorsa 0.</summary>
         public int Satir { get; }
 
+        /// <summary>Cooldown ve tetiklenme sınırları (7. hafta); fren alanı yazılmadıysa <c>null</c> ve kural eskisi gibi çalışır.</summary>
+        public TetikSiniri? TetikSiniri { get; }
+
         /// <summary>Kural kurar.</summary>
         /// <exception cref="ArgumentException">Kimlik ya da olay türü boşsa, etki yoksa.</exception>
         public KuralTanimi(
-            string id, string neZaman, IEnumerable<Kriter> kriterler, IEnumerable<KuralEtkisi> etkiler, IEnumerable<Rol> gerekliRoller, int satir = 0)
+            string id, string neZaman, IEnumerable<Kriter> kriterler, IEnumerable<KuralEtkisi> etkiler, IEnumerable<Rol> gerekliRoller, int satir = 0, TetikSiniri? tetikSiniri = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -140,6 +144,7 @@ namespace Yanki.Core.Rules
             roller.Sort();
             GerekliRoller = new ReadOnlyCollection<Rol>(roller);
             Satir = satir;
+            TetikSiniri = tetikSiniri;
         }
     }
 
