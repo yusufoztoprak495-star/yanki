@@ -20,6 +20,11 @@ namespace Yanki.Core.Mind
         private readonly List<HafizaKaydi> _hafiza = new List<HafizaKaydi>();
         private readonly List<AktarimKaydi> _aktarimlar = new List<AktarimKaydi>();
 
+        // Kanonik metin önbellekleri (Z3, durum değildir, günlükten yeniden kurulur): null = bayat.
+        private string? _metin;
+        private string? _aktarimBlok;
+        private string? _hafizaBlok;
+
         // _hafiza konumlarının, hatırlanan OLAY kimliğine göre artan sıralı dizini. Yalnızca sorguyu hızlandırır; durum değildir, hash'e girmez.
         // Neden gerekli: HafizaVar penceresi hatırlanan olayın tick'ine göre uygulanır; _hafiza ise ekleme sırasındadır ve bu anahtara göre
         // sıralı DEĞİLDİR (kural `hafiza` etkisi bir önceki tick'in olayını sona ekler, mevcut kayıt yerinde güncellenir). Günlük olay
@@ -46,6 +51,9 @@ namespace Yanki.Core.Mind
             public Onerme Onerme { get; }
 
             public List<Kanit> Kanitlar { get; } = new List<Kanit>();
+
+            // Bu önermenin B satırları (kanonik metin önbelleği); Kanitlar değişince null yapılır.
+            public string? Blok { get; set; }
         }
 
         /// <summary>Zihnin sahibi NPC'nin kimliği.</summary>
@@ -88,6 +96,7 @@ namespace Yanki.Core.Mind
         /// <exception cref="ArgumentException">Olay başka bir NPC'ye aitse ya da yükü geçersizse.</exception>
         public bool Uygula(Olay olay)
         {
+            _metin = null;   // kanonik metin önbelleği: her olay uygulaması bayatlatır (bölüm önbellekleri ilgili yolda boşaltılır)
             if (olay == null)
             {
                 throw new ArgumentNullException(nameof(olay));
@@ -494,7 +503,47 @@ namespace Yanki.Core.Mind
         /// </summary>
         public string KanonikMetin()
         {
+            // Önbellek (7. hafta, Z3): satırlar değişmediği sürece aynı metin. Bölüm önbellekleri ilgili mutasyon yolunda (KanitEkle, AktarimEkle,
+            // HafizaEkle) boşaltılır; bütün metin Uygula'nın başında. KanonikMetinTam() önbelleksiz referanstır, testler ikisini her tick karşılaştırır.
+            if (_metin != null)
+            {
+                return _metin;
+            }
+
             var sb = new StringBuilder();
+            BaslikYaz(sb);
+            foreach (var kv in _inanclar)
+            {
+                kv.Value.Blok ??= KanitBlogu(kv.Key, kv.Value);
+                sb.Append(kv.Value.Blok);
+            }
+
+            sb.Append(_aktarimBlok ??= AktarimBlogu());
+            sb.Append(_hafizaBlok ??= HafizaBloguHizli());
+            _metin = sb.ToString();
+            return _metin;
+        }
+
+        /// <summary>
+        /// <see cref="KanonikMetin"/>'in önbelleksiz referans hesabı: her bölümü baştan üretir. Çıktı birebir aynı olmalıdır (bayat önbellek denetimi, testler).
+        /// </summary>
+        public string KanonikMetinTam()
+        {
+            var sb = new StringBuilder();
+            BaslikYaz(sb);
+            foreach (var kv in _inanclar)
+            {
+                sb.Append(KanitBlogu(kv.Key, kv.Value));
+            }
+
+            sb.Append(AktarimBlogu());
+            sb.Append(HafizaBlogu());
+            return sb.ToString();
+        }
+
+        // Z, P, E, M, D, O, S satırları (küçük bölüm; her seferinde yeniden üretilir).
+        private void BaslikYaz(StringBuilder sb)
+        {
             sb.Append("Z|").Append(Id).Append('\n');
             foreach (var ozellik in Kisilik.Ozellikler)
             {
@@ -527,27 +576,35 @@ namespace Yanki.Core.Mind
                 sb.Append("S|").Append(KanonikYazici.Sayi(_stres.Deger)).Append('|').Append(Uzun(_stres.Tick)).Append('\n');
             }
 
-            foreach (var kv in _inanclar)
+        }
+
+        // Bir önermenin B satırları (kanıtlar (tick, olay) sıralı).
+        private static string KanitBlogu(string anahtar, InancKaydi kayit)
+        {
+            var sb = new StringBuilder();
+            var kanitlar = new List<Kanit>(kayit.Kanitlar);
+            kanitlar.Sort((a, b) =>
             {
-                var kanitlar = new List<Kanit>(kv.Value.Kanitlar);
-                kanitlar.Sort((a, b) =>
+                var c = a.Tick.CompareTo(b.Tick);
+                return c != 0 ? c : a.OlayId.CompareTo(b.OlayId);
+            });
+            foreach (var k in kanitlar)
+            {
+                sb.Append("B|").Append(anahtar).Append('|').Append(KanitTurleri.Ad(k.Tur)).Append('|').Append(k.Kaynak)
+                    .Append('|').Append(Uzun(k.Tick)).Append('|').Append(KanonikYazici.Sayi(k.Guc)).Append('|').Append(Uzun(k.OlayId));
+                if (k.Kok.Length > 0)
                 {
-                    var c = a.Tick.CompareTo(b.Tick);
-                    return c != 0 ? c : a.OlayId.CompareTo(b.OlayId);
-                });
-                foreach (var k in kanitlar)
-                {
-                    sb.Append("B|").Append(kv.Key).Append('|').Append(KanitTurleri.Ad(k.Tur)).Append('|').Append(k.Kaynak)
-                        .Append('|').Append(Uzun(k.Tick)).Append('|').Append(KanonikYazici.Sayi(k.Guc)).Append('|').Append(Uzun(k.OlayId));
-                    if (k.Kok.Length > 0)
-                    {
-                        sb.Append('|').Append(k.Kok);
-                    }
-
-                    sb.Append('\n');
+                    sb.Append('|').Append(k.Kok);
                 }
-            }
 
+                sb.Append('\n');
+            }
+            return sb.ToString();
+        }
+
+        private string AktarimBlogu()
+        {
+            var sb = new StringBuilder();
             // Aktarım kayıtları yalnızca varsa yazılır: kayıt yokken kanonik metin 6. hafta öncesiyle birebir aynıdır (altın hash'ler).
             var aktarimlar = new List<AktarimKaydi>(_aktarimlar);
             aktarimlar.Sort((a, b) => a.OlayId.CompareTo(b.OlayId));
@@ -557,6 +614,25 @@ namespace Yanki.Core.Mind
                     .Append(Uzun(a.Tick)).Append('|').Append(a.Yalan ? "1" : "0").Append('\n');
             }
 
+            return sb.ToString();
+        }
+
+        // Hızlı yol: hafıza dizini zaten olay kimliğine göre sıralıdır (HafizaDizinYeri); her kaydın satırı bir kez biçimlenir. HafizaBlogu() ile birebir aynı metin.
+        private string HafizaBloguHizli()
+        {
+            var sb = new StringBuilder(_hafiza.Count * 24);
+            foreach (var konum in _hafizaOlayaGore)
+            {
+                var h = _hafiza[konum];
+                sb.Append(h.KanonikSatir ??= "H|" + Uzun(h.OlayId) + "|" + KanonikYazici.Sayi(h.Onem) + "|" + Uzun(h.Tick) + "\n");
+            }
+
+            return sb.ToString();
+        }
+
+        private string HafizaBlogu()
+        {
+            var sb = new StringBuilder();
             var hafiza = new List<HafizaKaydi>(_hafiza);
             hafiza.Sort((a, b) => a.OlayId.CompareTo(b.OlayId));
             foreach (var h in hafiza)
@@ -648,6 +724,8 @@ namespace Yanki.Core.Mind
                 _inanclar.Add(anahtar, kayit);
             }
 
+            kayit.Blok = null;   // B satırları önbelleği bayat (aşağıdaki yollardan biri Kanitlar'ı değiştirir)
+
             // Kaynak bilgisi (7. hafta, G): kökü olan duydu kanıtı (önerme, kök, kaynak) başına tek kayıttır. Aynı (kök, kaynak) tekrarında
             // güncel (sönmüş) güçle karşılaştırılır: yeni kanıt daha güçlüyse bütün alanları (Kaynak, Guc, Tick, OlayId) yeni kanıttan gelir,
             // değilse mevcut kanıt tamamen aynı kalır (zayıf bir tekrar sönümü sıfırlayamaz). Aynı kökten FARKLI kaynak ayrı kanıttır ve
@@ -698,6 +776,7 @@ namespace Yanki.Core.Mind
                 throw new ArgumentException($"Olay #{olay.Id}: \"yalan\" 0 ya da 1 olmalı: \"{yalan}\".");
             }
 
+            _aktarimBlok = null;
             _aktarimlar.Add(new AktarimKaydi(olay.Tick, kime, onerme, yalan == "1", olay.Id));
         }
 
@@ -721,6 +800,8 @@ namespace Yanki.Core.Mind
             {
                 throw new ArgumentOutOfRangeException("onem", onem, $"Olay #{olay.Id}: hafıza önemi 0..1 olmalı.");
             }
+
+            _hafizaBlok = null;   // T/H önbelleği: aşağıdaki yollar _hafiza'yı değiştirir
 
             // Aynı olay için tek kayıt: kayıt varsa önem max(eski, yeni) olur (yalnızca artarsa kayıt tazelenir), yoksa yeni kayıt açılır.
             var hatirlanan = ZihinOlaylari.Tam(olay, "olay");

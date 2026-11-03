@@ -255,6 +255,51 @@ namespace Yanki.Olcum
                 Console.WriteLine($"| NPC başına en çok önerme | {enCok} |");
             }
 
+            // Hash maliyetinin tick içindeki payı: aynı koşuyu tick tick sür ve her tick sonunda önbelleksiz tam durum hash'ini ayrıca zamanla.
+            {
+                var hizalama = Kur(npcSayisi, 42, dedikodu);
+                double tamToplam = 0;
+                var sw2 = new Stopwatch();
+                for (var i = 0; i < TickSayisi; i++)
+                {
+                    hizalama.Tick(1);
+                    sw2.Restart();
+                    var tamMetin = new StringBuilder("ZIHIN|1\n");
+                    foreach (var kimlik in hizalama.Zihinler.Kimlikler)
+                    {
+                        tamMetin.Append(hizalama.Zihinler[kimlik].KanonikMetinTam());
+                    }
+
+                    Yanki.Core.World.Hash64.Hesapla(tamMetin.ToString());
+                    sw2.Stop();
+                    tamToplam += sw2.Elapsed.TotalMilliseconds;
+                }
+
+                Console.WriteLine($"| önbelleksiz tam zihin hash'i (tick başına ortalama) | {(tamToplam / TickSayisi).ToString("F3", ic)} ms = tick süresinin %{(100.0 * (tamToplam / TickSayisi) / (ortanca / TickSayisi)).ToString("F1", ic)} |");
+            }
+
+            var hSw = Stopwatch.StartNew();
+            for (var i = 0; i < 20; i++)
+            {
+                son.DurumHash();
+            }
+
+            var tamHash = hSw.Elapsed.TotalMilliseconds / 20;
+            hSw.Restart();
+            for (var i = 0; i < 20; i++)
+            {
+                son.Dunya.DurumHash();
+            }
+
+            var dunyaHash = hSw.Elapsed.TotalMilliseconds / 20;
+            hSw.Restart();
+            for (var i = 0; i < 20; i++)
+            {
+                son.Zihinler.KanonikMetin();
+            }
+
+            var zihinHash = hSw.Elapsed.TotalMilliseconds / 20;
+            Console.WriteLine($"| durum hash (son durumda tek çağrı) | {tamHash.ToString("F3", ic)} ms (dünya {dunyaHash.ToString("F3", ic)}, zihinler {zihinHash.ToString("F3", ic)}); tick başına bir çağrı = tick süresinin %{(100.0 * tamHash / (ortanca / TickSayisi)).ToString("F1", ic)} |");
             Console.WriteLine($"| son durum hash'i | {son.DurumHash()} |");
             Console.WriteLine($"| oturum dosyası | {oturum} bayt (NPC kararları ve izler dosyaya yazılmaz) |");
             Console.WriteLine();

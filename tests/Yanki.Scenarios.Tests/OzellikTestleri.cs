@@ -126,8 +126,28 @@ namespace Yanki.Scenarios.Tests
 
         // ---- değişmezler (ortak) ----
 
+        /// <summary>Z3: önbellekli kanonik metin ve durum hash'i, önbelleksiz tam hesapla her tick birebir aynı olmalı (bayat önbellek yok).</summary>
+        private static void OnbellekTaze(Simulasyon sim)
+        {
+            var tam = new System.Text.StringBuilder();
+            foreach (var npc in sim.Zihinler.Kimlikler)
+            {
+                var z = sim.Zihinler[npc];
+                var tamMetin = z.KanonikMetinTam();
+                Assert.Equal(tamMetin, z.KanonikMetin());                                            // tick {sim.SimdikiTick}: {npc} önbellekli kanonik metin bayat olmamalı
+                Assert.Equal(tamMetin, z.KanonikMetin());                                            // ikinci çağrı (önbellekten) de aynı
+                tam.Append(tamMetin);
+            }
+
+            var beklenen = sim.Zihinler.Kimlikler.Count == 0
+                ? Yanki.Core.World.Hash64.Hex(Yanki.Core.World.Hash64.Hesapla(string.Empty))
+                : Yanki.Core.World.Hash64.Hex(Yanki.Core.World.Hash64.Hesapla("ZIHIN|1\n" + tam));
+            Assert.Equal(beklenen, sim.Zihinler.DurumHash());
+        }
+
         private static void SinirlarIcinde(Simulasyon sim)
         {
+            OnbellekTaze(sim);
             var kisiler = sim.Zihinler.Kimlikler.Concat(new[] { sim.OyuncuId }).ToArray();
             foreach (var npc in sim.Zihinler.Kimlikler)
             {
