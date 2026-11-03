@@ -44,6 +44,8 @@ namespace Yanki.Core.Simulation
     {
         private readonly KuralMotoru _kuralMotoru;
         private readonly TetikSayaclari _sayaclar;
+        private readonly ZincirDerinligi _zincir;
+        private readonly FrenAyarlari _frenAyarlari;
         private readonly EylemKatalogu _eylemKatalogu;
         private readonly IActionSelector _secici;
         private readonly AlgiAyarlari _algiAyarlari;
@@ -106,11 +108,19 @@ namespace Yanki.Core.Simulation
 
         private Simulasyon(
             SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, IActionSelector secici, ulong seed, AlgiAyarlari algi,
-            DedikoduAyarlari dedikodu, StresAyarlari stres, IReadOnlyList<KrizSatiri> krizler)
+            DedikoduAyarlari dedikodu, StresAyarlari stres, IReadOnlyList<KrizSatiri> krizler, FrenAyarlari frenAyarlari)
         {
+            _frenAyarlari = frenAyarlari;
             Senaryo = senaryo;
             _kuralMotoru = motor;
             _sayaclar = new TetikSayaclari(motor.Kurallar, katalog.Eylemler);
+            var kuralKimlikleri = new List<string>();
+            foreach (var k in motor.Kurallar)
+            {
+                kuralKimlikleri.Add(k.Id);
+            }
+
+            _zincir = new ZincirDerinligi(kuralKimlikleri);
             _eylemKatalogu = katalog;
             _secici = secici;
             Seed = seed;
@@ -132,7 +142,8 @@ namespace Yanki.Core.Simulation
         public static Simulasyon Olustur(
             SenaryoTanimi senaryo, IEnumerable<KuralTanimi> kurallar, ulong seed, ZihinAyarlari? zihinAyarlari = null, AlgiAyarlari? algiAyarlari = null,
             IEnumerable<EylemTanimi>? eylemler = null, IActionSelector? secici = null,
-            DedikoduAyarlari? dedikoduAyarlari = null, StresAyarlari? stresAyarlari = null, IEnumerable<KrizSatiri>? krizler = null)
+            DedikoduAyarlari? dedikoduAyarlari = null, StresAyarlari? stresAyarlari = null, IEnumerable<KrizSatiri>? krizler = null,
+            FrenAyarlari? frenAyarlari = null)
         {
             if (senaryo == null)
             {
@@ -148,7 +159,7 @@ namespace Yanki.Core.Simulation
             var krizListesi = KrizleriDenetle(senaryo, krizler, stres);
             KurallariDenetle(senaryo, motor, katalog, krizListesi);
             EylemleriDenetle(senaryo, katalog);
-            var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari(), dedikodu, stres, krizListesi);
+            var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari(), dedikodu, stres, krizListesi, frenAyarlari ?? new FrenAyarlari());
             sim.Kur(zihinAyarlari);
             sim.SonHash = sim.DurumHash();
             return sim;
@@ -393,6 +404,9 @@ namespace Yanki.Core.Simulation
         /// <summary>Şu anki dünya ve zihin durumunun hash'i (16 karakter onaltılık).</summary>
         public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler, _sayaclar.KanonikMetin());
 
+        /// <summary>Olayın zincir derinliği (günlükten türer; kural çıktısı 1 + nedenlerinin en büyüğü, algı eklemez, oyuncu/NPC eylemi/kriz 0).</summary>
+        public int ZincirDerinligi(long olayId) => _zincir.Derinlik(olayId);
+
         /// <summary>Cooldown/en_fazla sayaçlarının kanonik metni (durum hash'ine girer); sınırlı kural/eylem yoksa boş.</summary>
         public string SayaclarKanonikMetni => _sayaclar.KanonikMetin();
 
@@ -613,7 +627,8 @@ namespace Yanki.Core.Simulation
                 tetikler.Add(new TetikBilgisi(olay, kimler, npc => new List<long>(algi.Nedenler(kimlik, npc))));
             }
 
-            var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId, _sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc);
+            var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId,
+                new FrenBaglami(_sayaclar, Senaryo.Frenler.TickBasinaEnFazlaSonuc, _zincir, _frenAyarlari.ZincirDerinligi));
             foreach (var etki in degerlendirme.Etkiler)
             {
                 var olay = KuralMotoru.OlayYap(etki, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
@@ -1255,6 +1270,7 @@ namespace Yanki.Core.Simulation
         {
             Gunluk.Ekle(olay);
             _sayaclar.Isle(olay);
+            _zincir.Isle(olay);
             if (!Dunya.Uygula(olay))
             {
                 Zihinler.Uygula(olay);

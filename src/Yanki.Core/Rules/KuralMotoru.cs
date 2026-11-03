@@ -135,16 +135,18 @@ namespace Yanki.Core.Rules
         /// <see cref="Degerlendir"/>, ek olarak uygulanan frenleri de döndürür (7. hafta). Hâlâ saftır: ne günlüğe ne duruma yazar;
         /// fren olaylarını çağıran yazar.
         /// <para>
-        /// Cooldown ve tetiklenme sınırları için <paramref name="sayaclar"/> verilir (günlükten türetilmiş sayaçlar, okunur; adım içi artışlar
-        /// yerel bir görünümde tutulur: sıra tetikleyici → kural → NPC). <paramref name="genelSinir"/> (M) tick başına en fazla sonuç çıktısıdır;
+        /// Cooldown ve tetiklenme sınırları için <paramref name="fren"/> içinde sayaçlar verilir (günlükten türetilmiş sayaçlar, okunur; adım içi artışlar
+        /// yerel bir görünümde tutulur: sıra tetikleyici → kural → NPC). Genel sınır M (<c>fren.GenelSinir</c>) tick başına en fazla sonuç çıktısıdır;
         /// kural tetiklemesi bölünmez, sınırı aşan tetikleme düşer ve sonraki tick'e ertelenmez.
-        /// Kontrol sırası: cooldown, en_fazla, tick_siniri, genel_sinir.
+        /// Kontrol sırası: zincir (derinlik), cooldown, en_fazla, tick_siniri, genel_sinir.
         /// </para>
         /// </summary>
         public KuralDegerlendirmesi DegerlendirFrenli(
             IReadOnlyList<TetikBilgisi> tetikler, Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, string oyuncuId,
-            TetikSayaclari? sayaclar = null, int? genelSinir = null)
+            FrenBaglami? fren = null)
         {
+            var sayaclar = fren?.Sayaclar;
+            var genelSinir = fren?.GenelSinir;
             if (tetikler == null)
             {
                 throw new ArgumentNullException(nameof(tetikler));
@@ -193,6 +195,13 @@ namespace Yanki.Core.Rules
                         }
 
                         var nedenListesi = new ReadOnlyCollection<long>(new List<long>(nedenler));
+
+                        // Zincir derinliği: bu tetikleme 1 + nedenlerinin en büyük derinliğinde olay üretecek; D'yi aşıyorsa kural çalışmaz.
+                        if (fren?.Zincir != null && fren.Zincir.EnBuyuk(nedenListesi) + 1 > fren.ZincirSiniri)
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.Zincir, kural.Id, npc, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                            continue;
+                        }
 
                         // Önce etkiler denenir: tetiklendi = en az bir etki üretildi. Sınır aşılırsa deneme düşer (yazılanGercekler'e de işlemez).
                         var deneme = new List<UretilenEtki>();
