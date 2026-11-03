@@ -57,6 +57,9 @@ namespace Yanki.Core.Simulation
         /// <summary>Oyuncunun gönderebileceği eylem (olay) türleri, ordinal sıralı.</summary>
         public IReadOnlyList<string> OlayTurleri { get; }
 
+        /// <summary>Kriz tablosu dosyalarının adları (senaryo dosyasına göre göreli); boşsa kriz üretilmez, stres yine çalışır.</summary>
+        public IReadOnlyList<string> KrizDosyalari { get; }
+
         /// <summary>Kural dosyalarının adları (senaryo dosyasına göre göreli).</summary>
         public IReadOnlyList<string> KuralDosyalari { get; }
 
@@ -76,7 +79,8 @@ namespace Yanki.Core.Simulation
             IEnumerable<string> gercekler,
             IEnumerable<string> olayTurleri,
             IEnumerable<string> kuralDosyalari,
-            IEnumerable<string>? eylemDosyalari = null)
+            IEnumerable<string>? eylemDosyalari = null,
+            IEnumerable<string>? krizDosyalari = null)
         {
             Ad = ad ?? string.Empty;
             Mekanlar = new ReadOnlyCollection<string>(new List<string>(mekanlar));
@@ -92,6 +96,7 @@ namespace Yanki.Core.Simulation
             OlayTurleri = new ReadOnlyCollection<string>(t);
             KuralDosyalari = new ReadOnlyCollection<string>(new List<string>(kuralDosyalari));
             EylemDosyalari = new ReadOnlyCollection<string>(new List<string>(eylemDosyalari ?? new string[0]));
+            KrizDosyalari = new ReadOnlyCollection<string>(new List<string>(krizDosyalari ?? new string[0]));
         }
     }
 

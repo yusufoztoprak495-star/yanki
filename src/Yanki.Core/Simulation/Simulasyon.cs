@@ -316,6 +316,21 @@ namespace Yanki.Core.Simulation
             }
         }
 
+        /// <summary>NPC'nin güncel (sönmüş) stresi, 0..100.</summary>
+        /// <exception cref="ArgumentException">NPC yoksa.</exception>
+        public decimal Stres(string npc) => ZihniAl(npc).Stres(_tick);
+
+        /// <summary>NPC'nin aktarım kayıtları (kime, hangi önerme, yalan mı), eklenme sırasıyla. Yalan bilgisi NPC bilgisi değildir: yalnızca geliştirici çıktısı içindir.</summary>
+        /// <exception cref="ArgumentException">NPC yoksa.</exception>
+        public IReadOnlyList<AktarimKaydi> Aktarimlar(string npc) => ZihniAl(npc).Aktarimlar;
+
+        /// <summary>"Bunu kimden duydu?": NPC'nin desene uyan önermeler için <c>duydu</c> kanıtları (tick, önerme, kaynak, olay sırasıyla).</summary>
+        /// <exception cref="ArgumentException">NPC yoksa.</exception>
+        public IReadOnlyList<Kanit> KimdenDuydu(string npc, string desen) => ZihniAl(npc).KimdenDuydu(desen);
+
+        private Zihin ZihniAl(string npc) =>
+            npc != null && Zihinler.Var(npc) ? Zihinler[npc] : throw new ArgumentException($"\"{npc}\" bir NPC değil.", nameof(npc));
+
         /// <summary>Olayın nedensellik zinciri: ona doğrudan ya da dolaylı yol açan olaylar, Id'si azalan sırada (plan 5.8).</summary>
         /// <exception cref="ArgumentOutOfRangeException">Olay günlükte yoksa.</exception>
         public IReadOnlyList<Olay> Neden(long olayId) => Gunluk.Neden(olayId);

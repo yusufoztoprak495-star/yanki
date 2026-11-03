@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Yanki.Core.Decision;
+using Yanki.Core.Mind;
 using Yanki.Core.Rules;
 using Yanki.Core.Simulation;
 
@@ -10,7 +11,7 @@ namespace Yanki.Cli
     /// <summary>
     /// Senaryo, eylem ve kural dosyalarını diskten okuyup simülasyon kurar. Çekirdek dosya sistemine dokunmaz; bu iş CLI'dadır.
     /// Kural ve eylem dosyaları senaryonun <c>kural_dosyalari</c> ve <c>eylem_dosyalari</c> listelerindendir ve senaryo dosyasına göre göreli
-    /// çözülür. Eylem dosyaları kurallardan ÖNCE okunur: kurallar NPC eylemlerinin olay türlerini <c>ne_zaman</c> olarak kullanabilir.
+    /// çözülür. Eylem ve kriz dosyaları kurallardan ÖNCE okunur: kurallar NPC eylemlerinin ve krizlerin olay türlerini <c>ne_zaman</c> olarak kullanabilir.
     /// </summary>
     internal static class SenaryoDosyasi
     {
@@ -85,8 +86,59 @@ namespace Yanki.Cli
                 return null;
             }
 
+            var krizler = new List<KrizSatiri>();
+            var krizHatali = false;
+            foreach (var ad in senaryo.KrizDosyalari)
+            {
+                var yol = Path.Combine(klasor, ad);
+                if (!File.Exists(yol))
+                {
+                    hata.WriteLine($"{senaryoYolu}: kriz dosyası bulunamadı: {yol}");
+                    krizHatali = true;
+                    continue;
+                }
+
+                // Yedek satır denetimi dosyalar birleştikten sonra yapılır (seviye başına bir yedek, hangi dosyada olursa olsun).
+                var sonuc = KrizYukleyici.Yukle(File.ReadAllText(yol), yol, new StresAyarlari().Esikler.Count, yedekDenetle: false);
+                if (!sonuc.Basarili)
+                {
+                    krizHatali = true;
+                    foreach (var h in sonuc.Hatalar)
+                    {
+                        hata.WriteLine(h.ToString());
+                    }
+
+                    continue;
+                }
+
+                foreach (var u in sonuc.Uyarilar)
+                {
+                    hata.WriteLine("uyarı: " + u);
+                }
+
+                krizler.AddRange(sonuc.Satirlar);
+            }
+
+            if (!krizHatali && krizler.Count > 0)
+            {
+                foreach (var h in KrizYukleyici.YedekHatalari(krizler, new StresAyarlari().Esikler.Count, senaryoYolu))
+                {
+                    hata.WriteLine(h.ToString());
+                    krizHatali = true;
+                }
+            }
+
+            if (krizHatali)
+            {
+                return null;
+            }
+
             var kuralTurleri = new List<string>(senaryo.OlayTurleri);
             kuralTurleri.AddRange(katalog.OlayTurleri);
+            foreach (var k in krizler)
+            {
+                kuralTurleri.Add(k.OlayTuru);
+            }
 
             var kurallar = new List<KuralTanimi>();
             var hatali = false;
@@ -127,7 +179,7 @@ namespace Yanki.Cli
 
             try
             {
-                return Simulasyon.Olustur(senaryo, kurallar, seed, eylemler: katalog.Eylemler);
+                return Simulasyon.Olustur(senaryo, kurallar, seed, eylemler: katalog.Eylemler, krizler: krizler);
             }
             catch (ArgumentException e)
             {

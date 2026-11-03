@@ -195,7 +195,7 @@ namespace Yanki.Cli
             var yuk = new List<KeyValuePair<string, string>>();
             if (parcalar.Length == 3 && parcalar[2].Length > 0)
             {
-                foreach (var cift in parcalar[2].Split(','))
+                foreach (var cift in YukCiftleri(parcalar[2]))
                 {
                     var i = cift.IndexOf('=');
                     if (i <= 0)
@@ -208,6 +208,31 @@ namespace Yanki.Cli
             }
 
             return new PlayerAction(parcalar[0], parcalar.Length > 1 ? parcalar[1] : string.Empty, yuk);
+        }
+
+        // Yük çiftleri virgülle ayrılır, ama parantez içindeki virgüller (örn. onerme=borclu(Mehmet,Ayse,500)) ayraç değildir.
+        private static IEnumerable<string> YukCiftleri(string yuk)
+        {
+            var derinlik = 0;
+            var bas = 0;
+            for (var i = 0; i < yuk.Length; i++)
+            {
+                if (yuk[i] == '(')
+                {
+                    derinlik++;
+                }
+                else if (yuk[i] == ')')
+                {
+                    derinlik--;
+                }
+                else if (yuk[i] == ',' && derinlik == 0)
+                {
+                    yield return yuk.Substring(bas, i - bas);
+                    bas = i + 1;
+                }
+            }
+
+            yield return yuk.Substring(bas);
         }
 
         // ---- replay / query / why için ortak yükleme ----
