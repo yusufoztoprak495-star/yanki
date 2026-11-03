@@ -648,15 +648,17 @@ namespace Yanki.Core.Mind
                 _inanclar.Add(anahtar, kayit);
             }
 
-            // Yankı freni (E): aynı önerme için aynı kökten duydu kanıtı varsa yenisi EKLENMEZ. Karşılaştırma güncel (sönmüş) güçle yapılır:
-            // yeni kanıt daha güçlüyse bütün alanları (Kaynak, Guc, Tick, OlayId) yeni kanıttan gelir; değilse mevcut kanıt tamamen aynı kalır
-            // (Tick ve OlayId dahil), böylece zayıf bir tekrar güçlü kanıtın sönümünü sıfırlayamaz. Kök değişmez; alanlar iki olaydan karışmaz.
+            // Kaynak bilgisi (7. hafta, G): kökü olan duydu kanıtı (önerme, kök, kaynak) başına tek kayıttır. Aynı (kök, kaynak) tekrarında
+            // güncel (sönmüş) güçle karşılaştırılır: yeni kanıt daha güçlüyse bütün alanları (Kaynak, Guc, Tick, OlayId) yeni kanıttan gelir,
+            // değilse mevcut kanıt tamamen aynı kalır (zayıf bir tekrar sönümü sıfırlayamaz). Aynı kökten FARKLI kaynak ayrı kanıttır ve
+            // silinmez ("kimden duydu" korunur); güven hesabı aynı kökü tek sayar (Guven).
             if (tur == KanitTuru.Duydu && kok.Length > 0)
             {
                 for (var i = 0; i < kayit.Kanitlar.Count; i++)
                 {
                     var eski = kayit.Kanitlar[i];
-                    if (eski.Tur == KanitTuru.Duydu && string.Equals(EtkinKok(eski), kok, StringComparison.Ordinal))
+                    if (eski.Tur == KanitTuru.Duydu && string.Equals(EtkinKok(eski), kok, StringComparison.Ordinal)
+                        && string.Equals(eski.Kaynak, kaynak, StringComparison.Ordinal))
                     {
                         if (guc > _sonumleme.KanitGucu(eski, olay.Tick))
                         {
@@ -666,6 +668,9 @@ namespace Yanki.Core.Mind
                         return;
                     }
                 }
+
+                kayit.Kanitlar.Add(new Kanit(tur, kaynak, olay.Tick, guc, olay.Id, kok));
+                return;
             }
 
             // Aynı önerme, tür ve kaynaktan tekrar gelen kanıt yeni kanıt sayılmaz: mevcut olan tazelenir
@@ -770,12 +775,35 @@ namespace Yanki.Core.Mind
             katkilar.Add(new FikirKatkisi("eksen:" + eksen, deger * agirlik, olay, -1));
         }
 
+        // Güven (noisy-or): duydu kanıtları KÖK başına tek sayılır (kökün en güçlü güncel kanıtı); gordu ve çıkarım kanıtları tek tek.
         private decimal Guven(InancKaydi kayit, long simdikiTick)
         {
             var carpim = 1m;
+            SortedDictionary<string, decimal>? kokler = null;
             foreach (var k in kayit.Kanitlar)
             {
-                carpim *= 1m - _sonumleme.KanitGucu(k, simdikiTick);
+                var guc = _sonumleme.KanitGucu(k, simdikiTick);
+                if (k.Tur == KanitTuru.Duydu)
+                {
+                    kokler ??= new SortedDictionary<string, decimal>(StringComparer.Ordinal);
+                    var kok = EtkinKok(k);
+                    if (!kokler.TryGetValue(kok, out var onceki) || guc > onceki)
+                    {
+                        kokler[kok] = guc;
+                    }
+
+                    continue;
+                }
+
+                carpim *= 1m - guc;
+            }
+
+            if (kokler != null)
+            {
+                foreach (var kv in kokler)
+                {
+                    carpim *= 1m - kv.Value;
+                }
             }
 
             return 1m - carpim;

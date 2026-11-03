@@ -66,23 +66,31 @@ namespace Yanki.Scenarios.Tests
             Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Fail == "oyuncu" && o.Hedef == "Ayse" && o.KuralId == "player");
 
             // Can'ın Borc kanıtının kökü her seed için oyuncudur.
-            var kanit = Assert.Single(sim.Zihinler["Can"].Kanitlar(Borc));
-            Assert.Equal("oyuncu", kanit.Kok);
+            var kanitlar = sim.Zihinler["Can"].Kanitlar(Borc);
+            Assert.All(kanitlar, k => Assert.Equal("oyuncu", k.Kok));
         }
 
         [Fact]
-        public void I1_Seed_42_Canin_borc_kanitinin_son_hali_Haticenin_kanitidir()
+        public void I1_Seed_42_Canin_en_guclu_borc_kaniti_Haticenin_kanitidir_ve_Ayse_de_kaynak_olarak_korunur()
         {
             var sim = Calistir(42);
+            var can = sim.Zihinler["Can"];
 
-            // Ayşe t1'de 0.49 ile anlattı; Hatice t3'te aynı kökten 0.4886 ile anlattı. Yankı freni aynı kökten tek kanıt tutar ve
-            // güncel (sönmüş) güçle karşılaştırır: t3'te Ayşe'nin kanıtı sönmüş 0.4880 < Hatice'nin 0.4886, bu yüzden Ayşe'nin yerini Hatice alır
-            // (Kaynak, Guc, Tick, OlayId hepsi Hatice'nin olayından gelir).
-            var kanit = Assert.Single(sim.Zihinler["Can"].Kanitlar(Borc));
+            // Ayşe t1'de 0.49 ile anlattı; Hatice t3'te aynı kökten 0.4886 ile anlattı. Güncel (sönmüş) güçle t3'te Ayşe 0.4880 < Hatice 0.4886:
+            // en güçlü kanıt Hatice'nin (Kaynak, Guc, Tick, OlayId hepsi onun olayından). 7. hafta (G): Ayşe'nin kanıtı SİLİNMEZ,
+            // Can söylentiyi Ayşe'den de duyduğunu unutmaz; güven yine kök başına tek sayılır.
+            var kanit = can.EnGucluKanit(Borc, sim.SimdikiTick)!;
             Assert.Equal("Hatice", kanit.Kaynak);
             Assert.Equal(3, kanit.Tick);
             Assert.Equal(0.4886m, kanit.Guc);
             Assert.Equal("oyuncu", kanit.Kok);
+
+            var kaynaklar = sim.KimdenDuydu("Can", Borc).Select(k => k.Kaynak).ToList();
+            Assert.Contains("Ayse", kaynaklar);
+            Assert.Contains("Hatice", kaynaklar);
+            Assert.True(can.KaynakVar(Borc, "Ayse"));
+            Assert.True(can.KaynakVar(Borc, "Hatice"));
+            Assert.Equal(can.KanitGucu(kanit, sim.SimdikiTick), can.Guven(Borc, sim.SimdikiTick));   // tek kök: güven en güçlü kanıta eşit
         }
 
         [Fact]

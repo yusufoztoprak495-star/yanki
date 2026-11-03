@@ -64,6 +64,11 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - ADR-012, `docs/notes/dedikodu.md`, `docs/notes/stres.md`, `criteria-language.md` (18 fonksiyon), `authoring-guide.md` (konuşma, yalan, stres, kriz). ADR-011 ve ADR-012 "Gerekçe (Yusuf)" bölümlerini Yusuf'un görev metnindeki devriyle Claude Code yazdı; `CLAUDE.md` kuralı buna göre güncellendi, durumlar "Önerildi" kaldı. Testler: 1348 (Core) + 74 (senaryo/CLI/golden) = 1422; iki hedef derleniyor, 0 uyarı. `mini-han-1` (`cee9956ef06df17f`) ve `mini-karar-1` (`fe29a63d6dfbc307`) hash'leri değişmedi.
 - **Plandan sapmalar (ADR-012'de):** doğru anlatım da `anlatti` türünde (yalan gizliliği); kriz tespiti geçiş durumu tutmaz; yalanın kanıt çelişkisinden otomatik yakalanması yok.
 
+### 7. hafta: frenler ve sağlamlık (DEVAM EDİYOR, `hafta-07` dalı)
+- **Plan:** `docs/superpowers/plans/2026-11-04-hafta-07-frenler.md`; görev metni `docs/prompts/hafta-07.md`. Yusuf'un kararları (A–I düzeltmeleriyle, C = Seçenek 1, G = Seçenek 1, K1 = a, K2/K3 onaylı, CLI `yanki devam`, çıkış kodları 5/6, uygulama: executing-plans) plan çalışmasının başında verildi; ADR-013'e işlenecek.
+- **T1 (kaynak bilgisi, G Seçenek 1) kodda ve testte bitti, golden #3 ONAYI BEKLİYOR:** her (önerme, kök, kaynak) ayrı `duydu` kanıtı, güven kök başına en güçlü güncel kanıtla, hiçbiri silinmez. `mini-han-1` ve `mini-karar-1` hash'leri aynı. `han-gerilim-1.json` HENÜZ güncellenmedi: `690f2f4ee9d3d385` → yeni `d98b50f39fc358dd` (yalnızca `GoldenReplayTests` han-gerilim satırı kırmızı, Yusuf onaylayana kadar öyle kalacak).
+- **Devam edecek biri için:** T1 onayı gelince `replay tests/golden/han-gerilim-1.json --guncelle`, sonra plandaki T2'den (fren olayı altyapısı) devam.
+
 ## Ertelenenler (Yusuf'un işi)
 
 - [ ] **ADR-011 ve ADR-012 "Gerekçe (Yusuf)" onayı:** gerekçeleri Yusuf'un 6. hafta görev metnindeki devriyle Claude Code yazdı. Yusuf onaylayınca durumlar "Kabul edildi" yapılır (kararlar o zamana kadar da bağlayıcıdır).
