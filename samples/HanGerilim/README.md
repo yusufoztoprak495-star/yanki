@@ -64,7 +64,7 @@ Oyuncu eylem günlüğü: tick 1'de beş anlatım (Ayşe'ye `borclu(Mehmet,Ayse,
 ## Beklenen sonuç
 
 Değişmezler (testle, `tests/Yanki.Scenarios.Tests/HanGerilimTests.cs`; koşudan ÖNCE yazıldı): I1 Ayşe → Can söylentisi ve yalnızca Can'da `aileme_iftira`, `why` oyuncunun anlatımına iner; I2 Hatice tam 2 farklı yalan, 1 itiraf, sonra yalan yok, itiraf kurbanında `yalanini_yakaladim`, yalan yalnızca Hatice'de; I3 Selim 2 tehdit, 1 patlama, sonra tehdit yok; I4 Can en fazla 2 tehdit, krizden sonra tehdit yok; I5 24 tickte tam 3 kriz (`itiraf`, `patla`, `sakinles`); I6 aynı seed aynı hash.
-Seed 42 son durum hash'i `690f2f4ee9d3d385` (golden #3: `tests/golden/han-gerilim-1.json`). Seed 7 de aynı sayıları verir (2 yalan, 1 itiraf, Can 2 / Selim 2 tehdit, 1 patlama, 1 sakinleşme); yalnızca yalanların kurbanı ve hash'i (`4bf5ab4e4786f4de`) farklıdır.
+Seed 42 son durum hash'i `d98b50f39fc358dd` (7. hafta kaynak bilgisi düzeltmesinden önce `690f2f4ee9d3d385`) (golden #3: `tests/golden/han-gerilim-1.json`). Seed 7 de aynı sayıları verir (2 yalan, 1 itiraf, Can 2 / Selim 2 tehdit, 1 patlama, 1 sakinleşme); yalnızca yalanların kurbanı ve hash'i (`fb0210738ec3d335`; önceki `4bf5ab4e4786f4de`) farklıdır.
 
 ## Bilinen sınırlar
 

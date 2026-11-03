@@ -18,7 +18,7 @@ namespace Yanki.Scenarios.Tests
     {
         private const string Borc = "borclu(Mehmet,Ayse,500)";
 
-        internal static Simulasyon Calistir(ulong seed = 42)
+        internal static Simulasyon Calistir(ulong seed = 42, System.Action<Simulasyon>? herTickSonunda = null)
         {
             var yol = Path.Combine(RepoKoku(), "samples", "HanGerilim", "scenario.json");
             var hata = new StringWriter();
@@ -29,10 +29,18 @@ namespace Yanki.Scenarios.Tests
             Anlat(sim, "Hatice", Borc);
             Anlat(sim, "Hatice", "borclu(Selim,Hatice,200)");
             Anlat(sim, "Hatice", "sir_sakliyor(Hatice,Mehmet)");
-            sim!.Tick(9);
-            sim.Submit(new PlayerAction("hakaret_et", "Selim"));
-            sim.Tick(15);
-            Assert.Equal(24, sim.SimdikiTick);
+            for (var t = 1; t <= 24; t++)
+            {
+                if (t == 10)
+                {
+                    sim!.Submit(new PlayerAction("hakaret_et", "Selim"));   // tick 9 sonunda gönderilir, tick 10'da işlenir
+                }
+
+                sim!.Tick(1);
+                herTickSonunda?.Invoke(sim);
+            }
+
+            Assert.Equal(24, sim!.SimdikiTick);
             return sim;
         }
 
@@ -100,6 +108,73 @@ namespace Yanki.Scenarios.Tests
 
             var etkilenenler = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.Deger("tur") == "aileme_iftira").Select(o => o.Deger("npc")).Distinct().ToArray();
             Assert.Equal(new[] { "Can" }, etkilenenler);
+        }
+
+        // ---- 7. hafta (G): kaynak bilgisi değişmezi ve hash'ler ----
+
+        /// <summary>
+        /// Kalıcı değişmez: her tick'te her NPC'nin her önermesi için güven, bağımsız yazılmış şu formüle eşittir:
+        /// 1 − Π(gordu/çıkarım kanıtlarının 1−güç) × Π(her duydu KÖKÜNÜN en güçlü güncel kanıtının 1−gücü).
+        /// Aynı kök iki kez sayılırsa (çift sayım) bu eşitlik bozulur.
+        /// </summary>
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void Guven_her_kokun_en_guclu_guncel_kanitinin_noisy_or_birlesimidir(ulong seed)
+        {
+            var kontrolEdilen = 0;
+            var ayniKokluCok = 0;
+            Calistir(seed, sim =>
+            {
+                foreach (var npc in sim.Zihinler.Kimlikler)
+                {
+                    var z = sim.Zihinler[npc];
+                    foreach (var onerme in z.Onermeler)
+                    {
+                        var carpim = 1m;
+                        var kokler = new SortedDictionary<string, decimal>(System.StringComparer.Ordinal);
+                        var duydu = 0;
+                        foreach (var k in z.Kanitlar(onerme))
+                        {
+                            var guc = z.KanitGucu(k, sim.SimdikiTick);
+                            if (k.Tur == Yanki.Core.Mind.KanitTuru.Duydu)
+                            {
+                                duydu++;
+                                var kok = z.EtkinKok(k);
+                                kokler[kok] = kokler.TryGetValue(kok, out var onceki) && onceki > guc ? onceki : guc;
+                            }
+                            else
+                            {
+                                carpim *= 1m - guc;
+                            }
+                        }
+
+                        foreach (var kv in kokler)
+                        {
+                            carpim *= 1m - kv.Value;
+                        }
+
+                        Assert.True(
+                            1m - carpim == z.Guven(onerme, sim.SimdikiTick),
+                            $"tick {sim.SimdikiTick} {npc} {onerme}: beklenen {1m - carpim}, gerçek {z.Guven(onerme, sim.SimdikiTick)}");
+                        kontrolEdilen++;
+                        if (duydu > kokler.Count)
+                        {
+                            ayniKokluCok++;
+                        }
+                    }
+                }
+            });
+
+            Assert.True(kontrolEdilen > 500, "değişmez yeterince önermede denetlenmedi");
+            Assert.True(ayniKokluCok > 0, "aynı kökten birden çok kaynaklı önerme yok: test anlamsız kalır");
+        }
+
+        [Fact]
+        public void Seed_42_ve_seed_7_son_hashleri_kilitli()
+        {
+            Assert.Equal("d98b50f39fc358dd", Calistir(42).SonHash);
+            Assert.Equal("fb0210738ec3d335", Calistir(7).SonHash);
         }
 
         // ---- I2: Hatice yalan → stres → itiraf ----

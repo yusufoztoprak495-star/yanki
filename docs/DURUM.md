@@ -66,8 +66,8 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 ### 7. hafta: frenler ve sağlamlık (DEVAM EDİYOR, `hafta-07` dalı)
 - **Plan:** `docs/superpowers/plans/2026-11-04-hafta-07-frenler.md`; görev metni `docs/prompts/hafta-07.md`. Yusuf'un kararları (A–I düzeltmeleriyle, C = Seçenek 1, G = Seçenek 1, K1 = a, K2/K3 onaylı, CLI `yanki devam`, çıkış kodları 5/6, uygulama: executing-plans) plan çalışmasının başında verildi; ADR-013'e işlenecek.
-- **T1 (kaynak bilgisi, G Seçenek 1) kodda ve testte bitti, golden #3 ONAYI BEKLİYOR:** her (önerme, kök, kaynak) ayrı `duydu` kanıtı, güven kök başına en güçlü güncel kanıtla, hiçbiri silinmez. `mini-han-1` ve `mini-karar-1` hash'leri aynı. `han-gerilim-1.json` HENÜZ güncellenmedi: `690f2f4ee9d3d385` → yeni `d98b50f39fc358dd` (yalnızca `GoldenReplayTests` han-gerilim satırı kırmızı, Yusuf onaylayana kadar öyle kalacak).
-- **Devam edecek biri için:** T1 onayı gelince `replay tests/golden/han-gerilim-1.json --guncelle`, sonra plandaki T2'den (fren olayı altyapısı) devam.
+- **T1 (kaynak bilgisi, G Seçenek 1) BİTTİ:** her (önerme, kök, kaynak) ayrı `duydu` kanıtı, güven kök başına en güçlü güncel kanıtla, hiçbiri silinmez. Yusuf koşullu onayladı; koşullar doğrulandı: ilk ayrışan olay #253 (tick 4, Ayşe'nin kararı: Hatice'den duyduğu borç kanıtı artık kaynak olarak duruyor, geri anlatmama Hatice adayını havuzdan düşürüyor), güven eşitliği kalıcı değişmez (`HanGerilimTests`, her tick/NPC/önerme, seed 42+7), `inanilan` dönüşleri yalnızca Hatice'nin yalanının kurbanı değiştiği için (Ayşe/Can `borclu(Selim,Hatice,200)`), çift sayım yok. Ayrıntı `docs/notes/dedikodu.md`. `han-gerilim-1` `690f2f4ee9d3d385` → **`d98b50f39fc358dd`** (güncellendi), seed 7 `4bf5ab4e4786f4de` → `fb0210738ec3d335` (testle kilitli). `mini-han-1` ve `mini-karar-1` değişmedi.
+- **Devam edecek biri için:** plandaki T2'den (fren olayı altyapısı) devam; ledger `.superpowers/sdd/` altında (git dışı).
 
 ## Ertelenenler (Yusuf'un işi)
 
