@@ -45,7 +45,7 @@ namespace Yanki.Core.Criteria
     }
 
     /// <summary>
-    /// Kriter dilinin sabit sorgu fonksiyonu sözlüğü (v0.1, 16 fonksiyon). Kaynak: <c>docs/criteria-language.md</c>;
+    /// Kriter dilinin sabit sorgu fonksiyonu sözlüğü (v0.1, 18 fonksiyon). Kaynak: <c>docs/criteria-language.md</c>;
     /// sözlük Yusuf'un tasarım alanıdır, değişiklik onun onayıyla yapılır.
     /// </summary>
     public static class SorguSozlugu
@@ -63,7 +63,9 @@ namespace Yanki.Core.Criteria
             new FonksiyonTanimi("inanc", 1, DonusTuru.Sayi, 0),
             new FonksiyonTanimi("kaynak", 2, DonusTuru.Mantiksal, 0),
             new FonksiyonTanimi("kisilik", 1, DonusTuru.Sayi),
+            new FonksiyonTanimi("konu_puani", 1, DonusTuru.Sayi),
             new FonksiyonTanimi("modifier_var", 2, DonusTuru.Mantiksal),
+            new FonksiyonTanimi("olay_konusu", 1, DonusTuru.Mantiksal, 0),
             new FonksiyonTanimi("olay_rolu", 1, DonusTuru.Mantiksal),
             new FonksiyonTanimi("stres", 0, DonusTuru.Sayi),
             new FonksiyonTanimi("yalan_soyledi", 1, DonusTuru.Mantiksal),
@@ -144,9 +146,9 @@ namespace Yanki.Core.Criteria
                     if (string.Equals(icerik.Ad, "degil", StringComparison.Ordinal) && !icerik.TekDegerli)
                     {
                         // Olumsuz önerme yalnızca zihin sorgularında (inanc, kaynak): degil(yuklem(...)) tek bir önermeyi sarar.
-                        if (tanim.Ad != "inanc" && tanim.Ad != "kaynak")
+                        if (tanim.Ad != "inanc" && tanim.Ad != "kaynak" && tanim.Ad != "olay_konusu")
                         {
-                            throw new KriterHatasi($"'degil(...)' yalnızca 'inanc' ve 'kaynak' içinde kullanılabilir, '{tanim.Ad}' içinde değil", icerik.Konum);
+                            throw new KriterHatasi($"'degil(...)' yalnızca 'inanc', 'kaynak' ve 'olay_konusu' içinde kullanılabilir, '{tanim.Ad}' içinde değil", icerik.Konum);
                         }
 
                         if (icerik.Argumanlar.Count != 1 || !(icerik.Argumanlar[0] is OnermeArgumani sarilan))

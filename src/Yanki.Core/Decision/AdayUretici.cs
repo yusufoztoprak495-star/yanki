@@ -50,7 +50,22 @@ namespace Yanki.Core.Decision
                     var neden = OnKosulSonucu(eylem, hedef, baglam, onbellek);
                     if (neden == null)
                     {
-                        adaylar.Add(new Aday(eylem, hedef));
+                        if (!eylem.Konusma)
+                        {
+                            adaylar.Add(new Aday(eylem, hedef));
+                            continue;
+                        }
+
+                        // Konuşma eylemi: anlatılacak konu (ya da yalan) yoksa aday elenir; neden izde görünür.
+                        var konu = KonuSec(eylem, hedef, baglam);
+                        if (konu.Konular.Count == 0)
+                        {
+                            elenenler.Add(new ElenenAday(eylem, hedef, KonuYokNedeni(konu)));
+                        }
+                        else
+                        {
+                            adaylar.Add(new Aday(eylem, hedef, konu));
+                        }
                     }
                     else
                     {
@@ -62,10 +77,35 @@ namespace Yanki.Core.Decision
             return new AdayUretimi(adaylar, elenenler);
         }
 
+        private static KonuSecimi KonuSec(EylemTanimi eylem, string hedef, KararBaglami baglam)
+        {
+            var hesap = baglam.KonuHesabi
+                ?? throw new InvalidOperationException($"Eylem \"{eylem.Id}\" konuşma eylemi: karar bağlamında KonuHesabi gerekli.");
+            return eylem.Aktarim == AktarimTuru.Dogru
+                ? hesap.Dogru(baglam.Npc, hedef, eylem.KonuDesenleri)
+                : hesap.Yalan(baglam.Npc, hedef, eylem.YalanOnermeleriniAc(baglam.Npc, hedef), baglam.Seed);
+        }
+
+        private static string KonuYokNedeni(KonuSecimi konu)
+        {
+            if (konu.Elenenler.Count == 0)
+            {
+                return "konu yok";
+            }
+
+            var parcalar = new List<string>(konu.Elenenler.Count);
+            foreach (var e in konu.Elenenler)
+            {
+                parcalar.Add(e.Onerme + ": " + e.Neden);
+            }
+
+            return "konu yok (" + string.Join("; ", parcalar) + ")";
+        }
+
         // İlk tutmayan ön koşulun nedeni; hepsi tutuyorsa null.
         private static string? OnKosulSonucu(EylemTanimi eylem, string hedef, KararBaglami baglam, OnKosulOnbellegi onbellek)
         {
-            var sorguBaglami = baglam.SorguBaglami(hedef);
+            var sorguBaglami = baglam.SorguBaglami(hedef, eylem);
             for (var i = 0; i < eylem.OnKosullar.Count; i++)
             {
                 var kriter = eylem.OnKosullar[i];

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Yanki.Core.Criteria;
+using Yanki.Core.Mind;
 using Yanki.Core.Rules;
 
 namespace Yanki.Core.Decision
@@ -58,6 +59,37 @@ namespace Yanki.Core.Decision
         }
     }
 
+    /// <summary>Eylemin aktarım (dedikodu) türü. <c>dogru</c>: konuşanın inandığı konuları anlatır; <c>yalan</c>: inandığıyla çelişen bir önerme söyler.</summary>
+    public enum AktarimTuru
+    {
+        /// <summary>Konuşma eylemi değil.</summary>
+        Yok,
+
+        /// <summary>Doğru anlatım.</summary>
+        Dogru,
+
+        /// <summary>Yalan.</summary>
+        Yalan,
+    }
+
+    /// <summary><see cref="AktarimTuru"/> ile JSON adları arasında çeviri.</summary>
+    public static class AktarimTurleri
+    {
+        /// <summary>Geçerli adlar.</summary>
+        public const string GecerliAdlar = "dogru, yalan";
+
+        /// <summary>Adı türe çevirir; bilinmiyorsa <c>false</c>.</summary>
+        public static bool TryCoz(string ad, out AktarimTuru tur)
+        {
+            switch (ad)
+            {
+                case "dogru": tur = AktarimTuru.Dogru; return true;
+                case "yalan": tur = AktarimTuru.Yalan; return true;
+                default: tur = AktarimTuru.Yok; return false;
+            }
+        }
+    }
+
     /// <summary>
     /// Çekirdeğe ait özel olay türü adları. <c>ayrildi</c> ve <c>geldi</c> hareketin iki dış olayıdır, <c>karar_verildi</c> karar izini
     /// taşır, <c>hareket</c> oyuncunun hareket eylemidir (ADR-011). Senaryo ve eylemler bu adları yeniden tanımlayamaz.
@@ -76,10 +108,19 @@ namespace Yanki.Core.Decision
         /// <summary>Oyuncunun hareket eylemi türü (<c>PlayerAction.Tur</c>).</summary>
         public const string OyuncuHareketi = "hareket";
 
+        /// <summary>
+        /// Anlatım olayı: doğru anlatım da yalan da dışarıdan bu türle çıkar (yalan gizliliği, ADR-012). Yük: <c>onerme</c>, <c>kok</c>,
+        /// <c>gorunurluk</c>. Yalnızca <c>aktarim</c> alanı olan eylemler ve oyuncu anlatımı bu türü üretir.
+        /// </summary>
+        public const string Anlatti = "anlatti";
+
+        /// <summary>Konuşanın zihnindeki aktarım kaydı olayı (algılanmaz, kural tetiklemez).</summary>
+        public const string AktarimKaydi = Mind.ZihinOlaylari.AktarimKaydedildiTuru;
+
         /// <summary>Ad çekirdeğe ayrılmış mı (dünya/zihin olayları dahil).</summary>
         public static bool AyrilmisMi(string tur)
         {
-            if (tur == Ayrildi || tur == Geldi || tur == KararVerildi || tur == OyuncuHareketi)
+            if (tur == Ayrildi || tur == Geldi || tur == KararVerildi || tur == OyuncuHareketi || tur == Anlatti || tur == AktarimKaydi)
             {
                 return true;
             }
@@ -167,8 +208,65 @@ namespace Yanki.Core.Decision
         /// <summary>Ruh hali çarpanı tanımı; yoksa <c>null</c>.</summary>
         public RuhHaliCarpaniTanimi? RuhHaliCarpani { get; }
 
-        /// <summary>Eylemin çeliştiği kişilik özellikleri, ordinal sıralı. 5. hafta: yalnızca okunur ve izde görünür, stres yazılmaz.</summary>
+        /// <summary>Eylemin çeliştiği kişilik özellikleri, ordinal sıralı. Seçilince <c>stres += StresTabani × Σ(özellik değeri)</c> (6. hafta).</summary>
         public IReadOnlyList<string> CelisenOzellikler { get; }
+
+        /// <summary>Aktarım (dedikodu) türü; konuşma eylemi değilse <see cref="AktarimTuru.Yok"/>.</summary>
+        public AktarimTuru Aktarim { get; }
+
+        /// <summary><c>dogru</c> aktarımın konu havuzu: anlatılabilecek önerme desenleri (yüklem açık yazılır, joker yüklem yok).</summary>
+        public IReadOnlyList<OnermeDeseni> KonuDesenleri { get; }
+
+        /// <summary><c>yalan</c> aktarımın yazar şablonları (<c>{eylem.hedef}</c> ve <c>{ben}</c> desteklenir).</summary>
+        public IReadOnlyList<string> YalanOnermeleri { get; }
+
+        /// <summary>Aktarım olayının görünürlüğü: <c>sessiz</c> (varsayılan) ya da <c>acik</c>; aktarım değilse boş.</summary>
+        public string Gorunurluk { get; }
+
+        /// <summary>Stres tabanı (0..100); yoksa <c>null</c>. <see cref="CelisenOzellikler"/> varsa zorunludur.</summary>
+        public decimal? StresTabani { get; }
+
+        /// <summary>
+        /// Bu eylem seçilince konuşanın stresine eklenecek miktar: <c>StresTabani × Σ(çelişen özelliklerin kişilik değeri)</c>, 6 ondalığa yuvarlanmış.
+        /// Çelişen özellik ya da taban yoksa 0.
+        /// </summary>
+        public decimal StresArtisi(Kisilik kisilik)
+        {
+            if (kisilik == null)
+            {
+                throw new ArgumentNullException(nameof(kisilik));
+            }
+
+            if (StresTabani == null || CelisenOzellikler.Count == 0)
+            {
+                return 0m;
+            }
+
+            var toplam = 0m;
+            foreach (var ozellik in CelisenOzellikler)
+            {
+                toplam += kisilik.Deger(ozellik);
+            }
+
+            return Math.Round(StresTabani.Value * toplam, 6, MidpointRounding.ToEven);
+        }
+
+        /// <summary>Konuşma eylemi mi.</summary>
+        public bool Konusma => Aktarim != AktarimTuru.Yok;
+
+        /// <summary>
+        /// Yalan şablonlarını bu konuşan ve dinleyen için açar: <c>{ben}</c> konuşan, <c>{eylem.hedef}</c> dinleyen.
+        /// </summary>
+        public IReadOnlyList<string> YalanOnermeleriniAc(string konusan, string dinleyen)
+        {
+            var sonuc = new List<string>(YalanOnermeleri.Count);
+            foreach (var sablon in YalanOnermeleri)
+            {
+                sonuc.Add(sablon.Replace("{ben}", konusan).Replace("{eylem.hedef}", dinleyen));
+            }
+
+            return sonuc;
+        }
 
         /// <summary>Eylemin etkileri (kural etkisi biçimi); seçilen eylem için 6. adımda uygulanır.</summary>
         public IReadOnlyList<KuralEtkisi> Etkiler { get; }
@@ -199,7 +297,12 @@ namespace Yanki.Core.Decision
             RuhHaliCarpaniTanimi? ruhHaliCarpani,
             IEnumerable<string> celisenOzellikler,
             IEnumerable<KuralEtkisi> etkiler,
-            int satir = 0)
+            int satir = 0,
+            AktarimTuru aktarim = AktarimTuru.Yok,
+            IEnumerable<OnermeDeseni>? konuDesenleri = null,
+            IEnumerable<string>? yalanOnermeleri = null,
+            string gorunurluk = "",
+            decimal? stresTabani = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -226,7 +329,7 @@ namespace Yanki.Core.Decision
                     throw new ArgumentException("Eylemin olay türü boş olamaz.", nameof(olayTuru));
                 }
 
-                if (etkiListesi.Count == 0)
+                if (etkiListesi.Count == 0 && aktarim == AktarimTuru.Yok)
                 {
                     throw new ArgumentException("Eylemin en az bir etkisi olmalı.", nameof(etkiler));
                 }
@@ -237,6 +340,30 @@ namespace Yanki.Core.Decision
                 throw new ArgumentException("Fikir çarpanı yalnızca npc/oyuncu hedefli eylemde tanımlanabilir.", nameof(fikirCarpani));
             }
 
+            if (aktarim != AktarimTuru.Yok && hedef != EylemHedefTuru.Npc && hedef != EylemHedefTuru.Oyuncu)
+            {
+                throw new ArgumentException("Aktarım eyleminin hedefi npc ya da oyuncu olmalı.", nameof(hedef));
+            }
+
+            if (aktarim != AktarimTuru.Yok && olayTuru != YerlesikTurler.Anlatti)
+            {
+                throw new ArgumentException("Aktarım eyleminin olay türü anlatti olmalı.", nameof(olayTuru));
+            }
+
+            var desenler = new List<OnermeDeseni>(konuDesenleri ?? new OnermeDeseni[0]);
+            var yalanlar = new List<string>(yalanOnermeleri ?? new string[0]);
+            if ((aktarim == AktarimTuru.Dogru && (desenler.Count == 0 || yalanlar.Count > 0))
+                || (aktarim == AktarimTuru.Yalan && (yalanlar.Count == 0 || desenler.Count > 0))
+                || (aktarim == AktarimTuru.Yok && (desenler.Count > 0 || yalanlar.Count > 0 || !string.IsNullOrEmpty(gorunurluk))))
+            {
+                throw new ArgumentException("Konu desenleri/yalan önermeleri/görünürlük aktarım türüyle tutarsız.", nameof(aktarim));
+            }
+
+            Aktarim = aktarim;
+            KonuDesenleri = new ReadOnlyCollection<OnermeDeseni>(desenler);
+            YalanOnermeleri = new ReadOnlyCollection<string>(yalanlar);
+            Gorunurluk = aktarim == AktarimTuru.Yok ? string.Empty : (string.IsNullOrEmpty(gorunurluk) ? "sessiz" : gorunurluk);
+            StresTabani = stresTabani;
             Id = id;
             OlayTuru = olayTuru ?? string.Empty;
             Hedef = hedef;

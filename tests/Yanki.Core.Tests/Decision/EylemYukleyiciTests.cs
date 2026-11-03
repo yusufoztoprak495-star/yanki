@@ -26,7 +26,7 @@ namespace Yanki.Core.Tests.Decision
       ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""merhamet"", ""agirlik"": 2 }, { ""ozellik"": ""acgozluluk"", ""ters"": true } ] },
       ""fikir_carpani"": { ""yon"": ""artan"" },
       ""ruh_hali_carpani"": { ""duygular"": [ { ""duygu"": ""korku"", ""ters"": true } ] },
-      ""celisen_ozellikler"": [ ""acgozluluk"" ],
+      ""celisen_ozellikler"": [ ""acgozluluk"" ], ""stres_tabani"": 10,
       ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.6 } ]
     },
     {
@@ -314,9 +314,12 @@ namespace Yanki.Core.Tests.Decision
 
         [Theory]
         [InlineData("yay(gerginlik)", "<", "5", "yay")]
-        [InlineData("yalan_soyledi(eylem.hedef)", "==", "true", "yalan_soyledi")]
         public void Bagli_olmayan_fonksiyonlar_acik_mesajla_reddedilir(string alan, string op, string deger, string ad) =>
             HataVar(Kosul(alan, op, deger), $"'{ad}' fonksiyonu henüz bağlı değil");
+
+        [Fact]
+        public void Yalan_soyledi_eylem_on_kosulunda_gecerlidir() =>
+            Gecer(Kosul("yalan_soyledi(eylem.hedef)", "==", "false"));
 
         [Fact]
         public void Hedefsiz_eylemde_eylem_hedef_reddedilir() =>

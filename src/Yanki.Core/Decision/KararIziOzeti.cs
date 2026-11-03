@@ -108,6 +108,12 @@ namespace Yanki.Core.Decision
                 {
                     satirlar.Add("  çelişen özellikler: " + string.Join(", ", celisen));
                 }
+
+                var stres = secilen.Al("stres_artisi");
+                if (stres != null)
+                {
+                    satirlar.Add("  stres artışı: +" + Say(stres));
+                }
             }
 
             var kaynaklar = new List<string>();
@@ -168,6 +174,12 @@ namespace Yanki.Core.Decision
                 if (celisen.Count > 0)
                 {
                     satirlar.Add("  çelişen özellikler: " + string.Join(", ", celisen));
+                }
+
+                var stres = secilen.Al("stres_artisi");
+                if (stres != null)
+                {
+                    satirlar.Add("  stres artışı: +" + Say(stres));
                 }
             }
 
@@ -233,6 +245,18 @@ namespace Yanki.Core.Decision
             if (Al(a, "havuz").MantiksalDeger)
             {
                 sb.Append(", havuzda");
+            }
+
+            var konuPuani = a.Al("konu_puani");
+            if (konuPuani != null)
+            {
+                var konular = new List<string>();
+                foreach (var k in Al(a, "konular").Elemanlar)
+                {
+                    konular.Add(Al(k, "onerme").MetinDeger + " (" + Say(Al(k, "puan")) + ")");
+                }
+
+                sb.Append("; konu puanı ").Append(Say(konuPuani)).Append(konular.Count > 0 ? ": " + string.Join(", ", konular) : string.Empty);
             }
 
             return sb.ToString();

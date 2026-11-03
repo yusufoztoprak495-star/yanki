@@ -138,7 +138,8 @@ namespace Yanki.Core.Decision
                 secilenAday,
                 secilenAday != null ? secilenAday.Eylem.CelisenOzellikler : new string[0],
                 kaynak.Olaylar,
-                kaynak.Kaynaksiz);
+                kaynak.Kaynaksiz,
+                secilenAday != null ? secilenAday.Eylem.StresArtisi(baglam.Zihin.Kisilik) : 0m);
             return new SecimSonucu(secilenAday, iz);
         }
     }

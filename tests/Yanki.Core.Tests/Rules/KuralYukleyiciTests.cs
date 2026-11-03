@@ -181,7 +181,6 @@ namespace Yanki.Core.Tests.Rules
 
         [Theory]
         [InlineData("{ \"alan\": \"fikir(konusan)\", \"op\": \"<\", \"deger\": 1 }", "konusan")]
-        [InlineData("{ \"alan\": \"yalan_soyledi(olay.fail)\", \"op\": \"==\", \"deger\": true }", "yalan_soyledi")]
         [InlineData("{ \"alan\": \"yay(gerginlik)\", \"op\": \">\", \"deger\": 1 }", "yay")]
         public void Kural_baglaminda_cozulemeyen_kriterler_reddedilir(string kriter, string parca)
         {

@@ -95,7 +95,7 @@ namespace Yanki.Core.Decision
             }
 
             var eylem = aday.Eylem;
-            var sorguBaglami = baglam.SorguBaglami(aday.Hedef);
+            var sorguBaglami = baglam.SorguBaglami(aday.Hedef, aday.Eylem);
 
             var katkilar = new List<OlcutKatkisi>(eylem.Olcutler.Count);
             var carpim = 1m;

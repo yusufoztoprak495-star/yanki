@@ -15,14 +15,21 @@ namespace Yanki.Core.Decision
         /// <summary>Hedef varlık/mekan kimliği; hedefsiz eylemde boş.</summary>
         public string Hedef { get; }
 
+        /// <summary>
+        /// Konuşma eyleminde aday aşamasında bir kez hesaplanan konu seçimi (karar ve aktarım aynı sonucu kullanır); diğer eylemlerde <c>null</c>.
+        /// Adayın kimliğini (<see cref="Anahtar"/>) etkilemez.
+        /// </summary>
+        public KonuSecimi? Konu { get; }
+
         /// <summary><c>eylem|hedef</c>: aday kimliği ve ordinal sıralama anahtarı.</summary>
         public string Anahtar => Eylem.Id + "|" + Hedef;
 
         /// <summary>Aday kurar.</summary>
-        public Aday(EylemTanimi eylem, string hedef)
+        public Aday(EylemTanimi eylem, string hedef, KonuSecimi? konu = null)
         {
             Eylem = eylem ?? throw new ArgumentNullException(nameof(eylem));
             Hedef = hedef ?? string.Empty;
+            Konu = konu;
         }
     }
 

@@ -24,11 +24,17 @@ namespace Yanki.Core.Mind
         /// <summary>Yük: <c>npc</c>, <c>delta</c> (sönmüş güncel stresin üzerine eklenir, sonuç 0..100'e kırpılır).</summary>
         public const string StresDegistiTuru = "stres_degisti";
 
-        /// <summary>Yük: <c>npc</c>, <c>onerme</c>, <c>tur</c> (gordu|duydu|cikarim), <c>kaynak</c>, <c>guc</c> (0..1).</summary>
+        /// <summary>Yük: <c>npc</c>, <c>onerme</c>, <c>tur</c> (gordu|duydu|cikarim), <c>kaynak</c>, <c>guc</c> (0..1), isteğe bağlı <c>kok</c> (<c>duydu</c> için söylentinin ilk anlatanı; boşsa yazılmaz).</summary>
         public const string KanitEklendiTuru = "kanit_eklendi";
 
         /// <summary>Yük: <c>npc</c>, <c>olay</c> (hatırlanan olayın kimliği), <c>onem</c> (0..1).</summary>
         public const string HafizaEklendiTuru = "hafiza_eklendi";
+
+        /// <summary>
+        /// Yük: <c>npc</c> (konuşan), <c>kime</c>, <c>onerme</c>, <c>yalan</c> (0|1). Yalnızca konuşanın zihnine yazılır; algılanmaz ve kural
+        /// tetiklemez (6. hafta, ADR-012). Yalan bilgisi dışarıdaki <c>anlatti</c> olayında değil, yalnızca burada bulunur.
+        /// </summary>
+        public const string AktarimKaydedildiTuru = "aktarim_kaydedildi";
 
         /// <summary>Tür bir zihin olayı mı.</summary>
         public static bool ZihinOlayiMi(string tur)
@@ -41,6 +47,7 @@ namespace Yanki.Core.Mind
                 case StresDegistiTuru:
                 case KanitEklendiTuru:
                 case HafizaEklendiTuru:
+                case AktarimKaydedildiTuru:
                     return true;
                 default:
                     return false;
@@ -78,9 +85,19 @@ namespace Yanki.Core.Mind
         /// <summary><c>kanit_eklendi</c> olayı kurar.</summary>
         public static Olay KanitEklendi(
             long id, long tick, int sira, string npc, string onerme, string tur, string kaynak, decimal guc,
+            IEnumerable<long> nedenOlaylar, string kuralId, string mekan = "", string kok = "") =>
+            kok.Length == 0
+                ? Yap(id, tick, sira, KanitEklendiTuru, nedenOlaylar, kuralId, mekan,
+                    Y("npc", npc), Y("onerme", onerme), Y("tur", tur), Y("kaynak", kaynak), Y("guc", KanonikYazici.Sayi(guc)))
+                : Yap(id, tick, sira, KanitEklendiTuru, nedenOlaylar, kuralId, mekan,
+                    Y("npc", npc), Y("onerme", onerme), Y("tur", tur), Y("kaynak", kaynak), Y("guc", KanonikYazici.Sayi(guc)), Y("kok", kok));
+
+        /// <summary><c>aktarim_kaydedildi</c> olayı kurar.</summary>
+        public static Olay AktarimKaydedildi(
+            long id, long tick, int sira, string npc, string kime, string onerme, bool yalan,
             IEnumerable<long> nedenOlaylar, string kuralId, string mekan = "") =>
-            Yap(id, tick, sira, KanitEklendiTuru, nedenOlaylar, kuralId, mekan,
-                Y("npc", npc), Y("onerme", onerme), Y("tur", tur), Y("kaynak", kaynak), Y("guc", KanonikYazici.Sayi(guc)));
+            Yap(id, tick, sira, AktarimKaydedildiTuru, nedenOlaylar, kuralId, mekan,
+                Y("npc", npc), Y("kime", kime), Y("onerme", onerme), Y("yalan", yalan ? "1" : "0"));
 
         /// <summary><c>hafiza_eklendi</c> olayı kurar.</summary>
         public static Olay HafizaEklendi(

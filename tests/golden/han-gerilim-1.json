@@ -1,0 +1,54 @@
+{
+  "surum": 1,
+  "seed": 42,
+  "senaryo": "../../samples/HanGerilim/scenario.json",
+  "tick_sayisi": 24,
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "borclu(Mehmet,Ayse,500)"
+      }
+    },
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "kardes(Mehmet,Can)"
+      }
+    },
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Hatice",
+      "yuk": {
+        "onerme": "borclu(Mehmet,Ayse,500)"
+      }
+    },
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Hatice",
+      "yuk": {
+        "onerme": "borclu(Selim,Hatice,200)"
+      }
+    },
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Hatice",
+      "yuk": {
+        "onerme": "sir_sakliyor(Hatice,Mehmet)"
+      }
+    },
+    {
+      "tick": 10,
+      "tur": "hakaret_et",
+      "hedef": "Selim"
+    }
+  ],
+  "son_hash": "690f2f4ee9d3d385"
+}

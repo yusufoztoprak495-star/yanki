@@ -136,9 +136,13 @@ namespace Yanki.Core.Mind
         /// <summary>Kanıtı ekleyen (<c>kanit_eklendi</c>) olayın kimliği.</summary>
         public long OlayId { get; }
 
+        /// <summary>Söylentinin kökü (ilk anlatan); <c>gordu</c> ve eski kayıtlar için boş. Gerçek kök için <c>Zihin.EtkinKok</c>.</summary>
+        public string Kok { get; }
+
         /// <summary>Yeni kanıt.</summary>
-        public Kanit(KanitTuru tur, string kaynak, long tick, decimal guc, long olayId)
+        public Kanit(KanitTuru tur, string kaynak, long tick, decimal guc, long olayId, string kok = "")
         {
+            Kok = kok ?? string.Empty;
             Tur = tur;
             Kaynak = kaynak ?? throw new ArgumentNullException(nameof(kaynak));
             Tick = tick;
@@ -165,6 +169,38 @@ namespace Yanki.Core.Mind
             OlayId = olayId;
             Onem = onem;
             Tick = tick;
+        }
+    }
+}
+
+namespace Yanki.Core.Mind
+{
+    /// <summary>Konuşanın aktarım kaydı: kime, hangi önermeyi, yalan mı (konuşanın kendi inancına göre). Değişmez.</summary>
+    public sealed class AktarimKaydi
+    {
+        /// <summary>Kaydın tick'i.</summary>
+        public long Tick { get; }
+
+        /// <summary>Dinleyen.</summary>
+        public string Kime { get; }
+
+        /// <summary>Kanonik önerme.</summary>
+        public string Onerme { get; }
+
+        /// <summary>Konuşan bunun yanlış olduğuna inanıyordu.</summary>
+        public bool Yalan { get; }
+
+        /// <summary>Kaydı yazan (<c>aktarim_kaydedildi</c>) olayın kimliği.</summary>
+        public long OlayId { get; }
+
+        /// <summary>Yeni kayıt.</summary>
+        public AktarimKaydi(long tick, string kime, string onerme, bool yalan, long olayId)
+        {
+            Tick = tick;
+            Kime = kime ?? throw new ArgumentNullException(nameof(kime));
+            Onerme = onerme ?? throw new ArgumentNullException(nameof(onerme));
+            Yalan = yalan;
+            OlayId = olayId;
         }
     }
 }

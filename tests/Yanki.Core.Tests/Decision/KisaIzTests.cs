@@ -17,7 +17,7 @@ namespace Yanki.Core.Tests.Decision
         private static KararIzi Iz(int n = 3)
         {
             var eylemler = KararFikstur.Yukle(
-                KararFikstur.Eylem("a", "npc", "\"olcutler\": [ { \"alan\": \"kisilik(cesaret)\", \"egri\": { \"tur\": \"lojistik\", \"k\": 10, \"m\": 0.5 } } ], \"celisen_ozellikler\": [ \"durustluk\" ]", 2m),
+                KararFikstur.Eylem("a", "npc", "\"olcutler\": [ { \"alan\": \"kisilik(cesaret)\", \"egri\": { \"tur\": \"lojistik\", \"k\": 10, \"m\": 0.5 } } ], \"celisen_ozellikler\": [ \"durustluk\" ], \"stres_tabani\": 10", 2m),
                 KararFikstur.Eylem("b", taban: 1.4m),
                 KararFikstur.Eylem("c", taban: 0.5m));
             var sim = KararFikstur.Sim(eylemler);

@@ -33,7 +33,7 @@ namespace Yanki.Scenarios.Tests
   ""id"": ""selam_ver"", ""olay_turu"": ""selam_verdi"", ""hedef"": ""yok"", ""taban"": 1,
   ""olcutler"": [ { ""alan"": ""kisilik(sosyallik)"", ""egri"": { ""tur"": ""lojistik"", ""k"": 8, ""m"": 0.4 } } ],
   ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""sosyallik"" } ] },
-  ""celisen_ozellikler"": [ ""durustluk"" ],
+  ""celisen_ozellikler"": [ ""durustluk"" ], ""stres_tabani"": 10,
   ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.6 } ]
 } ] }";
 
@@ -185,7 +185,8 @@ namespace Yanki.Scenarios.Tests
         [Fact]
         public void Query_eylemsiz_senaryoda_son_karar_satiri_yazmaz()
         {
-            var senaryo = Senaryo.Replace(",\n  \"eylem_dosyalari\": [\"eylemler.json\"]", string.Empty);
+            // Kaynak dosyanın satır sonundan bağımsız (CRLF/LF): satır sonu ve boşluk regex ile eşleşir.
+            var senaryo = Regex.Replace(Senaryo, @",\s*""eylem_dosyalari"": \[""eylemler\.json""\]", string.Empty);
             File.WriteAllText(Yol("senaryo2.json"), senaryo);
             File.WriteAllText(Yol("kurallar.json"), "{ \"kurallar\": [] }");
             var oturum = Yol("oturum2.json");

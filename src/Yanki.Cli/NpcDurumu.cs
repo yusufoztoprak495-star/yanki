@@ -85,7 +85,18 @@ namespace Yanki.Cli
                 w.WriteLine($"{onerme}: güven {Sayi(zihin.Guven(onerme, tick))}, {durum}");
                 foreach (var kanit in zihin.Kanitlar(onerme))
                 {
-                    w.WriteLine($"  {KanitTurleri.Ad(kanit.Tur)} ← {kanit.Kaynak} (#{Sayi(kanit.OlayId)}, tick {Sayi(kanit.Tick)}, güç {Sayi(kanit.Guc)})");
+                    var kok = kanit.Kok.Length > 0 ? ", kök " + kanit.Kok : string.Empty;
+                    w.WriteLine($"  {KanitTurleri.Ad(kanit.Tur)} ← {kanit.Kaynak} (#{Sayi(kanit.OlayId)}, tick {Sayi(kanit.Tick)}, güç {Sayi(kanit.Guc)}{kok})");
+                }
+            }
+
+            // Geliştirici çıktısı: NPC'nin kendi aktarım kaydı (yalan bilgisi yalnızca konuşanın zihninde; dinleyen bunu bilmez).
+            if (zihin.Aktarimlar.Count > 0)
+            {
+                w.WriteLine("-- aktarımlar --");
+                foreach (var a in zihin.Aktarimlar)
+                {
+                    w.WriteLine($"{a.Kime} ← {a.Onerme} (#{Sayi(a.OlayId)}, tick {Sayi(a.Tick)}{(a.Yalan ? ", yalan" : string.Empty)})");
                 }
             }
 

@@ -19,6 +19,8 @@ Karar: eylem tanımları, aday üretimi, puanlama, `IActionSelector`/`UtilitySel
 | `KararIziYenidenUretici`, `KararIziOzeti` | Geçmiş kararın tam izini oturumu replay ile oynatarak üretir ve kısa izle doğrular (`KararIziUyusmazligiException`); okunur satırlar. |
 | `YerlesikTurler` | Çekirdeğe ayrılmış adlar: `ayrildi`, `geldi`, `karar_verildi`, `hareket`. |
 
-Yazılmayanlar (sonraki haftalar): cooldown, tetiklenme ve zincir sınırları, fren olayları, korumalı bayraklar (aday üretimine takılacak), stres (`celisen_ozellikler` 6. haftada), GOAP/BT adaptörleri, hedef zihin katmanı (v0.2 sonrası).
+6. hafta: `KonuHesabi` (konu puanı, konu sınırı, yalan seçimi, aktarım gücü; tek sınıf, tick içi önbellekli), `EylemTanimi.Aktarim`/`KonuDesenleri`/`YalanOnermeleri`/`Gorunurluk`/`StresTabani`, `Aday.Konu`, karar izinde `konu_puani` ve `stres_artisi`.
 
-Not: [`docs/notes/karar.md`](../../../docs/notes/karar.md). Eylem yazımı: [`docs/authoring-guide.md`](../../../docs/authoring-guide.md).
+Yazılmayanlar (sonraki haftalar): cooldown, tetiklenme ve zincir sınırları, fren olayları, korumalı bayraklar (aday üretimine takılacak), GOAP/BT adaptörleri, hedef zihin katmanı (v0.2 sonrası).
+
+Notlar: [`docs/notes/karar.md`](../../../docs/notes/karar.md), [`docs/notes/dedikodu.md`](../../../docs/notes/dedikodu.md). Eylem yazımı: [`docs/authoring-guide.md`](../../../docs/authoring-guide.md).

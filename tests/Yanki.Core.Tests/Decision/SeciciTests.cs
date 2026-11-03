@@ -251,7 +251,7 @@ namespace Yanki.Core.Tests.Decision
             var eylemler = KararFikstur.Yukle(
                 KararFikstur.Eylem("a", taban: 2m, ek: "\"olcutler\": [ { \"alan\": \"kisilik(cesaret)\" } ]"),
                 KararFikstur.Eylem("b", taban: 1m),
-                KararFikstur.Eylem("c", taban: 5m, ek: "\"celisen_ozellikler\": [ \"durustluk\" ]"));
+                KararFikstur.Eylem("c", taban: 5m, ek: "\"celisen_ozellikler\": [ \"durustluk\" ], \"stres_tabani\": 10"));
             var sim = KararFikstur.Sim(eylemler);
             var adaylar = eylemler.Select(e => new Aday(e, string.Empty)).ToList();
             var elenen = new[] { new ElenenAday(eylemler[0], "Veli", "on_kosul #1 tutmadi: x") };

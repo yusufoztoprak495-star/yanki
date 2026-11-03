@@ -33,7 +33,7 @@ eylem JSON ──► AdayUretici ──► Puanlayici ──► UtilitySelector 
 
 ## Yusuf'un kararları
 
-- **Karar (Yusuf):** Hedef katmanı v0.1'de yok (v0.2 sonrası). Stres 6. haftada; `celisen_ozellikler` bu hafta yalnızca izde görünür.
+- **Karar (Yusuf):** Hedef katmanı v0.1'de yok (v0.2 sonrası). Stres 6. haftada yapıldı: `celisen_ozellikler` + `stres_tabani` seçilen eylemde stres yazar (`stres.md`).
 - **Karar (Yusuf):** `eylem.hedef` rolü (seçenek A); çarpan eşlemesi parçalı doğrusal, nötr 1.0 (kişilik 0.25–2.0, fikir 0.6–1.5, ruh hali 0.8–1.25).
 - **Karar (Yusuf):** Eş zamanlı algı, hareket olayları (`ayrildi` ve `geldi`, `konum!` ayrı olay), decimal eğriler (`e^y` elle yazılmış seri).
 - **Karar (Yusuf):** K3 (kısa iz günlükte, tam iz replay ile) + Z1 (`HafizaVar` erken durdurma) + Z2 (hedefe bağlı olmayan ön koşul önbelleği) bu hafta; Z3 ve Z4 7. haftaya.
@@ -71,6 +71,13 @@ Aynı eylemin her tick tekrarı cooldown yazmadan `hafiza_var(selam_oldu, ben, 5
 - **"En fazla k kez" ya da tick başına sınır ifade edilemez**, yalnızca "son n tick'te hiç yapmadı".
 
 Bu hafta için yeterli; cooldown, tetiklenme sınırı ve fren olayları 7. haftada (görev metni).
+
+## 6. hafta: konuşma adayları ve stres
+
+- **Konuşma adayı** `aktarim` alanı olan eylemdir. Konu hesabı aday aşamasında bir kez yapılır (`KonuHesabi`); konu (ya da yalan) yoksa aday elenir, neden izde görünür (`konu yok (...)`). Aday `(eylem, hedef)` kalır; `Aday.Konu` sonucu taşır, `Anahtar` değişmez.
+- **Karar izi** aday başına `konu_puani` ve `konular` (önerme, puan, önem, yenilik, ilgi) gösterir; seçilenin `stres_artisi` değeri ve `celisen_ozellikler` birlikte görünür (yalnızca varsa; konuşma/stres olmayan izler eskisiyle birebir aynıdır).
+- `konu_puani(kime)` yalnızca `aktarim: dogru` eylemlerinin ön koşul ve ölçütlerinde geçerlidir (kararda "ne kadar anlatacak şeyi var" girdisi).
+- Krizdeki NPC o tick karar vermez; kriz kararı kural + tabloyla seçilir (`stres.md`), `IActionSelector`'dan geçmez.
 
 ## Açık noktalar
 

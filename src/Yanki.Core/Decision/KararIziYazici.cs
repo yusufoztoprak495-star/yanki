@@ -131,10 +131,20 @@ namespace Yanki.Core.Decision
                 celisen.Add(JsonDegeri.Metin(c));
             }
 
-            return JsonDegeri.Nesne(
+            var secilen = new List<(string, JsonDegeri)>
+            {
                 ("eylem", JsonDegeri.Metin(iz.Secilen.Eylem.Id)),
                 ("hedef", JsonDegeri.Metin(iz.Secilen.Hedef)),
-                ("celisen_ozellikler", JsonDegeri.Dizi(celisen.ToArray())));
+                ("celisen_ozellikler", JsonDegeri.Dizi(celisen.ToArray())),
+            };
+
+            // Uygulanan stres artışı yalnızca varsa yazılır (stressiz izler 6. hafta öncesiyle birebir aynıdır).
+            if (iz.StresArtisi > 0m)
+            {
+                secilen.Add(("stres_artisi", JsonDegeri.Sayi(iz.StresArtisi)));
+            }
+
+            return JsonDegeri.Nesne(secilen.ToArray());
         }
 
         private static JsonDegeri Aday(AdayIzi a)
@@ -149,8 +159,11 @@ namespace Yanki.Core.Decision
             {
                 ozellikler.Add(("durum", JsonDegeri.Metin("elendi")));
                 ozellikler.Add(("neden", JsonDegeri.Metin(a.Neden)));
+                return JsonDegeri.Nesne(ozellikler.ToArray());
             }
-            else if (a.Puan == null)
+
+            KonuAlanlari(a, ozellikler);
+            if (a.Puan == null)
             {
                 ozellikler.Add(("durum", JsonDegeri.Metin("puansiz")));
                 ozellikler.Add(("sira", JsonDegeri.Sayi(a.Sira)));
@@ -181,6 +194,32 @@ namespace Yanki.Core.Decision
             }
 
             return JsonDegeri.Nesne(ozellikler.ToArray());
+        }
+
+        // Konuşma adayının konu puanı ve konuları (yalnızca konu seçimi taşıyan adayda yazılır). Yalanın puanı yoktur: yalnızca önerme yazılır.
+        private static void KonuAlanlari(AdayIzi a, List<(string, JsonDegeri)> ozellikler)
+        {
+            var konu = a.Aday.Konu;
+            if (konu == null)
+            {
+                return;
+            }
+
+            var en = 0m;
+            var konular = new List<JsonDegeri>(konu.Konular.Count);
+            foreach (var k in konu.Konular)
+            {
+                en = System.Math.Max(en, k.Puan);
+                konular.Add(JsonDegeri.Nesne(
+                    ("onerme", JsonDegeri.Metin(k.Onerme)),
+                    ("puan", JsonDegeri.Sayi(k.Puan)),
+                    ("onem", JsonDegeri.Sayi(k.Onem)),
+                    ("yenilik", JsonDegeri.Sayi(System.Math.Round(k.Yenilik, 6))),
+                    ("ilgi", JsonDegeri.Sayi(k.Ilgi))));
+            }
+
+            ozellikler.Add(("konu_puani", JsonDegeri.Sayi(en)));
+            ozellikler.Add(("konular", JsonDegeri.Dizi(konular.ToArray())));
         }
 
         private static JsonDegeri Egri(EgriTanimi e)

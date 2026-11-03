@@ -3,13 +3,14 @@
 Zihin: kişilik, 3 kalıcı ilişki ekseni + süreli fikir modifier'ları, tek duygulu ruh hali, stres, hafıza ve kanıt listeli inançlar (plan 5.4).
 Durum yalnızca zihin olaylarıyla ilerler; süreli değerler sorgu anında tick'ten hesaplanır ([ADR-008](../../../docs/adr/0008-zihin-olaylardan-turetilir.md)).
 
-**Durum:** 3. hafta teslimi tamam. Tick döngüsüne bağlama 4. hafta; stres eylem bağlantısı ve kriz olayları 6. hafta; frenler, korumalı bayraklar ve yay 7. hafta.
+**Durum:** 3. hafta teslimi tamam; 6. hafta: aktarım kaydı (`aktarim_kaydedildi`), `Kanit.Kok` ve yankı freni, `EnGucluKanit`, `DedikoduAyarlari` ve `StresAyarlari` (kriz değişmezi doğrulaması). Frenler, korumalı bayraklar ve yay 7. hafta.
 
 ## Tipler
 
 | Tip | Ne yapar |
 |---|---|
-| `Zihin` | Bir NPC'nin zihni. `Uygula(olay)`, `Fikir`, `FikirDokumu`, `Eksen`, `Guven`, `Inanilan`, `InancDerecesi`, `KimdenDuydu`, `Hafiza`, `Stres`, `DuyguSiddeti`, `KanonikMetin`. |
+| `Zihin` | Bir NPC'nin zihni. `Uygula(olay)`, `Fikir`, `FikirDokumu`, `Eksen`, `Guven`, `Inanilan`, `InancDerecesi`, `KimdenDuydu`, `EnGucluKanit`, `EtkinKok`, `Aktarimlar`, `YalanSoyledi`, `AktarimVar`, `Hafiza`, `HafizaOnemi`, `Stres`, `DuyguSiddeti`, `KanonikMetin`. |
+| `DedikoduAyarlari`, `StresAyarlari` | Konu puanı / aktarım gücü sayıları ve kriz eşikleri / düşüşleri (denge alanı, Yusuf). `StresAyarlari.Dogrula()` kriz sonrası stresin alt eşiğin altında kalmasını denetler. |
 | `ZihinDeposu` | Bütün zihinler (ordinal sıralı); olayları sahibine yönlendirir; `Fikir(a, b, tick)`, `FikirDokumu`, `KimdenDuydu(npc, onerme)`. |
 | `Kisilik` | Altı özellik (0–1); kurulduktan sonra değişmez. |
 | `ZihinAyarlari` | Eksen ağırlıkları, birikme sınırı/çarpanı, sönme oranları, hafıza eşikleri (varsayılanlarıyla). |

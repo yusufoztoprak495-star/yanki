@@ -205,9 +205,24 @@ namespace Yanki.Core.Tests.Mind
             Assert.False(Mantik(d, "hafiza_var(yardim_etti, Ali, 168)", tick: 200));
         }
 
-        // 12. yalan_soyledi, 15. yay: sonraki haftalar
+        // 12. yalan_soyledi (6. hafta)
+        [Fact]
+        public void Yalan_soyledi_yalnizca_yalan_kaydi_varken_dogrudur()
+        {
+            var d = new Duzen();
+            Assert.False(Mantik(d, "yalan_soyledi(Ayse)"));
+
+            d.Uygula(ZihinOlaylari.AktarimKaydedildi(1, 3, 0, "Can", "Veli", "borclu(Mehmet,Ayse,500)", false, new long[0], "t"));
+            Assert.False(Mantik(d, "yalan_soyledi(Veli)"));
+
+            d.Uygula(ZihinOlaylari.AktarimKaydedildi(2, 4, 0, "Can", "Ayse", "degil(borclu(Mehmet,Ayse,500))", true, new long[0], "t"));
+            Assert.True(Mantik(d, "yalan_soyledi(Ayse)"));
+            Assert.True(Mantik(d, "yalan_soyledi(dinleyen)"));
+            Assert.False(Mantik(d, "yalan_soyledi(Veli)"));
+        }
+
+        // 15. yay: 7. hafta
         [Theory]
-        [InlineData("yalan_soyledi(oyuncu)")]
         [InlineData("yay(kasaba_gerginligi)")]
         public void Sonraki_haftalarin_fonksiyonlari_net_hata_verir(string alan)
         {
@@ -247,10 +262,12 @@ namespace Yanki.Core.Tests.Mind
         [Fact]
         public void Her_zihin_fonksiyonu_zihin_ya_da_dunya_cozucusunde_karsilik_bulur()
         {
-            // 16 fonksiyonun hiçbiri "bilinmiyor" diye düşmemeli; yalnızca yalan_soyledi (6. hafta) ve yay (7. hafta) NotSupported verir.
+            // Hiçbir fonksiyon "bilinmiyor" diye düşmemeli; yalnızca yay (7. hafta) NotSupported verir.
             var d = new Duzen();
             var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0);
-            var baglam = new SorguBaglami("Ali", oyuncu: "Ayse", konusan: "Ali", dinleyen: "Can", olayFail: "Ali", olayHedef: "Can");
+            var baglam = new SorguBaglami(
+                "Ali", oyuncu: "Ayse", konusan: "Ali", dinleyen: "Can", olayFail: "Ali", olayHedef: "Can",
+                konuDesenleri: new[] { OnermeDeseni.Ayristir("borclu(*,*,*)") }, olayOnermesi: "borclu(Mehmet,Ayse,5)");
             var desteklenmeyen = new List<string>();
             var ornekler = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -270,6 +287,8 @@ namespace Yanki.Core.Tests.Mind
                 ["stres"] = "stres()",
                 ["yalan_soyledi"] = "yalan_soyledi(oyuncu)",
                 ["yay"] = "yay(x)",
+                ["konu_puani"] = "konu_puani(Can)",
+                ["olay_konusu"] = "olay_konusu(borclu(*, *, *))",
             };
             d.Zihinler.Ekle(new Zihin("Ali", new Kisilik(0.5m, 0.5m, 0.5m, 0.5m, 0.5m, 0.5m)));
 
@@ -285,7 +304,7 @@ namespace Yanki.Core.Tests.Mind
                 }
             }
 
-            Assert.Equal(new[] { "yalan_soyledi", "yay" }, desteklenmeyen);
+            Assert.Equal(new[] { "yay" }, desteklenmeyen);
         }
 
         [Fact]

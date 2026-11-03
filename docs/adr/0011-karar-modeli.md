@@ -105,7 +105,10 @@ K3 ile günlük küçük ve aday sayısından bağımsız kalır, ama günlükte
 
 ## Gerekçe (Yusuf)
 
-> Yusuf yazacak. Bu bölümü Claude Code doldurmaz; ADR Yusuf gerekçeyi yazana kadar "Önerildi" kalır, kararlar yine de bağlayıcıdır.
+> Bu gerekçeyi Claude Code, Yusuf'un 6. hafta görev metnindeki devriyle, planın 5.5 bölümünden, 5. hafta görev metninden ve PR #9 kararlarından derledi. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+
+Plan 5.5 NPC kararının kural + utility AI ile alınmasını, her kararın bir karar izi üretmesini ve kişilik çarpanının en geniş aralığa sahip olmasını ister; bu ADR o aralıkları sayıya çevirir (0.25–2.0 / 0.6–1.5 / 0.8–1.25), böylece ilişki ve ruh hali kişiliği ezemez (plan 5.4 tutarlılık ilkesi). Kararın tek noktada üretilmesi (`AdayUretici`) 7. haftadaki korumalı bayrak filtresinin tek yere takılabilmesi içindir.
+Karar izinin günlükte kısa, tam izin replay ile yeniden üretilmesi (K3), ölçümün gösterdiği şey yüzündendir: tam iz günlükte olayların %70'ini tutuyor ve aday sayısıyla büyüyordu; replay deterministik olduğu için tam iz kaybedilmeden günlük %10'a indi, ve uyuşmazlık sessizce geçmez (çıkış kodu 4). `eylem.hedef` rolü, hedef başına puanlamayı yeni bir fonksiyon eklemeden ve `olay.hedef`'i iki anlama getirmeden mümkün kılar. Hedef katmanı v0.2 sonrasına bırakıldı: v0.1'de NPC'nin amacı kişilik, eylem ölçütleri ve hafızadan doğar.
 
 ## Sonuçlar
 

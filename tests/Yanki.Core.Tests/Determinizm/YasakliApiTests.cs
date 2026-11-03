@@ -171,6 +171,22 @@ namespace Yanki.Core.Tests.Determinizm
             Assert.True(ihlaller.Count == 0, "Yasaklı API kullanımı:\n" + string.Join("\n", ihlaller));
         }
 
+        [Theory]
+        [InlineData("Decision/KonuHesabi.cs")]
+        [InlineData("Mind/DedikoduAyarlari.cs")]
+        [InlineData("Mind/StresAyarlari.cs")]
+        [InlineData("Simulation/KrizTablosu.cs")]
+        [InlineData("Simulation/Simulasyon.cs")]
+        public void Tarama_6_hafta_dosyalarini_kapsar(string goreli)
+        {
+            var kok = RepoRoot.Combine("src", "Yanki.Core");
+            var taranan = Directory.EnumerateFiles(kok, "*.cs", SearchOption.AllDirectories)
+                .Select(f => Path.GetRelativePath(kok, f).Replace('\\', '/'))
+                .ToList();
+
+            Assert.Contains(goreli, taranan);
+        }
+
         [Fact]
         public void Her_izin_gerekce_tasir_ve_var_olan_bir_dosya_ile_kurala_isaret_eder()
         {

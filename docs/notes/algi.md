@@ -40,9 +40,16 @@
 - **Algılayanlar saklanır.** Kurallar NPC eylemleri için bir sonraki tick'te çalıştığı için 6.2'nin algı sonucundan türetilen algılayan listesi bir tick saklanıp sonra atılır; kurallar konumdan yeniden hesaplamaz ve algı adımı bu olayları ikinci kez işlemez (bkz. `tick-dongusu.md`).
 - **Oyuncu hareketi** adım 1'de işlenir, NPC konumları değişmez; oyuncunun `ayrildi`'sini kalkış mekanındaki, `geldi`'sini varış mekanındaki NPC'ler görür.
 
+## 6. hafta: anlatma bir olaydır, içeriği algıdan geçmez
+
+- `anlatti` (NPC ya da oyuncu anlatımı) mevcut doğrudan algıdan geçer; algı önermesi içeriksiz `anlatti(fail,hedef)`'dir (`OnermeUret` olay türünden `tur(fail, hedef)` üretir). **İçerik algıdan değil, `duydu` kanıtıyla** yalnızca dinleyene gider; böylece tanık (`acik` görünürlükte) konuşmanın olduğunu görür ama içeriğini almaz (kulak misafirliği yok, 7. hafta sonrasında bile ayrı karar).
+- `anlatti` varsayılan olarak `sessiz`dir (konuşan ve dinleyen algılar); eylem tanımı `gorunurluk: acik` yazabilir. Konuşmada `gizli` anlamsızdır (reddedilir).
+- Yalan algıyı etkilemez: dışarıdan görünüm doğru anlatımla aynıdır; yalan bilgisi yalnızca konuşanın zihnindeki `aktarim_kaydedildi` olayındadır ve bu olay algılanmaz.
+- Kriz olayları (`olay_turu` satırdan) `acik` dış olaydır; aynı mekandaki herkes algılar.
+
 ## Sonraki haftalara kalanlar
 
-Dedikodu, `duydu` aktarımı, konu sınırı ve yalan kaydı 6. haftada.
+Dedikodu, `duydu` aktarımı, konu sınırı ve yalan kaydı 6. haftada yapıldı (aşağıda ve `dedikodu.md`). Tam kayıt/yükleme, frenler, korumalı bayraklar 7. haftada.
 
 ## Açık
 

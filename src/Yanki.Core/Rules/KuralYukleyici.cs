@@ -20,7 +20,7 @@ namespace Yanki.Core.Rules
         private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler" };
 
         // Sözlükte olup çözücüsü henüz bağlı olmayan fonksiyonlar (ZihinSorguCozucusu): çalışma anında patlamasınlar diye baştan reddedilir.
-        internal static readonly string[] BagliOlmayanFonksiyonlar = { "yalan_soyledi", "yay" };
+        internal static readonly string[] BagliOlmayanFonksiyonlar = { "yay" };
 
         /// <summary>
         /// Çekirdeğin bildiği olay türleri: dünya ve zihin olayları. Oyuncu eylem türlerini senaryo tanımlar ve
@@ -31,7 +31,7 @@ namespace Yanki.Core.Rules
             Dunya.VarlikEklendi, Dunya.GercekEklendi, Dunya.GercekKaldirildi, Dunya.MekanBaglandi,
             ZihinOlaylari.ModifierEklendiTuru, ZihinOlaylari.EksenDegistiTuru, ZihinOlaylari.DuyguDegistiTuru,
             ZihinOlaylari.StresDegistiTuru, ZihinOlaylari.KanitEklendiTuru, ZihinOlaylari.HafizaEklendiTuru,
-            Decision.YerlesikTurler.Ayrildi, Decision.YerlesikTurler.Geldi,
+            Decision.YerlesikTurler.Ayrildi, Decision.YerlesikTurler.Geldi, Decision.YerlesikTurler.Anlatti,
         }.AsReadOnly();
 
         /// <summary>Kural bağlamında çözülebilen roller.</summary>
@@ -288,8 +288,13 @@ namespace Yanki.Core.Rules
             {
                 if (string.Equals(alan.Ad, bagli, StringComparison.Ordinal))
                 {
-                    hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yalan_soyledi 6. hafta, yay 7. hafta)");
+                    hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yay 7. hafta)");
                 }
+            }
+
+            if (ReferenceEquals(kume, RolKumesi.Kural) && string.Equals(alan.Ad, "konu_puani", StringComparison.Ordinal))
+            {
+                hata(satir, $"{onek}'konu_puani' yalnızca aktarim: dogru eylemlerinde geçerlidir (konu havuzu eyleme özel desenlerden gelir); sonuç kurallarında tanımsız");
             }
 
             var bulunan = new List<Rol>();

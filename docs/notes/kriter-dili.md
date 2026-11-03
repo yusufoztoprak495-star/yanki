@@ -12,7 +12,7 @@ Kriter, "şu sorgunun cevabı şu karşılaştırmayı sağlıyor mu?" sorusudur
 4. `ISorguCozucu` üzerinden kriteri değerlendirir.
 5. Adayları puanlar, zorunlu kriteri tutmayanı eler, en iyiyi seçer ve her aday için eşleşme izini saklar.
 
-Sözlükte 16 fonksiyon var. `yalan_soyledi` (6. hafta) ve `yay` (7. hafta) dışındakiler gerçek veriye bağlı.
+Sözlükte 18 fonksiyon var (6. hafta: `konu_puani`, `olay_konusu`). `yay` (7. hafta) dışındakiler gerçek veriye bağlı.
 
 ## Neden böyle?
 

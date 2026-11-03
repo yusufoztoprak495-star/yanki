@@ -41,7 +41,7 @@ namespace Yanki.Olcum
   { ""id"": ""tehdit"", ""olay_turu"": ""tehdit_oldu"", ""hedef"": ""npc"", ""taban"": 0.6,
     ""olcutler"": [ { ""alan"": ""kisilik(kin_tutma)"" }, { ""alan"": ""kisilik(cesaret)"", ""egri"": { ""tur"": ""ustel"", ""k"": 2 } } ],
     ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""cesaret"" } ] },
-    ""celisen_ozellikler"": [ ""merhamet"" ],
+    ""celisen_ozellikler"": [ ""merhamet"" ], ""stres_tabani"": 10,
     ""etkiler"": [ { ""tur"": ""duygu"", ""duygu"": ""ofke"", ""siddet"": 0.3, ""hedef"": ""eylem.hedef"" } ] },
   { ""id"": ""git"", ""hedef"": ""komsu_mekan"", ""taban"": 0.8,
     ""olcutler"": [ { ""alan"": ""kisilik(cesaret)"" } ],
@@ -49,6 +49,26 @@ namespace Yanki.Olcum
   { ""id"": ""dinlen"", ""olay_turu"": ""dinlendi"", ""hedef"": ""yok"", ""taban"": 0.5,
     ""ruh_hali_carpani"": { ""duygular"": [ { ""duygu"": ""ofke"", ""ters"": true } ] },
     ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.2 } ] }
+] }";
+
+        // Dedikodulu ölçüm (6. hafta): aynı 5 eylem + anlat/yalan_soyle. Konu havuzu yalnızca borclu(*,*,*); sahte içerik (Kasaba Hanı değil).
+        private const string DedikoduEylemleri = @",
+  { ""id"": ""anlat"", ""olay_turu"": ""anlatti"", ""hedef"": ""npc"", ""taban"": 3, ""aktarim"": ""dogru"",
+    ""konu_desenleri"": [ ""borclu(*,*,*)"" ],
+    ""olcutler"": [ { ""alan"": ""kisilik(sosyallik)"", ""egri"": { ""tur"": ""lojistik"", ""k"": 6, ""m"": 0.4 } }, { ""alan"": ""konu_puani(eylem.hedef)"" } ],
+    ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""sosyallik"" } ] } },
+  { ""id"": ""yalan_soyle"", ""olay_turu"": ""anlatti"", ""hedef"": ""npc"", ""taban"": 0.3, ""aktarim"": ""yalan"",
+    ""yalan_onermeleri"": [ ""degil(borclu(N00,N01,500))"", ""degil(borclu(N02,N03,500))"" ],
+    ""celisen_ozellikler"": [ ""durustluk"" ], ""stres_tabani"": 15,
+    ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""durustluk"", ""ters"": true } ] } }
+";
+
+        private const string DedikoduKrizleri = @"{ ""krizler"": [
+  { ""id"": ""itiraf"", ""seviye"": 1, ""olay_turu"": ""itiraf_etti"", ""hedef"": ""yalan_kurbani"",
+    ""kriterler"": [ { ""alan"": ""kisilik(durustluk)"", ""op"": "">="", ""deger"": 0.6 } ] },
+  { ""id"": ""sakinles"", ""seviye"": 1, ""olay_turu"": ""sakinlesti"", ""hedef"": ""yok"" },
+  { ""id"": ""patla"", ""seviye"": 2, ""olay_turu"": ""patladi"", ""hedef"": ""en_soguk"" },
+  { ""id"": ""kac"", ""seviye"": 2, ""olay_turu"": ""kacti"", ""hedef"": ""yok"" }
 ] }";
 
         private const string Kurallar = @"{ ""kurallar"": [
@@ -87,7 +107,7 @@ namespace Yanki.Olcum
             return sb.ToString();
         }
 
-        private static Simulasyon Kur(int npcSayisi, ulong seed)
+        private static Simulasyon Kur(int npcSayisi, ulong seed, bool dedikodu = false)
         {
             var senaryo = SenaryoYukleyici.Yukle(SenaryoJson(npcSayisi), "olcum.json");
             if (!senaryo.Basarili || senaryo.Senaryo == null)
@@ -95,10 +115,22 @@ namespace Yanki.Olcum
                 throw new InvalidOperationException(string.Join("\n", senaryo.Hatalar));
             }
 
-            var eylemler = EylemYukleyici.Yukle(Eylemler, "eylemler.json");
+            var eylemler = EylemYukleyici.Yukle(dedikodu ? Eylemler.Substring(0, Eylemler.LastIndexOf(']')) + DedikoduEylemleri + "] }" : Eylemler, "eylemler.json");
             if (!eylemler.Basarili)
             {
                 throw new InvalidOperationException(string.Join("\n", eylemler.Hatalar));
+            }
+
+            var krizler = new List<KrizSatiri>();
+            if (dedikodu)
+            {
+                var kriz = KrizYukleyici.Yukle(DedikoduKrizleri, "krizler.json");
+                if (!kriz.Basarili)
+                {
+                    throw new InvalidOperationException(string.Join("\n", kriz.Hatalar));
+                }
+
+                krizler.AddRange(kriz.Satirlar);
             }
 
             var turler = new List<string>(senaryo.Senaryo.OlayTurleri);
@@ -109,7 +141,23 @@ namespace Yanki.Olcum
                 throw new InvalidOperationException(string.Join("\n", kurallar.Hatalar));
             }
 
-            return Simulasyon.Olustur(senaryo.Senaryo, kurallar.Kurallar, seed, eylemler: eylemler.Eylemler);
+            var sim = Simulasyon.Olustur(senaryo.Senaryo, kurallar.Kurallar, seed, eylemler: eylemler.Eylemler, krizler: krizler);
+            if (dedikodu)
+            {
+                // Oyuncu han'daki ilk NPC'lere birkaç farklı borç söylentisi anlatır (tick 1); gerisini NPC'ler yayar.
+                for (var i = 0; i < Math.Min(4, npcSayisi); i++)
+                {
+                    var hedef = "N" + (i * (npcSayisi >= 5 ? 5 : 1)).ToString("D2", CultureInfo.InvariantCulture);
+                    if (sim.Dunya.TekDeger("konum!", hedef) == "han")
+                    {
+                        sim.Submit(new PlayerAction(
+                            "anlatti", hedef,
+                            new[] { new KeyValuePair<string, string>("onerme", "borclu(N" + (i + 6).ToString("D2", CultureInfo.InvariantCulture) + ",N" + i.ToString("D2", CultureInfo.InvariantCulture) + ",500)") }));
+                    }
+                }
+            }
+
+            return sim;
         }
 
         // Olayın kanonik metin dökümünün UTF-8 bayt sayısı (günlük boyutunun yaklaşık ölçüsü).
@@ -127,15 +175,15 @@ namespace Yanki.Olcum
             return Encoding.UTF8.GetByteCount(sb.ToString());
         }
 
-        private static void Olc(int npcSayisi, int tekrar)
+        private static void Olc(int npcSayisi, int tekrar, bool dedikodu)
         {
-            Kur(npcSayisi, 1).Tick(10); // ısınma: JIT etkisini ölçümden çıkarır
+            Kur(npcSayisi, 1, dedikodu).Tick(10); // ısınma: JIT etkisini ölçümden çıkarır
 
             var sureler = new List<double>();
             Simulasyon? son = null;
             for (var i = 0; i < tekrar; i++)
             {
-                var sim = Kur(npcSayisi, 42);
+                var sim = Kur(npcSayisi, 42, dedikodu);
                 var sw = Stopwatch.StartNew();
                 sim.Tick(TickSayisi);
                 sw.Stop();
@@ -168,7 +216,7 @@ namespace Yanki.Olcum
             var oturum = Encoding.UTF8.GetByteCount(OturumKaydi.Yaz(OturumKaydi.Uret(son, "olcum.json")));
             var ic = CultureInfo.InvariantCulture;
 
-            Console.WriteLine($"### {npcSayisi} NPC, {TickSayisi} tick (stres fikstürü: her NPC her tick eylem seçer)");
+            Console.WriteLine($"### {npcSayisi} NPC, {TickSayisi} tick ({(dedikodu ? "dedikodulu" : "dedikodusuz")} stres fikstürü: her NPC her tick eylem seçer)");
             Console.WriteLine();
             Console.WriteLine("| ölçü | değer |");
             Console.WriteLine("|---|---|");
@@ -177,6 +225,23 @@ namespace Yanki.Olcum
             Console.WriteLine($"| günlük boyutu | {(toplam / 1024.0).ToString("F1", ic)} KiB |");
             Console.WriteLine($"| karar_verildi boyutu | {(karar / 1024.0).ToString("F1", ic)} KiB = %{(100.0 * karar / toplam).ToString("F1", ic)} |");
             Console.WriteLine($"| karar_verildi bayt/olay | {(kararSayisi == 0 ? 0 : karar / kararSayisi)} |");
+            if (dedikodu)
+            {
+                var kanit = olaylar.Where(o => o.Tur == "kanit_eklendi").ToList();
+                var duydu = kanit.Count(o => o.Deger("tur") == "duydu");
+                var onermeler = new SortedSet<string>(kanit.Where(o => o.Deger("tur") == "duydu").Select(o => o.Deger("onerme")), StringComparer.Ordinal);
+                Console.WriteLine($"| kanıt sayısı | {kanit.Count} (gordu {kanit.Count - duydu}, duydu {duydu}); duydu ile yayılan {onermeler.Count} farklı önerme |");
+                Console.WriteLine($"| anlatım | anlatti {olaylar.Count(o => o.Tur == "anlatti")}, aktarim_kaydedildi {olaylar.Count(o => o.Tur == "aktarim_kaydedildi")}, yalan kaydı {olaylar.Count(o => o.Tur == "aktarim_kaydedildi" && o.Deger("yalan") == "1")} |");
+                Console.WriteLine($"| stres/kriz | stres_degisti {olaylar.Count(o => o.Tur == "stres_degisti")}, kriz olayı {olaylar.Count(o => o.KuralId.StartsWith("kriz:", StringComparison.Ordinal) && !Yanki.Core.Mind.ZihinOlaylari.ZihinOlayiMi(o.Tur))} |");
+                var enCok = 0;
+                foreach (var id in son.Zihinler.Kimlikler)
+                {
+                    enCok = Math.Max(enCok, son.Zihinler[id].Onermeler.Count);
+                }
+
+                Console.WriteLine($"| NPC başına en çok önerme | {enCok} |");
+            }
+
             Console.WriteLine($"| son durum hash'i | {son.DurumHash()} |");
             Console.WriteLine($"| oturum dosyası | {oturum} bayt (NPC kararları ve izler dosyaya yazılmaz) |");
             Console.WriteLine();
@@ -194,11 +259,16 @@ namespace Yanki.Olcum
         {
             var npcler = new[] { 3, 10, 50 };
             int? tekrar = null;
+            var dedikodu = false;
             for (var i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--npc" && i + 1 < args.Length)
                 {
                     npcler = args[++i].Split(',').Select(s => int.Parse(s, CultureInfo.InvariantCulture)).ToArray();
+                }
+                else if (args[i] == "--dedikodu")
+                {
+                    dedikodu = true;
                 }
                 else if (args[i] == "--tekrar" && i + 1 < args.Length)
                 {
@@ -206,7 +276,7 @@ namespace Yanki.Olcum
                 }
                 else
                 {
-                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N]");
+                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu]");
                     return 1;
                 }
             }
@@ -215,7 +285,7 @@ namespace Yanki.Olcum
             Console.WriteLine();
             foreach (var n in npcler)
             {
-                Olc(n, tekrar ?? (n >= 50 ? 1 : 5));
+                Olc(n, tekrar ?? (n >= 50 ? 1 : 5), dedikodu);
             }
 
             return 0;

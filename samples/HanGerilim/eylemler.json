@@ -1,0 +1,142 @@
+{
+  "eylemler": [
+    {
+      "id": "anlat",
+      "olay_turu": "anlatti",
+      "hedef": "npc",
+      "taban": 2,
+      "aktarim": "dogru",
+      "konu_desenleri": [
+        "borclu(*,*,*)",
+        "kardes(*,*)"
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "egri": {
+            "tur": "lojistik",
+            "k": 6,
+            "m": 0.4
+          }
+        },
+        {
+          "alan": "konu_puani(eylem.hedef)"
+        }
+      ],
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "sosyallik"
+          }
+        ]
+      }
+    },
+    {
+      "id": "yalan_soyle",
+      "olay_turu": "anlatti",
+      "hedef": "npc",
+      "taban": 1,
+      "aktarim": "yalan",
+      "yalan_onermeleri": [
+        "degil(borclu(Mehmet,Ayse,500))",
+        "degil(borclu(Selim,Hatice,200))"
+      ],
+      "celisen_ozellikler": [
+        "durustluk"
+      ],
+      "stres_tabani": 30,
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "durustluk",
+            "ters": true
+          }
+        ]
+      },
+      "on_kosullar": [
+        {
+          "alan": "inanc(sir_sakliyor(ben, Mehmet))",
+          "op": ">=",
+          "deger": 0.5
+        },
+        {
+          "alan": "hafiza_var(itiraf_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(sakinlesti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(kacti, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ]
+    },
+    {
+      "id": "tehdit_et",
+      "olay_turu": "tehdit_etti",
+      "hedef": "oyuncu",
+      "taban": 3,
+      "on_kosullar": [
+        {
+          "alan": "fikir(eylem.hedef)",
+          "op": "<",
+          "deger": -10
+        },
+        {
+          "alan": "hafiza_var(patladi, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(sakinlesti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(itiraf_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(kacti, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(kin_tutma)"
+        }
+      ],
+      "celisen_ozellikler": [
+        "merhamet"
+      ],
+      "stres_tabani": 60,
+      "etkiler": [
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.5,
+          "hedef": "eylem.hedef"
+        }
+      ]
+    },
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.3,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ]
+    }
+  ]
+}

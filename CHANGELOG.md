@@ -26,6 +26,10 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/), sürümleme [Se
 - 5. hafta: tick adımları 5 ve 6 (tek durum görüntüsü, eş zamanlı algı), NPC ve oyuncu hareketi (`ayrildi`, `geldi`, ayrılmış `hareket` eylemi), `karar_verildi` olayı (günlükte kısa iz; tam iz replay ile yeniden üretilir, `KararIziYenidenUretici`).
 - 5. hafta: `yanki why` karar izine ve puan bileşenlerine iner, `yanki query` son kararı gösterir, `yanki run --eylem hareket:<mekan>`; CLI çıkış kodu 4 (iz uyuşmazlığı).
 - 5. hafta: `samples/MiniKarar` senaryosu ve golden replay #2 (`tests/golden/mini-karar-1.json`); `tools/olcum` karar ölçüm düzeneği (çözüm ve CI dışı).
+- 6. hafta: dedikodu (`anlatti`, `duydu` kanıtı aktarımı, kök ve yankı freni, `KonuHesabi` konu puanı/konu sınırı, aktarım kaydı `aktarim_kaydedildi`, `yalan_soyledi`), yalan gizliliği (doğru/yalan dışarıdan ayırt edilemez), oyuncu anlatımı (`PlayerAction("anlatti", ...)`), sözlük 18 fonksiyon (`konu_puani`, `olay_konusu`).
+- 6. hafta: stres (`stres_tabani`, seçilen çelişen eylem `stres_degisti` yazar) ve kriz (`StresAyarlari`, `KrizYukleyici`/`KrizSatiri`, `kriz_dosyalari`, adım 4 tespit, adım 6 yolu); `yanki run --eylem "anlatti:...:onerme=..."`, `query` kök/aktarım, `why` krizden karar izine.
+- 6. hafta: `samples/HanGerilim` senaryosu ve golden replay #3 (`tests/golden/han-gerilim-1.json`); `tools/olcum --dedikodu`; konuşan başına tick içi önbellek (50 NPC dedikodulu 3105.6 → 523.1 ms/tick); `.gitattributes` (LF) ve satır sonu testleri.
+- ADR-012 (dedikodu, yalan, stres, kriz; durum: önerildi), `docs/notes/dedikodu.md`, `docs/notes/stres.md`; ADR-011 ve ADR-012 gerekçeleri (Yusuf'un devriyle Claude Code yazdı).
 - ADR-011 (karar modeli, durum: önerildi), `docs/notes/karar.md`, `docs/authoring-guide.md` eylem yazımı ve `dinlen` önerisi, `docs/criteria-language.md` eylem bağlamı.
 
 ### Değişti
