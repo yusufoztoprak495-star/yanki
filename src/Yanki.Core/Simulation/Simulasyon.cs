@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Yanki.Core.Brakes;
 using Yanki.Core.Decision;
 using Yanki.Core.Criteria;
 using Yanki.Core.Events;
@@ -607,13 +608,44 @@ namespace Yanki.Core.Simulation
                 tetikler.Add(new TetikBilgisi(olay, kimler, npc => new List<long>(algi.Nedenler(kimlik, npc))));
             }
 
-            var etkiler = _kuralMotoru.Degerlendir(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId);
-            foreach (var etki in etkiler)
+            var degerlendirme = _kuralMotoru.DegerlendirFrenli(tetikler, Dunya, Zihinler, Gunluk, _tick, OyuncuId);
+            foreach (var etki in degerlendirme.Etkiler)
             {
                 var olay = KuralMotoru.OlayYap(etki, Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick));
                 Ekle(olay);
                 _devredilenler.Add(olay);
             }
+
+            FrenleriYaz(degerlendirme.Frenler);
+        }
+
+        // Fren olayları günlüğe yazılır ama ne algılanır ne de bir tetik kuyruğuna (_devredilenler, _saklananOlaylar) girer.
+        private void FrenleriYaz(IReadOnlyList<FrenBilgisi> frenler)
+        {
+            foreach (var fren in frenler)
+            {
+                Ekle(FrenOlayi.Yap(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), fren));
+            }
+        }
+
+        /// <summary>
+        /// Günlükteki <c>fren_uygulandi</c> olayları (ekleniş sırasıyla), isteğe bağlı olarak frenin türüne ve etkilenen NPC'ye göre süzülmüş.
+        /// "Bu neden olmadı?" sorusunun cevabı: olayın <c>NedenOlaylar</c>'ı engellenen tetikleyiciye, <see cref="Neden"/> köküne iner.
+        /// </summary>
+        public IReadOnlyList<Olay> Frenler(string? tur = null, string? npc = null)
+        {
+            var sonuc = new List<Olay>();
+            foreach (var o in Gunluk.Olaylar)
+            {
+                if (o.Tur == FrenOlayi.Tur
+                    && (tur == null || string.Equals(o.Deger("fren"), tur, StringComparison.Ordinal))
+                    && (npc == null || string.Equals(o.Deger("npc"), npc, StringComparison.Ordinal)))
+                {
+                    sonuc.Add(o);
+                }
+            }
+
+            return new ReadOnlyCollection<Olay>(sonuc);
         }
 
         private static void SonumVeSureDolumu()
@@ -1096,7 +1128,9 @@ namespace Yanki.Core.Simulation
             var nedenler = new[] { tetik.Id };
             foreach (var etki in etkiler)
             {
-                var uretilen = KuralMotoru.EtkiUret(sanalKural, etki, npc, tetik, baglam, nedenler, Dunya, yazilanGercekler);
+                var frenler = new List<FrenBilgisi>();
+                var uretilen = KuralMotoru.EtkiUret(sanalKural, etki, npc, tetik, baglam, nedenler, Dunya, yazilanGercekler, frenler);
+                FrenleriYaz(frenler);
                 if (uretilen == null)
                 {
                     continue;

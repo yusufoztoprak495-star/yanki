@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.IO;
 using Yanki.Core.Decision;
@@ -111,6 +112,18 @@ namespace Yanki.Cli
             {
                 var tur = sim.Gunluk.Var(h.OlayId) ? sim.Gunluk[h.OlayId].Tur : "?";
                 w.WriteLine($"#{Sayi(h.OlayId)} {tur} (önem {Sayi(h.Onem)}, tick {Sayi(h.Tick)})");
+            }
+
+            var frenler = sim.Frenler(npc: npc);
+            if (frenler.Count > 0)
+            {
+                w.WriteLine("-- frenler --");
+                foreach (var f in frenler)
+                {
+                    var neden = f.NedenOlaylar.Count > 0 ? ", neden #" + string.Join(", #", f.NedenOlaylar.Select(Sayi)) : string.Empty;
+                    var hedef = f.Deger("hedef").Length > 0 ? ", hedef " + f.Deger("hedef") : string.Empty;
+                    w.WriteLine($"#{Sayi(f.Id)} {f.Deger("fren")} (kural/eylem {f.Deger("kimlik")}{hedef}, tick {Sayi(f.Tick)}{neden})");
+                }
             }
 
             var sonKarar = sim.SonKararOlayi(npc);

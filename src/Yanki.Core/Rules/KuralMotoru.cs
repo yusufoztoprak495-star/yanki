@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Yanki.Core.Brakes;
 using Yanki.Core.Criteria;
 using Yanki.Core.Events;
 using Yanki.Core.Mind;
@@ -73,6 +74,22 @@ namespace Yanki.Core.Rules
         }
     }
 
+    /// <summary>Bir değerlendirmenin sonucu: üretilen etkiler ve uygulanan frenler (ikisi de değerlendirme sırasıyla).</summary>
+    public sealed class KuralDegerlendirmesi
+    {
+        /// <summary>Üretilecek etkiler.</summary>
+        public IReadOnlyList<UretilenEtki> Etkiler { get; }
+
+        /// <summary>Uygulanan frenler; olaya çevirmek çağıranın işidir (değerlendirme saf kalır).</summary>
+        public IReadOnlyList<FrenBilgisi> Frenler { get; }
+
+        internal KuralDegerlendirmesi(IReadOnlyList<UretilenEtki> etkiler, IReadOnlyList<FrenBilgisi> frenler)
+        {
+            Etkiler = etkiler;
+            Frenler = frenler;
+        }
+    }
+
     /// <summary>
     /// Sonuç kuralı motoru (plan 5.6, 6. adım 3). Saf bir değerlendiricidir: durumu değiştirmez, yalnızca etki listesi döndürür;
     /// çağıran etkileri <see cref="OlayYap"/> ile olaya çevirip günlüğe ekler (etkiler doğrudan state değiştirmez).
@@ -111,6 +128,14 @@ namespace Yanki.Core.Rules
 
         /// <summary>Tetikleyicileri değerlendirir ve üretilecek etkileri sırayla döndürür.</summary>
         public IReadOnlyList<UretilenEtki> Degerlendir(
+            IReadOnlyList<TetikBilgisi> tetikler, Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, string oyuncuId) =>
+            DegerlendirFrenli(tetikler, dunya, zihinler, gunluk, tick, oyuncuId).Etkiler;
+
+        /// <summary>
+        /// <see cref="Degerlendir"/>, ek olarak uygulanan frenleri de döndürür (7. hafta). Hâlâ saftır: ne günlüğe ne duruma yazar;
+        /// fren olaylarını çağıran yazar.
+        /// </summary>
+        public KuralDegerlendirmesi DegerlendirFrenli(
             IReadOnlyList<TetikBilgisi> tetikler, Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, string oyuncuId)
         {
             if (tetikler == null)
@@ -121,13 +146,25 @@ namespace Yanki.Core.Rules
             var cozucu = new ZihinSorguCozucusu(dunya, zihinler, gunluk, tick);
             var yazilanGercekler = new SortedSet<string>(StringComparer.Ordinal);
             var sonuc = new List<UretilenEtki>();
+            var frenler = new List<FrenBilgisi>();
 
             foreach (var tetik in tetikler)
             {
                 foreach (var kural in _kurallar)
                 {
-                    if (!string.Equals(kural.NeZaman, tetik.Olay.Tur, StringComparison.Ordinal) || !RollerTanimli(kural, tetik.Olay, oyuncuId))
+                    if (!string.Equals(kural.NeZaman, tetik.Olay.Tur, StringComparison.Ordinal))
                     {
+                        continue;
+                    }
+
+                    if (!RollerTanimli(kural, tetik.Olay, oyuncuId))
+                    {
+                        // Kriterler tanımsız rolle değerlendirilemez; fren, kriterlere bakılmadan olayı algılayan her NPC için yazılır.
+                        foreach (var algilayan in tetik.Algilayanlar)
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.TanimsizRol, kural.Id, algilayan, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                        }
+
                         continue;
                     }
 
@@ -148,7 +185,7 @@ namespace Yanki.Core.Rules
                         var nedenListesi = new ReadOnlyCollection<long>(new List<long>(nedenler));
                         foreach (var etki in kural.Etkiler)
                         {
-                            var uretilen = EtkiUret(kural, etki, npc, tetik.Olay, baglam, nedenListesi, dunya, yazilanGercekler);
+                            var uretilen = EtkiUret(kural, etki, npc, tetik.Olay, baglam, nedenListesi, dunya, yazilanGercekler, frenler);
                             if (uretilen != null)
                             {
                                 sonuc.Add(uretilen);
@@ -158,7 +195,7 @@ namespace Yanki.Core.Rules
                 }
             }
 
-            return new ReadOnlyCollection<UretilenEtki>(sonuc);
+            return new KuralDegerlendirmesi(new ReadOnlyCollection<UretilenEtki>(sonuc), new ReadOnlyCollection<FrenBilgisi>(frenler));
         }
 
         /// <summary>Üretilen etkiyi günlüğe eklenecek olaya çevirir. Olay tetikleyicinin mekanında geçer.</summary>
@@ -246,7 +283,7 @@ namespace Yanki.Core.Rules
 
         internal static UretilenEtki? EtkiUret(
             KuralTanimi kural, KuralEtkisi etki, string npc, Olay tetik, SorguBaglami baglam,
-            IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler)
+            IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler, List<FrenBilgisi>? frenler = null)
         {
             switch (etki.Tur)
             {
@@ -278,9 +315,10 @@ namespace Yanki.Core.Rules
 
                     // Modifier, eksen ve duygu hedefi bir kişi (NPC ya da oyuncu) olmalı. Hedef bir mekan ya da eşya ise (ör. Hedefi mekan olan
                     // bir oyuncu eylemi, ayrildi/geldi olayları) etki üretilmez: zihne mekan adına ilişki kaydı yazılıp durum bozulmaz.
-                    // 7. hafta: bu atlama için fren olayı yazılacak.
+                    // Atlama günlükte iz bırakır: kisi_olmayan_hedef freni (7. hafta).
                     if (hedef.Length > 0 && !KisiMi(dunya, hedef))
                     {
+                        frenler?.Add(new FrenBilgisi(FrenTurleri.KisiOlmayanHedef, kural.Id, npc, hedef, tetik.Mekan, new[] { tetik.Id }));
                         return null;
                     }
 

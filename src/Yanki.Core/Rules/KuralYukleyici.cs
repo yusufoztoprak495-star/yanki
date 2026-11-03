@@ -165,6 +165,10 @@ namespace Yanki.Core.Rules
             {
                 Hata(nzDugumu.Satir, $"\"{Decision.YerlesikTurler.KararVerildi}\" ne_zaman olamaz: karar izi olayları algılanmaz ve kural tetiklemez (ADR-011)");
             }
+            else if (nzDugumu.MetinDeger == Brakes.FrenOlayi.Tur)
+            {
+                Hata(nzDugumu.Satir, $"\"{Brakes.FrenOlayi.Tur}\" ne_zaman olamaz: fren olayları algılanmaz ve kural tetiklemez (ADR-013)");
+            }
             else if (!bilinen.Contains(nzDugumu.MetinDeger))
             {
                 Hata(nzDugumu.Satir, $"Bilinmeyen olay türü: \"{nzDugumu.MetinDeger}\" (çekirdek olayları ya da senaryonun tanımladığı eylem türleri)");
