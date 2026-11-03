@@ -23,7 +23,7 @@ konular puana göre azalan, eşitlikte önerme metni ordinal. Eşik: puan 0.1'in
 
 `yeni_guc = kanit_gucu × min(0.95, 0.7 + 0.003 × güven)`; `kanit_gucu` konuşanın o önerme için **en güçlü tek güncel kanıtı** (eşitlikte en küçük olay kimliği), `güven` dinleyenin konuşana duyduğu `guven` ekseni. Nötr güvende her adım ×0.7:
 oyuncu 1.0 → Ayşe 0.7 → Can 0.49 → Zeki 0.343 → ... ; 0.15'in altı yazılmaz (söylenti ölür, ama anlatım olayı ve aktarım kaydı kalır). Sonuç kaynak kanıtın gücünü geçemez (testle).
-Kanıt kök taşır (`kanit_eklendi.kok`): aynı önerme için aynı kökten `duydu` varsa yeni kanıt eklenmez, mevcut tazelenir (güç `max`); kökü zihin sahibi olan kanıt hiç yazılmaz. A→B→C→A'da A'nın güveni artmaz. Konuşan, bir konuyu ondan kanıt aldığı ya da kökü olan kişiye geri anlatmaz; aynı önermeyi aynı kişiye iki kez anlatmaz (aktarım kaydından; cooldown değil).
+Kanıt kök taşır (`kanit_eklendi.kok`): aynı önerme için aynı kökten `duydu` varsa yeni kanıt eklenmez, güncel (sönmüş) güçle karşılaştırılır: yeni kanıt daha güçlüyse bütün alanları (`Kaynak`, `Guc`, `Tick`, `OlayId`) yeni kanıttan gelir, değilse mevcut kanıt tamamen aynı kalır (zayıf tekrar sönümü sıfırlayamaz); kökü zihin sahibi olan kanıt hiç yazılmaz. A→B→C→A'da A'nın güveni artmaz. Konuşan, bir konuyu ondan kanıt aldığı ya da kökü olan kişiye geri anlatmaz; aynı önermeyi aynı kişiye iki kez anlatmaz (aktarım kaydından; cooldown değil).
 
 ## Yalan ve gizlilik
 
@@ -69,7 +69,8 @@ Kalan fark (50 NPC: 523.1 / 79.5 ≈ 6.6×) **7. hafta açık kararıdır** (Z3/
 
 ## Açık
 
-- **Kanıt tazelemede `Kaynak` ile `OlayId` ayrışabilir (kod incelemesi bulgusu, Yusuf'un kararı):** aynı kökten daha zayıf bir `duydu` gelirse `Kaynak` güçlü olanda kalır ama `Tick` ve `OlayId` yeni olaya geçer; `why` zinciri bu durumda güçlü kaynağın değil son anlatımın olayına iner ve sönüm yeni tick'ten başlar. Değiştirmek `han-gerilim-1` golden hash'ini etkileyebileceğinden bu PR'da dokunulmadı.
+- **Kanıt tazelemesi (KAPANDI, Yusuf'un kararı):** aynı kökten tekrar artık güncel güçle karşılaştırılır; daha güçlüyse kanıtın bütün alanları yeni olaydan gelir, değilse mevcut kanıt (Tick ve OlayId dahil) aynen kalır, kök değişmez. Zayıf tekrar sönümü sıfırlayamaz, alanlar iki olaydan karışmaz. `han-gerilim-1` hash'i bu yüzden `2f778d4f93ea7b0b` → `690f2f4ee9d3d385` oldu (Yusuf onayladı; `HanGerilimTests` değişmezleri ve seed 42/7 sayıları korundu).
+- **Kimden duyuldu bilgisi tek kanıta düşüyor (7. hafta, zorunlu):** aynı kökten gelen kanıt güven için tek sayılıyor ama "kimden duydu" bilgisi siliniyor. `HanGerilim` seed 42'de Hatice'nin kanıtı Ayşe'ninkinin yerini aldığı için `kaynak(borclu(Mehmet,Ayse,500), Ayse)` Can için yanlış dönüyor, oysa Can Ayşe'den de duydu. Plan "kanıtlar silinmez" ve "kimden duydu birinci sınıf sorgu" der. Tasarım seçenekleri 7. haftada Yusuf'a sunulacak (`DURUM.md`).
 - **Yedek kriz satırı hedefsiz olmalı:** kriterli olmayan ama hedefli satır yedek sayılmaz (doğrulayıcı hata verir), çünkü hedefi bulunamayan satır elenir ve yedek elenemez.
 
 - **Yalanın kanıt çelişkisinden otomatik yakalanması yok.** Yalanı yakalamak yalnızca yazarın kurallarıyla olur (ör. başka kaynaktan çelişen kanıt gelince `kaynak(...)` ve `inanc(...)` ölçütleriyle) ya da itiraf krizinde. İtiraf kurbanın inancını düzeltmez (açık karar).

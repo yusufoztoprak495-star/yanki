@@ -648,7 +648,9 @@ namespace Yanki.Core.Mind
                 _inanclar.Add(anahtar, kayit);
             }
 
-            // Yankı freni (E): aynı önerme için aynı kökten duydu kanıtı varsa yenisi eklenmez, mevcut tazelenir (güç max).
+            // Yankı freni (E): aynı önerme için aynı kökten duydu kanıtı varsa yenisi EKLENMEZ. Karşılaştırma güncel (sönmüş) güçle yapılır:
+            // yeni kanıt daha güçlüyse bütün alanları (Kaynak, Guc, Tick, OlayId) yeni kanıttan gelir; değilse mevcut kanıt tamamen aynı kalır
+            // (Tick ve OlayId dahil), böylece zayıf bir tekrar güçlü kanıtın sönümünü sıfırlayamaz. Kök değişmez; alanlar iki olaydan karışmaz.
             if (tur == KanitTuru.Duydu && kok.Length > 0)
             {
                 for (var i = 0; i < kayit.Kanitlar.Count; i++)
@@ -656,9 +658,11 @@ namespace Yanki.Core.Mind
                     var eski = kayit.Kanitlar[i];
                     if (eski.Tur == KanitTuru.Duydu && string.Equals(EtkinKok(eski), kok, StringComparison.Ordinal))
                     {
-                        var yeniGuclu = guc > eski.Guc;
-                        kayit.Kanitlar[i] = new Kanit(
-                            tur, yeniGuclu ? kaynak : eski.Kaynak, olay.Tick, Math.Max(eski.Guc, guc), olay.Id, kok);
+                        if (guc > _sonumleme.KanitGucu(eski, olay.Tick))
+                        {
+                            kayit.Kanitlar[i] = new Kanit(tur, kaynak, olay.Tick, guc, olay.Id, eski.Kok.Length > 0 ? eski.Kok : kok);
+                        }
+
                         return;
                     }
                 }

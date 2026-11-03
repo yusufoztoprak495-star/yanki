@@ -15,7 +15,7 @@ Her NPC'nin bir `Zihin`'i var, hepsi `ZihinDeposu`'nda sıralı durur. Zihin şu
 
 Durum yedi olayla ilerler: `modifier_eklendi`, `eksen_degisti`, `duygu_degisti`, `stres_degisti`, `kanit_eklendi`, `hafiza_eklendi` ve (6. hafta) `aktarim_kaydedildi`.
 
-**6. hafta:** `Kanit` söylentinin kökünü taşır (`Kok`; `gordu` için boş, etkin kökü sahibi). Aynı kökten `duydu` varsa yeni kanıt eklenmez, mevcut tazelenir; kökü sahibi olan `duydu` hiç yazılmaz (yankı freni). Zihin ayrıca konuşanın aktarım kaydını tutar (`Aktarimlar`, `YalanSoyledi(kime)`, `AktarimVar(onerme, kime)`); kayıt yokken `KanonikMetin` eskisiyle birebir aynıdır (`T|` satırı yalnızca kayıt varken). `EnGucluKanit` önermenin en güçlü tek güncel kanıtını verir (eşitlikte en küçük olay kimliği). Ayrıntı: `dedikodu.md`.
+**6. hafta:** `Kanit` söylentinin kökünü taşır (`Kok`; `gordu` için boş, etkin kökü sahibi). Aynı kökten `duydu` varsa yeni kanıt eklenmez; güncel güçle daha güçlü olan kanıtın bütün alanları tutulur (zayıf tekrar sönümü sıfırlamaz); kökü sahibi olan `duydu` hiç yazılmaz (yankı freni). Zihin ayrıca konuşanın aktarım kaydını tutar (`Aktarimlar`, `YalanSoyledi(kime)`, `AktarimVar(onerme, kime)`); kayıt yokken `KanonikMetin` eskisiyle birebir aynıdır (`T|` satırı yalnızca kayıt varken). `EnGucluKanit` önermenin en güçlü tek güncel kanıtını verir (eşitlikte en küçük olay kimliği). Ayrıntı: `dedikodu.md`.
 
 ## Neden böyle?
 

@@ -73,19 +73,75 @@ namespace Yanki.Core.Tests.Mind
             Assert.Contains("B|" + Borc + "|duydu|Ayse|2|0.7|1|oyuncu\n", k.KanonikMetin());
         }
 
+        private static Zihin Sonumlu() =>
+            new Zihin("Can", new Kisilik(0.5m, 0.5m, 0.5m, 0.5m, 0.5m, 0.5m), new ZihinAyarlari { KanitSonumuTickBasina = 0.01m });
+
         [Fact]
-        public void Ayni_kokten_ikinci_kanit_yeni_kanit_eklemez_mevcudu_tazeler()
+        public void Ayni_kokten_daha_zayif_tekrar_kanitin_hicbir_alanini_degistirmez()
+        {
+            var z = Sonumlu();
+            z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
+            var tek = Sonumlu();
+            tek.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
+
+            z.Uygula(Duydu(2, 12, "Can", Borc, "Veli", 0.3m, "oyuncu"));   // güncel güç 0.4 > 0.3
+
+            var k = Assert.Single(z.Kanitlar(Borc));
+            Assert.Equal("Ayse", k.Kaynak);
+            Assert.Equal(2, k.Tick);
+            Assert.Equal(0.5m, k.Guc);
+            Assert.Equal(1, k.OlayId);
+            Assert.Equal("oyuncu", k.Kok);
+            Assert.Equal(tek.Guven(Borc, 50), z.Guven(Borc, 50));          // sönüm sıfırlanmadı (yankı freni delinmedi)
+        }
+
+        [Fact]
+        public void Ayni_kokten_esit_guclu_tekrar_mevcudu_korur()
         {
             var z = Yeni();
             z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
-            z.Uygula(Duydu(2, 5, "Can", Borc, "Veli", 0.3m, "oyuncu"));
+            z.Uygula(Duydu(2, 9, "Can", Borc, "Veli", 0.5m, "oyuncu"));
 
-            var kanitlar = z.Kanitlar(Borc);
-            Assert.Single(kanitlar);
-            Assert.Equal(5, kanitlar[0].Tick);
-            Assert.Equal(0.5m, kanitlar[0].Guc);
-            Assert.Equal(2, kanitlar[0].OlayId);
-            Assert.Equal(0.5m, z.Guven(Borc, 5));
+            var k = Assert.Single(z.Kanitlar(Borc));
+            Assert.Equal((1L, 2L, "Ayse"), (k.OlayId, k.Tick, k.Kaynak));
+        }
+
+        [Fact]
+        public void Ayni_kokten_guncel_guce_gore_daha_guclu_tekrar_butun_alanlari_yeniler()
+        {
+            var z = Sonumlu();
+            z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));   // tick 12'de güncel 0.4
+
+            z.Uygula(Duydu(2, 12, "Can", Borc, "Veli", 0.45m, "oyuncu"));  // 0.45 > 0.4
+
+            var k = Assert.Single(z.Kanitlar(Borc));
+            Assert.Equal("Veli", k.Kaynak);
+            Assert.Equal(12, k.Tick);
+            Assert.Equal(0.45m, k.Guc);
+            Assert.Equal(2, k.OlayId);
+            Assert.Equal("oyuncu", k.Kok);
+        }
+
+        [Fact]
+        public void Guc_karsilastirmasi_ilk_gucle_degil_guncel_sonmus_gucledir()
+        {
+            var z = Sonumlu();
+            z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
+            // ham güç 0.5 > 0.45 ama mevcut 20 tick sonra 0.3'e sönmüş: yeni kanıt (0.45) daha güçlüdür
+            z.Uygula(Duydu(2, 22, "Can", Borc, "Veli", 0.45m, "oyuncu"));
+
+            Assert.Equal(2, Assert.Single(z.Kanitlar(Borc)).OlayId);
+        }
+
+        [Fact]
+        public void Why_zayif_tekrarda_guclu_kaynagin_olayina_iner()
+        {
+            var z = Sonumlu();
+            z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
+            z.Uygula(Duydu(2, 5, "Can", Borc, "Veli", 0.2m, "oyuncu"));
+
+            Assert.Equal(1, z.EnGucluKanit(Borc, 6)!.OlayId);
+            Assert.Equal("Ayse", Assert.Single(z.KimdenDuydu(Borc)).Kaynak);
         }
 
         [Fact]

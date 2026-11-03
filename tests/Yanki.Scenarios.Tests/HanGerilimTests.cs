@@ -47,19 +47,42 @@ namespace Yanki.Scenarios.Tests
 
         // ---- I1: Ayşe → Can söylentisi (plan 7) ----
 
-        [Fact]
-        public void I1_Ayse_Canin_kardesi_hakkindaki_borc_soylentisini_Cana_anlatir_ve_Can_oyuncuya_soguur_why_oyuncuya_iner()
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void I1_Ayse_Cana_borc_soylentisini_t1de_anlatir_Can_oyuncuya_soguur_why_oyuncunun_eylemine_iner(ulong seed)
         {
-            var sim = Calistir();
+            var sim = Calistir(seed);
 
-            Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "anlatti" && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == Borc && o.KuralId == "eylem:anlat");
-            Assert.Contains(sim.Zihinler["Can"].Kanitlar(Borc), k => k.Kaynak == "Ayse" && k.Kok == "oyuncu");
+            // t1'de fail Ayşe, hedef Can, önerme Borc.
+            Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "anlatti" && o.Tick == 1 && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == Borc && o.KuralId == "eylem:anlat");
+
+            // aileme_iftira modifier'ının why zinciri bu anlatımdan oyuncunun eylemine iner.
             var modifier = sim.Gunluk.Olaylar.First(o => o.Tur == "modifier_eklendi" && o.Deger("npc") == "Can" && o.Deger("tur") == "aileme_iftira");
             Assert.Equal("oyuncu", modifier.Deger("hedef"));
             Assert.Equal("-22", modifier.Deger("deger"));
             var zincir = sim.Neden(modifier.Id);
-            Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Fail == "Ayse" && o.Hedef == "Can");
+            Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Tick == 1 && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == Borc);
             Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Fail == "oyuncu" && o.Hedef == "Ayse" && o.KuralId == "player");
+
+            // Can'ın Borc kanıtının kökü her seed için oyuncudur.
+            var kanit = Assert.Single(sim.Zihinler["Can"].Kanitlar(Borc));
+            Assert.Equal("oyuncu", kanit.Kok);
+        }
+
+        [Fact]
+        public void I1_Seed_42_Canin_borc_kanitinin_son_hali_Haticenin_kanitidir()
+        {
+            var sim = Calistir(42);
+
+            // Ayşe t1'de 0.49 ile anlattı; Hatice t3'te aynı kökten 0.4886 ile anlattı. Yankı freni aynı kökten tek kanıt tutar ve
+            // güncel (sönmüş) güçle karşılaştırır: t3'te Ayşe'nin kanıtı sönmüş 0.4880 < Hatice'nin 0.4886, bu yüzden Ayşe'nin yerini Hatice alır
+            // (Kaynak, Guc, Tick, OlayId hepsi Hatice'nin olayından gelir).
+            var kanit = Assert.Single(sim.Zihinler["Can"].Kanitlar(Borc));
+            Assert.Equal("Hatice", kanit.Kaynak);
+            Assert.Equal(3, kanit.Tick);
+            Assert.Equal(0.4886m, kanit.Guc);
+            Assert.Equal("oyuncu", kanit.Kok);
         }
 
         [Fact]

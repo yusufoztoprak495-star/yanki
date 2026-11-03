@@ -44,7 +44,7 @@ Konuşan yalnızca inandığı ve ham güveni 0.3 ya da üstü olan önermeyi do
 
 Konuşan o önerme için **en güçlü tek güncel kanıtı** seçer (eşitlikte en küçük olay kimliği); güç, kök, kaynak ve `NedenOlaylar` dayanağı bu aynı kanıttan gelir (ham güven kullanılmaz).
 `yeni_guc = kanit_gucu × min(0.95, 0.7 + 0.003 × güven)`, `güven` dinleyenin konuşana duyduğu `guven` eksenidir (fikir değil); sonuç kaynak kanıtın gücünü geçemez. Oyuncunun kendi kanıt gücü 1.0'dır (nötr güvende 0.7, plan 7'deki örnek). 0.15'in altındaysa dinleyene kanıt yazılmaz (söylenti ölür); anlatım olayı ve konuşanın aktarım kaydı yine yazılır. Güç adım 5'te aynı durum görüntüsünden sabitlenir.
-`duydu` kanıtı kök taşır (`kanit_eklendi` yükünde isteğe bağlı `kok`; `gordu` için boş, etkin kökü sahibidir). Yalanın kökü konuşandır. Dinleyende aynı önerme için aynı kökten `duydu` kanıtı varsa yenisi eklenmez, mevcut tazelenir; kökü dinleyenin kendisi olan kanıt hiç yazılmaz (A→B→C→A'da A kendi söylentisine daha çok inanmaz). Konuşan, bir konuyu ondan kanıt aldığı ya da kökü olan kişiye geri anlatmaz.
+`duydu` kanıtı kök taşır (`kanit_eklendi` yükünde isteğe bağlı `kok`; `gordu` için boş, etkin kökü sahibidir). Yalanın kökü konuşandır. Dinleyende aynı önerme için aynı kökten `duydu` kanıtı varsa yenisi eklenmez; güncel (sönmüş) güçle karşılaştırılır: yeni kanıt daha güçlüyse `Kaynak`, `Guc`, `Tick`, `OlayId` hepsi yeni kanıttan gelir, değilse mevcut kanıt `Tick` ve `OlayId` dahil aynen kalır (zayıf tekrar sönümü sıfırlayamaz, alanlar iki olaydan karışmaz); kökü dinleyenin kendisi olan kanıt hiç yazılmaz (A→B→C→A'da A kendi söylentisine daha çok inanmaz). Konuşan, bir konuyu ondan kanıt aldığı ya da kökü olan kişiye geri anlatmaz.
 
 ### 5. Tick adımları
 
