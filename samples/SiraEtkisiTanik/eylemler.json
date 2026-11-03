@@ -1,0 +1,28 @@
+{
+  "eylemler": [
+    {
+      "id": "han_a_gel",
+      "hedef": "komsu_mekan",
+      "taban": 2,
+      "on_kosullar": [
+        {
+          "alan": "ayni_mekanda(oyuncu)",
+          "op": "==",
+          "deger": false
+        }
+      ]
+    },
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.3,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "eylemler": [
+    {
+      "id": "yalan_soyle",
+      "olay_turu": "anlatti",
+      "hedef": "npc",
+      "taban": 4,
+      "aktarim": "yalan",
+      "yalan_onermeleri": [
+        "degil(borclu(Mehmet,Ayse,500))",
+        "degil(borclu(Selim,Hatice,200))"
+      ],
+      "celisen_ozellikler": [
+        "durustluk"
+      ],
+      "stres_tabani": 10,
+      "on_kosullar": [
+        {
+          "alan": "inanc(sir_sakliyor(ben, Mehmet))",
+          "op": ">=",
+          "deger": 0.5
+        },
+        {
+          "alan": "hafiza_var(itiraf_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(sakinlesti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(kacti, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ]
+    },
+    {
+      "id": "tehdit_et",
+      "olay_turu": "tehdit_etti",
+      "hedef": "oyuncu",
+      "taban": 3,
+      "on_kosullar": [
+        {
+          "alan": "fikir(eylem.hedef)",
+          "op": "<",
+          "deger": -10
+        },
+        {
+          "alan": "hafiza_var(itiraf_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(kacti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(tehdit_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(kin_tutma)"
+        }
+      ],
+      "celisen_ozellikler": [
+        "merhamet"
+      ],
+      "stres_tabani": 70,
+      "etkiler": [
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.5,
+          "hedef": "eylem.hedef"
+        }
+      ]
+    },
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.3,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ]
+    }
+  ]
+}

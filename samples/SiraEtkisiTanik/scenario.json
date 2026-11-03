@@ -1,0 +1,67 @@
+{
+  "surum": 1,
+  "ad": "SiraEtkisiTanik",
+  "mekanlar": [
+    "han",
+    "pazar"
+  ],
+  "baglantilar": [
+    [
+      "han",
+      "pazar"
+    ]
+  ],
+  "oyuncu": {
+    "id": "oyuncu",
+    "konum": "han"
+  },
+  "npcler": [
+    {
+      "id": "Ayse",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.5,
+        "sosyallik": 0.5,
+        "kin_tutma": 0.5,
+        "merhamet": 0.5
+      }
+    },
+    {
+      "id": "Can",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.5,
+        "sosyallik": 0.5,
+        "kin_tutma": 0.5,
+        "merhamet": 0.5
+      }
+    },
+    {
+      "id": "Zeki",
+      "konum": "pazar",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.5,
+        "sosyallik": 0.5,
+        "kin_tutma": 0.5,
+        "merhamet": 0.5
+      }
+    }
+  ],
+  "gercekler": [],
+  "olay_turleri": [
+    "tehdit_etti",
+    "yardim_etti"
+  ],
+  "kural_dosyalari": [
+    "kurallar.json"
+  ],
+  "eylem_dosyalari": [
+    "eylemler.json"
+  ]
+}

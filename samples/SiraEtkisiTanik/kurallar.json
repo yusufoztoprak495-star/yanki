@@ -1,0 +1,44 @@
+{
+  "kurallar": [
+    {
+      "id": "tehdit_gordu",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "tehdit_gordu",
+          "deger": -15,
+          "sure": 100
+        }
+      ]
+    },
+    {
+      "id": "yardim_minneti",
+      "ne_zaman": "yardim_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "minnet",
+          "deger": 15,
+          "sure": 100
+        }
+      ]
+    }
+  ]
+}

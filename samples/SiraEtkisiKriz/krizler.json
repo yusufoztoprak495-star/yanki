@@ -1,0 +1,47 @@
+{
+  "krizler": [
+    {
+      "id": "itiraf",
+      "seviye": 1,
+      "olay_turu": "itiraf_etti",
+      "hedef": "yalan_kurbani",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.7
+        },
+        {
+          "alan": "yalan_soyledi(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ]
+    },
+    {
+      "id": "kac_alt",
+      "seviye": 1,
+      "olay_turu": "kacti",
+      "hedef": "yok"
+    },
+    {
+      "id": "patla",
+      "seviye": 2,
+      "olay_turu": "patladi",
+      "hedef": "en_soguk",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ]
+    },
+    {
+      "id": "kac_ust",
+      "seviye": 2,
+      "olay_turu": "kacti",
+      "hedef": "yok"
+    }
+  ]
+}
