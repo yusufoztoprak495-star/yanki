@@ -102,8 +102,8 @@ namespace Yanki.Core.Decision
         private readonly long _tick;
         private readonly DedikoduAyarlari _ayar;
 
-        // Tick içi önbellek: yalnızca arama (sıralı gezinti yok); durum hash'ine girmez, hesap saf olduğundan sonucu değiştirmez.
-        private readonly Dictionary<string, KonuSecimi> _onbellek = new Dictionary<string, KonuSecimi>(StringComparer.Ordinal);
+        // Tick içi önbellek: yalnızca arama (ordinal sıralı sözlük); durum hash'ine girmez, hesap saf olduğundan sonucu değiştirmez.
+        private readonly SortedDictionary<string, KonuSecimi> _onbellek = new SortedDictionary<string, KonuSecimi>(StringComparer.Ordinal);
 
         /// <summary>Hesabı <paramref name="tick"/> anı için kurar.</summary>
         public KonuHesabi(ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, DedikoduAyarlari? ayar = null)
