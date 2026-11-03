@@ -159,10 +159,11 @@ namespace Yanki.Core.Rules
 
                     if (!RollerTanimli(kural, tetik.Olay, oyuncuId))
                     {
-                        // Kriterler tanımsız rolle değerlendirilemez; fren, kriterlere bakılmadan olayı algılayan her NPC için yazılır.
-                        foreach (var algilayan in tetik.Algilayanlar)
+                        // Rol denetimi NPC'ye bağlı değildir: (kural, tetikleyici) başına tek fren, npc alanı boş. Kriterlere bakılmaz
+                        // (tanımsız rolle değerlendirilemezler). Olayı kimse algılamadıysa kural zaten değerlendirilmezdi, fren de yazılmaz.
+                        if (tetik.Algilayanlar.Count > 0)
                         {
-                            frenler.Add(new FrenBilgisi(FrenTurleri.TanimsizRol, kural.Id, algilayan, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                            frenler.Add(new FrenBilgisi(FrenTurleri.TanimsizRol, kural.Id, string.Empty, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
                         }
 
                         continue;

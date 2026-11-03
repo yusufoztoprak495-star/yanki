@@ -21,25 +21,37 @@ namespace Yanki.Core.Tests.Brakes
         private static Olay[] Frenler(Simulasyon s) => s.Gunluk.Olaylar.Where(o => o.Tur == "fren_uygulandi").ToArray();
 
         [Fact]
-        public void Tanimsiz_rol_kurali_o_olay_icin_atlar_ve_algilayan_basina_fren_olayi_yazar()
+        public void Tanimsiz_rol_kurali_o_olay_icin_atlar_ve_kural_tetikleyici_basina_tek_npcsiz_fren_olayi_yazar()
         {
             var s = SimFikstur.Yap(HedefineMinnet);
-            s.Submit(new PlayerAction("yardim_etti"));   // hedefsiz: olay.hedef tanımsız
+            s.Submit(new PlayerAction("yardim_etti"));   // hedefsiz: olay.hedef tanımsız; Ali ve Veli olayı algılar
+            s.Tick(1);
+
+            // Rol denetimi NPC'ye bağlı değildir: algılayan sayısından bağımsız tek olay, npc alanı boş.
+            var fren = Assert.Single(Frenler(s));
+            Assert.Equal("tanimsiz_rol", fren.Deger("fren"));
+            Assert.Equal("hedefe_minnet", fren.Deger("kimlik"));
+            Assert.Equal(string.Empty, fren.Deger("npc"));
+            Assert.Equal(string.Empty, fren.Deger("hedef"));
+            Assert.Equal("fren:tanimsiz_rol", fren.KuralId);
+            Assert.Equal(1, fren.Tick);
+            var tetik = s.Gunluk.Olaylar.Single(o => o.Tur == "yardim_etti");
+            Assert.Equal(new[] { tetik.Id }, fren.NedenOlaylar.ToArray());
+            Assert.DoesNotContain(s.Gunluk.Olaylar, o => o.Tur == "modifier_eklendi");
+        }
+
+        [Fact]
+        public void Tanimsiz_rol_iki_tetikleyicide_iki_olay_yazar_her_biri_kendi_tetikleyicisine_baglidir()
+        {
+            var s = SimFikstur.Yap(HedefineMinnet);
+            s.Submit(new PlayerAction("yardim_etti"));
+            s.Submit(new PlayerAction("yardim_etti"));
             s.Tick(1);
 
             var fren = Frenler(s);
-            Assert.Equal(new[] { "Ali", "Veli" }, fren.Select(o => o.Deger("npc")).ToArray());
-            Assert.All(fren, o =>
-            {
-                Assert.Equal("tanimsiz_rol", o.Deger("fren"));
-                Assert.Equal("hedefe_minnet", o.Deger("kimlik"));
-                Assert.Equal(string.Empty, o.Deger("hedef"));
-                Assert.Equal("fren:tanimsiz_rol", o.KuralId);
-                Assert.Equal(1, o.Tick);
-            });
-            var tetik = s.Gunluk.Olaylar.Single(o => o.Tur == "yardim_etti");
-            Assert.All(fren, o => Assert.Equal(new[] { tetik.Id }, o.NedenOlaylar.ToArray()));
-            Assert.DoesNotContain(s.Gunluk.Olaylar, o => o.Tur == "modifier_eklendi");
+            var tetikler = s.Gunluk.Olaylar.Where(o => o.Tur == "yardim_etti").Select(o => o.Id).ToArray();
+            Assert.Equal(2, fren.Length);
+            Assert.Equal(tetikler, fren.Select(o => o.NedenOlaylar.Single()).ToArray());
         }
 
         [Fact]
@@ -94,9 +106,9 @@ namespace Yanki.Core.Tests.Brakes
             s.Submit(new PlayerAction("yardim_etti", "pazar"));
             s.Tick(1);
 
-            Assert.Equal(4, s.Frenler().Count);
-            Assert.Equal(2, s.Frenler("tanimsiz_rol").Count);
-            Assert.Equal(2, s.Frenler(npc: "Ali").Count);
+            Assert.Equal(3, s.Frenler().Count);               // 1 tanimsiz_rol (npc'siz) + 2 kisi_olmayan_hedef (Ali, Veli)
+            Assert.Single(s.Frenler("tanimsiz_rol"));
+            Assert.Single(s.Frenler(npc: "Ali"));
             Assert.Single(s.Frenler("kisi_olmayan_hedef", "Veli"));
             Assert.Empty(s.Frenler("cooldown"));
         }
