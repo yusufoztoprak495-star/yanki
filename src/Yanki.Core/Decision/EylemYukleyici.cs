@@ -26,7 +26,7 @@ namespace Yanki.Core.Decision
         private static readonly string[] EylemAnahtarlari =
         {
             "id", "olay_turu", "hedef", "taban", "on_kosullar", "olcutler", "kisilik_carpani", "fikir_carpani",
-            "ruh_hali_carpani", "celisen_ozellikler", "etkiler",
+            "ruh_hali_carpani", "celisen_ozellikler", "etkiler", "aktarim", "konu_desenleri", "yalan_onermeleri", "gorunurluk", "stres_tabani",
         };
 
         private static readonly string[] OlcutAnahtarlari = { "alan", "min", "max", "egri" };
@@ -161,6 +161,24 @@ namespace Yanki.Core.Decision
                 hedefGecerli = true;
             }
 
+            // aktarım (dedikodu) türü
+            var aktarim = AktarimTuru.Yok;
+            var aktarimDugumu = oge.Al("aktarim");
+            if (aktarimDugumu != null)
+            {
+                if (aktarimDugumu.Tur != JsonTuru.Metin || !AktarimTurleri.TryCoz(aktarimDugumu.MetinDeger, out aktarim))
+                {
+                    Hata(aktarimDugumu.Satir, $"\"aktarim\" geçersiz: dogru ya da yalan olmalı ({AktarimTurleri.GecerliAdlar})");
+                    aktarim = AktarimTuru.Yok;
+                    aktarimDugumu = null;
+                }
+                else if (hedefGecerli && hedef != EylemHedefTuru.Npc && hedef != EylemHedefTuru.Oyuncu)
+                {
+                    Hata(aktarimDugumu.Satir, "aktarim eyleminin \"hedef\" alanı npc ya da oyuncu olmalı (aynı mekandaki dinleyen)");
+                }
+            }
+
+            var konusma = aktarimDugumu != null;
             var hareket = hedefGecerli && hedef == EylemHedefTuru.KomsuMekan;
             var kume = !hedefGecerli ? RolKumesi.Hepsi : hedef == EylemHedefTuru.Yok ? HedefsizRoller : HedefliRoller;
 
@@ -193,6 +211,19 @@ namespace Yanki.Core.Decision
             else if (olayDugumu == null || olayDugumu.Tur != JsonTuru.Metin)
             {
                 Hata(olayDugumu?.Satir ?? oge.Satir, "Eylemde metin olarak \"olay_turu\" alanı gerekli (komsu_mekan hareket eylemi hariç)");
+            }
+            else if (konusma)
+            {
+                if (olayDugumu.MetinDeger != YerlesikTurler.Anlatti)
+                {
+                    Hata(
+                        olayDugumu.Satir,
+                        $"aktarim eyleminin \"olay_turu\" değeri \"anlatti\" olmak zorundadır (\"{olayDugumu.MetinDeger}\" olursa dışarıdan yalan ile doğru ayırt edilir)");
+                }
+                else
+                {
+                    olayTuru = olayDugumu.MetinDeger;
+                }
             }
             else if (!Kimlik.GecerliKimlikMi(olayDugumu.MetinDeger))
             {
@@ -343,12 +374,42 @@ namespace Yanki.Core.Decision
                 }
             }
 
+            var konuDesenleri = new List<OnermeDeseni>();
+            var yalanOnermeleri = new List<string>();
+            var gorunurluk = string.Empty;
+            AktarimAlanlariniOku(oge, aktarim, konusma, konuDesenleri, yalanOnermeleri, ref gorunurluk, Hata, uyarilar, kaynak, kimlik);
+
+            // stres tabanı
+            decimal? stresTabani = null;
+            var stresDugumu = oge.Al("stres_tabani");
+            if (stresDugumu != null)
+            {
+                if (stresDugumu.Tur != JsonTuru.Sayi || stresDugumu.SayiDeger <= 0m || stresDugumu.SayiDeger > 100m)
+                {
+                    Hata(stresDugumu.Satir, "\"stres_tabani\" 0'dan büyük, en çok 100 olan bir sayı olmalı");
+                }
+                else
+                {
+                    stresTabani = stresDugumu.SayiDeger;
+                    if (celisen.Count == 0)
+                    {
+                        uyarilar.Add(new KuralHatasi(
+                            kaynak, stresDugumu.Satir, kimlik, "\"stres_tabani\" yazılı ama \"celisen_ozellikler\" yok: stres hiç artmaz", "eylem"));
+                    }
+                }
+            }
+
+            if (celisen.Count > 0 && stresDugumu == null)
+            {
+                Hata(cd!.Satir, "\"celisen_ozellikler\" var ama \"stres_tabani\" yok: çelişen eylemin stres maliyeti yazılmalı");
+            }
+
             // etkiler
             var etkiler = new List<KuralEtkisi>();
             var etkiDugumu = oge.Al("etkiler");
             if (etkiDugumu == null)
             {
-                if (!hareket)
+                if (!hareket && !konusma)
                 {
                     Hata(oge.Satir, "Eylemin etkisi yok: \"etkiler\" alanı gerekli (etkisi boş eylem reddedilir; yalnızca komsu_mekan hareketi etkisiz olabilir)");
                 }
@@ -359,7 +420,7 @@ namespace Yanki.Core.Decision
             }
             else if (etkiDugumu.Elemanlar.Count == 0)
             {
-                if (!hareket)
+                if (!hareket && !konusma)
                 {
                     Hata(etkiDugumu.Satir, "Eylemin etkisi yok: \"etkiler\" boş (etkisi boş eylem reddedilir; yalnızca komsu_mekan hareketi etkisiz olabilir)");
                 }
@@ -390,7 +451,142 @@ namespace Yanki.Core.Decision
                 return null;
             }
 
-            return new EylemTanimi(kimlik, olayTuru, hedef, taban, kriterler, olcutler, kisilikCarpani, fikirCarpani, ruhHali, celisen, etkiler, oge.Satir);
+            return new EylemTanimi(kimlik, olayTuru, hedef, taban, kriterler, olcutler, kisilikCarpani, fikirCarpani, ruhHali, celisen, etkiler, oge.Satir, aktarim, konuDesenleri, yalanOnermeleri, gorunurluk, stresTabani);
+        }
+
+        // aktarim, konu_desenleri, yalan_onermeleri, gorunurluk alanları ve aktarımsız eylemde yasakları.
+        private static void AktarimAlanlariniOku(
+            JsonDegeri oge, AktarimTuru aktarim, bool konusma, List<OnermeDeseni> desenler, List<string> yalanlar, ref string gorunurluk,
+            Action<int, string> hata, List<KuralHatasi> uyarilar, string kaynak, string kimlik)
+        {
+            var konuDugumu = oge.Al("konu_desenleri");
+            var yalanDugumu = oge.Al("yalan_onermeleri");
+            var gorunurDugumu = oge.Al("gorunurluk");
+
+            if (!konusma)
+            {
+                foreach (var (ad, d) in new[] { ("konu_desenleri", konuDugumu), ("yalan_onermeleri", yalanDugumu), ("gorunurluk", gorunurDugumu) })
+                {
+                    if (d != null)
+                    {
+                        hata(d.Satir, $"\"{ad}\" yalnızca \"aktarim\" alanı olan eylemde yazılır");
+                    }
+                }
+
+                return;
+            }
+
+            if (gorunurDugumu != null)
+            {
+                if (gorunurDugumu.Tur != JsonTuru.Metin || (gorunurDugumu.MetinDeger != "sessiz" && gorunurDugumu.MetinDeger != "acik"))
+                {
+                    hata(gorunurDugumu.Satir, "\"gorunurluk\" sessiz ya da acik olmalı (konuşmada gizli anlamsızdır; varsayılan sessiz)");
+                }
+                else
+                {
+                    gorunurluk = gorunurDugumu.MetinDeger;
+                }
+            }
+
+            if (aktarim == AktarimTuru.Dogru)
+            {
+                if (yalanDugumu != null)
+                {
+                    hata(yalanDugumu.Satir, "\"yalan_onermeleri\" yalnızca aktarim: yalan eyleminde yazılır");
+                }
+
+                if (konuDugumu == null)
+                {
+                    hata(oge.Satir, "aktarim: dogru eyleminde \"konu_desenleri\" zorunlu (anlatılabilecek önerme desenleri, örn. \"borclu(*,*,*)\")");
+                    return;
+                }
+
+                if (konuDugumu.Tur != JsonTuru.Dizi || konuDugumu.Elemanlar.Count == 0)
+                {
+                    hata(konuDugumu.Satir, "\"konu_desenleri\" boş olmayan bir dizi olmalı");
+                    return;
+                }
+
+                foreach (var e in konuDugumu.Elemanlar)
+                {
+                    if (e.Tur != JsonTuru.Metin)
+                    {
+                        hata(e.Satir, "\"konu_desenleri\" öğesi metin olmalı");
+                        continue;
+                    }
+
+                    var metin = e.MetinDeger.Trim();
+                    var bos = metin.StartsWith("degil(", StringComparison.Ordinal) && metin.EndsWith(")", StringComparison.Ordinal)
+                        ? metin.Substring(6, metin.Length - 7).Trim() : metin;
+                    if (bos.StartsWith("*", StringComparison.Ordinal))
+                    {
+                        hata(e.Satir, $"\"konu_desenleri\" joker yüklem kabul etmez (yüklemi açık yaz): \"{e.MetinDeger}\"");
+                        continue;
+                    }
+
+                    try
+                    {
+                        var desen = OnermeDeseni.Ayristir(metin);
+                        desenler.Add(desen);
+                        if (bos.StartsWith("anlatti(", StringComparison.Ordinal))
+                        {
+                            uyarilar.Add(new KuralHatasi(
+                                kaynak, e.Satir, kimlik, "\"konu_desenleri\" içindeki anlatti önermeleri hiçbir zaman konu olamaz (desen etkisiz)", "eylem"));
+                        }
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        hata(e.Satir, $"\"konu_desenleri\" geçersiz desen: {ex.Message}");
+                    }
+                }
+
+                return;
+            }
+
+            // yalan
+            if (konuDugumu != null)
+            {
+                hata(konuDugumu.Satir, "\"konu_desenleri\" yalnızca aktarim: dogru eyleminde yazılır (yalan \"yalan_onermeleri\" kullanır)");
+            }
+
+            if (yalanDugumu == null)
+            {
+                hata(oge.Satir, "aktarim: yalan eyleminde \"yalan_onermeleri\" zorunlu (örn. \"degil(borclu(Mehmet,{eylem.hedef},500))\")");
+                return;
+            }
+
+            if (yalanDugumu.Tur != JsonTuru.Dizi || yalanDugumu.Elemanlar.Count == 0)
+            {
+                hata(yalanDugumu.Satir, "\"yalan_onermeleri\" boş olmayan bir dizi olmalı");
+                return;
+            }
+
+            foreach (var e in yalanDugumu.Elemanlar)
+            {
+                if (e.Tur != JsonTuru.Metin || e.MetinDeger.Trim().Length == 0)
+                {
+                    hata(e.Satir, "\"yalan_onermeleri\" öğesi boş olmayan bir metin olmalı");
+                    continue;
+                }
+
+                // Şablonlar örnek kimliklerle açılıp önerme olarak ayrıştırılır; tanınmayan { } şablonu reddedilir.
+                var ornek = e.MetinDeger.Replace("{ben}", "Ornek1").Replace("{eylem.hedef}", "Ornek2");
+                if (ornek.IndexOf('{') >= 0 || ornek.IndexOf('}') >= 0)
+                {
+                    hata(e.Satir, $"\"yalan_onermeleri\" bilinmeyen şablon (yalnızca {{ben}} ve {{eylem.hedef}}): \"{e.MetinDeger}\"");
+                    continue;
+                }
+
+                try
+                {
+                    Yanki.Core.Mind.Onerme.Ayristir(ornek);
+                    yalanlar.Add(e.MetinDeger.Trim());
+                }
+                catch (ArgumentException ex)
+                {
+                    hata(e.Satir, $"\"yalan_onermeleri\" geçersiz önerme \"{e.MetinDeger}\": {ex.Message}");
+                }
+            }
         }
 
         // ---- kriter/ölçüt alanı: eylem bağlamı denetimleri ----

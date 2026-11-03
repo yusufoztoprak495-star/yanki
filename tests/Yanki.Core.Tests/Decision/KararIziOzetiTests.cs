@@ -102,7 +102,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Celisen_ozellikler_secilen_eylem_icin_gosterilir()
         {
-            var eylemler = KararFikstur.Yukle(KararFikstur.Eylem("c", ek: "\"celisen_ozellikler\": [ \"durustluk\" ]"));
+            var eylemler = KararFikstur.Yukle(KararFikstur.Eylem("c", ek: "\"celisen_ozellikler\": [ \"durustluk\" ], \"stres_tabani\": 10"));
             var sim = KararFikstur.Sim(eylemler);
             var iz = new UtilitySelector().Sec(KararFikstur.Baglam(sim, "Ali"), new[] { new Aday(eylemler[0], string.Empty) }, new ElenenAday[0]).Iz;
 
@@ -171,7 +171,7 @@ namespace Yanki.Core.Tests.Decision
         [Fact]
         public void Kisa_iz_kaynaklari_ve_celisen_ozellikleri_yazar()
         {
-            var eylemler = KararFikstur.Yukle(KararFikstur.Eylem("c", ek: "\"celisen_ozellikler\": [ \"durustluk\" ]"));
+            var eylemler = KararFikstur.Yukle(KararFikstur.Eylem("c", ek: "\"celisen_ozellikler\": [ \"durustluk\" ], \"stres_tabani\": 10"));
             var sim = KararFikstur.Sim(eylemler);
             var iz = new UtilitySelector().Sec(KararFikstur.Baglam(sim, "Ali"), new[] { new Aday(eylemler[0], string.Empty) }, new ElenenAday[0]).Iz;
             var kaynakli = new KararIzi(iz.Npc, iz.Tick, iz.Ayarlar, iz.Adaylar, iz.Havuz, iz.Zar, iz.Secilen, iz.CelisenOzellikler, new long[] { 9, 3 }, new[] { "stres(): kaynak yok" });

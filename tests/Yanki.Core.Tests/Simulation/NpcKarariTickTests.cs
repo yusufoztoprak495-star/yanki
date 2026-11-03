@@ -424,7 +424,7 @@ namespace Yanki.Core.Tests.Simulation
         [Fact]
         public void Celisen_ozellikler_izde_gorunur_ama_stres_degismez()
         {
-            var sim = Kur(Senaryo1(), new[] { Selam("\"celisen_ozellikler\": [ \"durustluk\", \"merhamet\" ]"), Git() });
+            var sim = Kur(Senaryo1(), new[] { Selam("\"celisen_ozellikler\": [ \"durustluk\", \"merhamet\" ], \"stres_tabani\": 10"), Git() });
             sim.Tick(3);
 
             var karar = Tek(sim, "karar_verildi", "Ali", 1);

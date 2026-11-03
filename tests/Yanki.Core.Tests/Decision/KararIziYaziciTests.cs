@@ -14,7 +14,7 @@ namespace Yanki.Core.Tests.Decision
         private static (KararIzi Iz, Yanki.Core.Simulation.Simulasyon Sim) Ornek()
         {
             var eylemler = KararFikstur.Yukle(
-                KararFikstur.Eylem("a", "npc", "\"olcutler\": [ { \"alan\": \"kisilik(cesaret)\", \"egri\": { \"tur\": \"lojistik\", \"k\": 10, \"m\": 0.5 } } ], \"celisen_ozellikler\": [ \"durustluk\" ]", 2m),
+                KararFikstur.Eylem("a", "npc", "\"olcutler\": [ { \"alan\": \"kisilik(cesaret)\", \"egri\": { \"tur\": \"lojistik\", \"k\": 10, \"m\": 0.5 } } ], \"celisen_ozellikler\": [ \"durustluk\" ], \"stres_tabani\": 10", 2m),
                 KararFikstur.Eylem("b", taban: 1.4m));
             var sim = KararFikstur.Sim(eylemler);
             var adaylar = new[] { new Aday(eylemler[0], "Veli"), new Aday(eylemler[1], string.Empty) };

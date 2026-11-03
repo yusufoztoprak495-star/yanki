@@ -33,7 +33,7 @@ namespace Yanki.Scenarios.Tests
   ""id"": ""selam_ver"", ""olay_turu"": ""selam_verdi"", ""hedef"": ""yok"", ""taban"": 1,
   ""olcutler"": [ { ""alan"": ""kisilik(sosyallik)"", ""egri"": { ""tur"": ""lojistik"", ""k"": 8, ""m"": 0.4 } } ],
   ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""sosyallik"" } ] },
-  ""celisen_ozellikler"": [ ""durustluk"" ],
+  ""celisen_ozellikler"": [ ""durustluk"" ], ""stres_tabani"": 10,
   ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.6 } ]
 } ] }";
 

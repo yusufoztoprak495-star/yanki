@@ -26,7 +26,7 @@ namespace Yanki.Core.Tests.Decision
       ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""merhamet"", ""agirlik"": 2 }, { ""ozellik"": ""acgozluluk"", ""ters"": true } ] },
       ""fikir_carpani"": { ""yon"": ""artan"" },
       ""ruh_hali_carpani"": { ""duygular"": [ { ""duygu"": ""korku"", ""ters"": true } ] },
-      ""celisen_ozellikler"": [ ""acgozluluk"" ],
+      ""celisen_ozellikler"": [ ""acgozluluk"" ], ""stres_tabani"": 10,
       ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.6 } ]
     },
     {
