@@ -267,7 +267,7 @@ namespace Yanki.Core.Decision
 
                         var onek = $"kriter #{i + 1}: ";
                         KuralYukleyici.KriterRolleriniDenetle(kriter, kd.Satir, i + 1, roller, Hata, kume);
-                        AlanBaglamDenetle(kriter.Alan, hedef, hedefGecerli, kd.Satir, onek, Hata);
+                        AlanBaglamDenetle(kriter.Alan, hedef, hedefGecerli, kd.Satir, onek, Hata, aktarim);
 
                         if (kd.Al("agirlik") != null)
                         {
@@ -302,7 +302,7 @@ namespace Yanki.Core.Decision
                 {
                     for (var i = 0; i < olcutDugumu.Elemanlar.Count; i++)
                     {
-                        var olcut = OlcutOku(olcutDugumu.Elemanlar[i], i + 1, roller, kume, hedef, hedefGecerli, Hata);
+                        var olcut = OlcutOku(olcutDugumu.Elemanlar[i], i + 1, roller, kume, hedef, hedefGecerli, Hata, aktarim);
                         if (olcut != null)
                         {
                             olcutler.Add(olcut);
@@ -591,8 +591,19 @@ namespace Yanki.Core.Decision
 
         // ---- kriter/ölçüt alanı: eylem bağlamı denetimleri ----
 
-        private static void AlanBaglamDenetle(SorguCagrisi alan, EylemHedefTuru hedef, bool hedefGecerli, int satir, string onek, Action<int, string> hata)
+        private static void AlanBaglamDenetle(
+            SorguCagrisi alan, EylemHedefTuru hedef, bool hedefGecerli, int satir, string onek, Action<int, string> hata, AktarimTuru aktarim)
         {
+            if (alan.Ad == "olay_konusu")
+            {
+                hata(satir, onek + "'olay_konusu' sonuç kuralı bağlamıdır (anlatılan olay); eylemlerde tanımsız");
+            }
+
+            if (alan.Ad == "konu_puani" && aktarim != AktarimTuru.Dogru)
+            {
+                hata(satir, onek + "'konu_puani' yalnızca aktarim: dogru eylemlerinde geçerlidir (konu havuzu eyleme özel desenlerden gelir)");
+            }
+
             if (alan.Ad == "olay_rolu")
             {
                 hata(satir, onek + "'olay_rolu' sonuç kuralı bağlamıdır (olay.fail/hedef/tanık); eylemlerde tanımsız");
@@ -621,7 +632,8 @@ namespace Yanki.Core.Decision
         // ---- ölçüt ----
 
         private static Olcut? OlcutOku(
-            JsonDegeri d, int sira, SortedSet<Rol> roller, RolKumesi kume, EylemHedefTuru hedef, bool hedefGecerli, Action<int, string> hata)
+            JsonDegeri d, int sira, SortedSet<Rol> roller, RolKumesi kume, EylemHedefTuru hedef, bool hedefGecerli, Action<int, string> hata,
+            AktarimTuru aktarim)
         {
             var onek = $"ölçüt #{sira}: ";
             if (d.Tur != JsonTuru.Nesne)
@@ -671,7 +683,7 @@ namespace Yanki.Core.Decision
                 }
 
                 KuralYukleyici.AlanRolleriniDenetle(alan, alanDugumu!.Satir, onek, roller, Say, kume);
-                AlanBaglamDenetle(alan, hedef, hedefGecerli, alanDugumu.Satir, onek, Say);
+                AlanBaglamDenetle(alan, hedef, hedefGecerli, alanDugumu.Satir, onek, Say, aktarim);
                 var donus = SorguSozlugu.Bul(alan.Ad)!.Donus;
                 if (donus != DonusTuru.Sayi && donus != DonusTuru.Mantiksal)
                 {

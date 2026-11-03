@@ -65,7 +65,7 @@ namespace Yanki.Core.Decision
         // İlk tutmayan ön koşulun nedeni; hepsi tutuyorsa null.
         private static string? OnKosulSonucu(EylemTanimi eylem, string hedef, KararBaglami baglam, OnKosulOnbellegi onbellek)
         {
-            var sorguBaglami = baglam.SorguBaglami(hedef);
+            var sorguBaglami = baglam.SorguBaglami(hedef, eylem);
             for (var i = 0; i < eylem.OnKosullar.Count; i++)
             {
                 var kriter = eylem.OnKosullar[i];

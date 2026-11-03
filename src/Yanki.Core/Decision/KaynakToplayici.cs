@@ -35,7 +35,7 @@ namespace Yanki.Core.Decision
         {
             var olaylar = new SortedSet<long>();
             var kaynaksiz = new SortedSet<string>(StringComparer.Ordinal);
-            var sorgu = baglam.SorguBaglami(aday.Hedef);
+            var sorgu = baglam.SorguBaglami(aday.Hedef, aday.Eylem);
             var eylem = aday.Eylem;
 
             foreach (var kriter in eylem.OnKosullar)

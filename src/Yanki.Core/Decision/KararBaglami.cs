@@ -55,7 +55,9 @@ namespace Yanki.Core.Decision
         }
 
         /// <summary>Verilen hedef için sorgu bağlamı: <c>ben</c> = karar veren, <c>eylem.hedef</c> = aday hedefi (boşsa tanımsız).</summary>
-        public SorguBaglami SorguBaglami(string hedef) =>
-            new SorguBaglami(Npc, OyuncuId, eylemHedef: hedef ?? string.Empty);
+        public SorguBaglami SorguBaglami(string hedef, EylemTanimi? eylem = null) =>
+            new SorguBaglami(
+                Npc, OyuncuId, eylemHedef: hedef ?? string.Empty,
+                konuDesenleri: eylem != null && eylem.Aktarim == AktarimTuru.Dogru ? eylem.KonuDesenleri : null);
     }
 }

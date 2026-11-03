@@ -51,6 +51,8 @@ v0.1'de sabit, belgelenmiş küçük bir set (16 fonksiyon; 15'i v0.1 listesi, `
 | 14  | `gercek(onerme)`                          | Önerme dünyada nesnel olarak doğru mu (yalnızca sonuç kuralları ve yazar koşulları için; NPC zihni bunu göremez)                                                                           | doğru/yanlış                                   | `gercek(konum!(Ali, han))`                 |
 | 15  | `olay_rolu(rol)`                          | Sonuç kuralında mevcut olay bağlamında bu NPC `fail` (olayı yapan), `hedef` (olayın yöneldiği) ya da `tanik` (olayı algılayan, ama ikisi de olmayan) mı. Olay bağlamı yoksa her rol yanlış | doğru/yanlış                                   | `olay_rolu(hedef)`                         |
 | 16  | `yay(degisken)`                           | Senaryo düzeyindeki dramatik yay değişkeninin değeri                                                                                                                                       | sayı                                           | `yay(kasaba_gerginligi) aralik [2, 4]`     |
+| 17 | `konu_puani(kime)` | Bu NPC'nin o kişiye anlatabileceği en yüksek konu puanı (yalnızca `aktarim: dogru` eylemlerinin ön koşul ve ölçütlerinde; konu havuzu eylemin `konu_desenleri`) | sayı 0..1 | `konu_puani(eylem.hedef) >= 0.2` |
+| 18 | `olay_konusu(onerme)` | Sonuç kuralında mevcut olay `anlatti` ise ve anlatılan önerme desene uyuyorsa; yalnızca içeriği duyan dinleyen (`olay.hedef`) için doğru, konuşan ve tanık için yanlış | doğru/yanlış | `olay_konusu(borclu(Mehmet, *, *))` |
 
 ## Bağlama durumu (3. hafta)
 

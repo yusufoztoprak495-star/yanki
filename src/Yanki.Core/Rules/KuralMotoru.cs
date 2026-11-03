@@ -133,7 +133,7 @@ namespace Yanki.Core.Rules
 
                     foreach (var npc in tetik.Algilayanlar)
                     {
-                        var baglam = new SorguBaglami(npc, oyuncuId, olayFail: tetik.Olay.Fail, olayHedef: tetik.Olay.Hedef);
+                        var baglam = new SorguBaglami(npc, oyuncuId, olayFail: tetik.Olay.Fail, olayHedef: tetik.Olay.Hedef, olayOnermesi: OlayOnermesi(tetik.Olay));
                         if (!KriterlerTutuyor(kural, cozucu, baglam))
                         {
                             continue;
@@ -189,6 +189,25 @@ namespace Yanki.Core.Rules
                         new[] { new KeyValuePair<string, string>("gercek", e.Gercek) },
                         e.Nedenler, kuralId);
             }
+        }
+
+        // anlatti olayının anlattığı önerme (olay_konusu için); başka olaylarda boş.
+        private static string OlayOnermesi(Olay olay)
+        {
+            if (!string.Equals(olay.Tur, Decision.YerlesikTurler.Anlatti, StringComparison.Ordinal))
+            {
+                return string.Empty;
+            }
+
+            foreach (var kv in olay.Yuk)
+            {
+                if (string.Equals(kv.Key, "onerme", StringComparison.Ordinal))
+                {
+                    return kv.Value;
+                }
+            }
+
+            return string.Empty;
         }
 
         private static bool RollerTanimli(KuralTanimi kural, Olay olay, string oyuncuId)

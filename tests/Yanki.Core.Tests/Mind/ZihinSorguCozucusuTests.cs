@@ -265,7 +265,9 @@ namespace Yanki.Core.Tests.Mind
             // Hiçbir fonksiyon "bilinmiyor" diye düşmemeli; yalnızca yay (7. hafta) NotSupported verir.
             var d = new Duzen();
             var cozucu = new ZihinSorguCozucusu(OlayUretici.SabitDunya(), d.Zihinler, d.Gunluk, 0);
-            var baglam = new SorguBaglami("Ali", oyuncu: "Ayse", konusan: "Ali", dinleyen: "Can", olayFail: "Ali", olayHedef: "Can");
+            var baglam = new SorguBaglami(
+                "Ali", oyuncu: "Ayse", konusan: "Ali", dinleyen: "Can", olayFail: "Ali", olayHedef: "Can",
+                konuDesenleri: new[] { OnermeDeseni.Ayristir("borclu(*,*,*)") }, olayOnermesi: "borclu(Mehmet,Ayse,5)");
             var desteklenmeyen = new List<string>();
             var ornekler = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -285,6 +287,8 @@ namespace Yanki.Core.Tests.Mind
                 ["stres"] = "stres()",
                 ["yalan_soyledi"] = "yalan_soyledi(oyuncu)",
                 ["yay"] = "yay(x)",
+                ["konu_puani"] = "konu_puani(Can)",
+                ["olay_konusu"] = "olay_konusu(borclu(*, *, *))",
             };
             d.Zihinler.Ekle(new Zihin("Ali", new Kisilik(0.5m, 0.5m, 0.5m, 0.5m, 0.5m, 0.5m)));
 

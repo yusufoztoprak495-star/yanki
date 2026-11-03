@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Yanki.Core.Decision;
 using Yanki.Core.Events;
 using Yanki.Core.Mind;
 using Yanki.Core.World;
@@ -18,14 +19,16 @@ namespace Yanki.Core.Criteria
         private readonly ZihinDeposu _zihinler;
         private readonly OlayGunlugu _gunluk;
         private readonly long _simdikiTick;
+        private readonly DedikoduAyarlari _dedikodu;
 
         /// <summary>Verilen dünya, zihinler ve günlük üzerinde, <paramref name="simdikiTick"/> anı için çözücü kurar.</summary>
-        public ZihinSorguCozucusu(Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long simdikiTick)
+        public ZihinSorguCozucusu(Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long simdikiTick, DedikoduAyarlari? dedikodu = null)
         {
             _dunyaCozucusu = new DunyaSorguCozucusu(dunya ?? throw new ArgumentNullException(nameof(dunya)));
             _zihinler = zihinler ?? throw new ArgumentNullException(nameof(zihinler));
             _gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
             _simdikiTick = simdikiTick;
+            _dedikodu = dedikodu ?? new DedikoduAyarlari();
         }
 
         /// <inheritdoc />
@@ -48,6 +51,8 @@ namespace Yanki.Core.Criteria
                     return _dunyaCozucusu.Coz(cagri, baglam);
                 case "olay_rolu":
                     return SorguDegeri.Mantiksal(OlayRolundeMi(Ad(cagri, 0), baglam));
+                case "olay_konusu":
+                    return SorguDegeri.Mantiksal(OlayKonusuMu(cagri, baglam));
                 case "yay":
                     throw new NotSupportedException("'yay' yay değişkenleri gerektirir; 7. haftada eklenecek.");
             }
@@ -73,6 +78,15 @@ namespace Yanki.Core.Criteria
                     return SorguDegeri.Sayi(ben.Stres(_simdikiTick));
                 case "inanc":
                     return SorguDegeri.Sayi(ben.InancDerecesi(Desen(cagri, baglam), _simdikiTick));
+                case "konu_puani":
+                    if (baglam.KonuDesenleri == null)
+                    {
+                        throw new InvalidOperationException("'konu_puani' yalnızca aktarim: dogru eyleminin ön koşul/ölçütlerinde çözülür (konu havuzu eylemden gelir).");
+                    }
+
+                    return SorguDegeri.Sayi(
+                        new KonuHesabi(_zihinler, _gunluk, _simdikiTick, _dedikodu)
+                            .EnYuksekKonuPuani(baglam.Coz(Rol.Ben), Varlik(cagri, 0, baglam), baglam.KonuDesenleri));
                 case "yalan_soyledi":
                     return SorguDegeri.Mantiksal(ben.YalanSoyledi(Varlik(cagri, 0, baglam)));
                 case "kaynak":
@@ -82,6 +96,23 @@ namespace Yanki.Core.Criteria
                 default:
                     throw new NotSupportedException($"'{cagri.Ad}' fonksiyonu ZihinSorguCozucusu'nde yok.");
             }
+        }
+
+        // olay_konusu: yalnızca sonuç kuralı bağlamında; mevcut olay anlatti ise, "ben" olayın hedefi (içeriği duyan dinleyen) ise ve
+        // anlatılan önerme desene uyuyorsa doğru. Konuşan ve tanık için her zaman yanlıştır (kulak misafirliği yok).
+        private static bool OlayKonusuMu(SorguCagrisi cagri, SorguBaglami baglam)
+        {
+            if (baglam.OlayOnermesi.Length == 0 || !baglam.Tanimli(Rol.OlayHedef))
+            {
+                return false;
+            }
+
+            if (!string.Equals(baglam.Coz(Rol.Ben), baglam.Coz(Rol.OlayHedef), StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return Desen(cagri, baglam).Uyar(Onerme.Ayristir(baglam.OlayOnermesi));
         }
 
         // "Ben" mevcut olayda ne: fail (olayı yapan), hedef (olayın yöneldiği) ya da tanık (olayı algılayan ama ikisi de olmayan).

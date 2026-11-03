@@ -31,7 +31,7 @@ namespace Yanki.Core.Rules
             Dunya.VarlikEklendi, Dunya.GercekEklendi, Dunya.GercekKaldirildi, Dunya.MekanBaglandi,
             ZihinOlaylari.ModifierEklendiTuru, ZihinOlaylari.EksenDegistiTuru, ZihinOlaylari.DuyguDegistiTuru,
             ZihinOlaylari.StresDegistiTuru, ZihinOlaylari.KanitEklendiTuru, ZihinOlaylari.HafizaEklendiTuru,
-            Decision.YerlesikTurler.Ayrildi, Decision.YerlesikTurler.Geldi,
+            Decision.YerlesikTurler.Ayrildi, Decision.YerlesikTurler.Geldi, Decision.YerlesikTurler.Anlatti,
         }.AsReadOnly();
 
         /// <summary>Kural bağlamında çözülebilen roller.</summary>
@@ -290,6 +290,11 @@ namespace Yanki.Core.Rules
                 {
                     hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yay 7. hafta)");
                 }
+            }
+
+            if (ReferenceEquals(kume, RolKumesi.Kural) && string.Equals(alan.Ad, "konu_puani", StringComparison.Ordinal))
+            {
+                hata(satir, $"{onek}'konu_puani' yalnızca aktarim: dogru eylemlerinde geçerlidir (konu havuzu eyleme özel desenlerden gelir); sonuç kurallarında tanımsız");
             }
 
             var bulunan = new List<Rol>();

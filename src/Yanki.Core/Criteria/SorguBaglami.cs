@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Yanki.Core.Mind;
 
 namespace Yanki.Core.Criteria
 {
@@ -16,6 +18,18 @@ namespace Yanki.Core.Criteria
         private readonly string _olayHedef;
         private readonly string _eylemHedef;
 
+        /// <summary>
+        /// Yalnızca <c>aktarim: dogru</c> eyleminin ön koşul/ölçütlerinde dolu: eylemin konu havuzu (<c>konu_puani</c> bunu kullanır).
+        /// Diğer bağlamlarda <c>null</c> ve <c>konu_puani</c> çözülemez.
+        /// </summary>
+        public IReadOnlyList<OnermeDeseni>? KonuDesenleri { get; }
+
+        /// <summary>
+        /// Yalnızca <c>anlatti</c> olayının sonuç kuralı değerlendirmesinde dolu: anlatılan önerme (<c>olay_konusu</c> bunu okur);
+        /// dolu olması "dinleyen içeriği duydu" anlamına gelmez, bunu <c>olay_konusu</c> rol denetimiyle sınar.
+        /// </summary>
+        public string OlayOnermesi { get; }
+
         /// <summary>Bağlam kurar. <paramref name="ben"/> zorunludur; diğer roller yoksa boş bırakılır.</summary>
         /// <exception cref="ArgumentException"><paramref name="ben"/> boşsa.</exception>
         public SorguBaglami(
@@ -25,7 +39,9 @@ namespace Yanki.Core.Criteria
             string dinleyen = "",
             string olayFail = "",
             string olayHedef = "",
-            string eylemHedef = "")
+            string eylemHedef = "",
+            IReadOnlyList<OnermeDeseni>? konuDesenleri = null,
+            string olayOnermesi = "")
         {
             if (string.IsNullOrEmpty(ben))
             {
@@ -39,6 +55,8 @@ namespace Yanki.Core.Criteria
             _olayFail = olayFail ?? string.Empty;
             _olayHedef = olayHedef ?? string.Empty;
             _eylemHedef = eylemHedef ?? string.Empty;
+            KonuDesenleri = konuDesenleri;
+            OlayOnermesi = olayOnermesi ?? string.Empty;
         }
 
         /// <summary>Rol bu bağlamda tanımlı mı.</summary>
