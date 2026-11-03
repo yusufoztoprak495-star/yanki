@@ -314,9 +314,12 @@ namespace Yanki.Core.Tests.Decision
 
         [Theory]
         [InlineData("yay(gerginlik)", "<", "5", "yay")]
-        [InlineData("yalan_soyledi(eylem.hedef)", "==", "true", "yalan_soyledi")]
         public void Bagli_olmayan_fonksiyonlar_acik_mesajla_reddedilir(string alan, string op, string deger, string ad) =>
             HataVar(Kosul(alan, op, deger), $"'{ad}' fonksiyonu henüz bağlı değil");
+
+        [Fact]
+        public void Yalan_soyledi_eylem_on_kosulunda_gecerlidir() =>
+            Gecer(Kosul("yalan_soyledi(eylem.hedef)", "==", "false"));
 
         [Fact]
         public void Hedefsiz_eylemde_eylem_hedef_reddedilir() =>

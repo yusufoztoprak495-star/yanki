@@ -20,7 +20,7 @@ namespace Yanki.Core.Rules
         private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler" };
 
         // Sözlükte olup çözücüsü henüz bağlı olmayan fonksiyonlar (ZihinSorguCozucusu): çalışma anında patlamasınlar diye baştan reddedilir.
-        internal static readonly string[] BagliOlmayanFonksiyonlar = { "yalan_soyledi", "yay" };
+        internal static readonly string[] BagliOlmayanFonksiyonlar = { "yay" };
 
         /// <summary>
         /// Çekirdeğin bildiği olay türleri: dünya ve zihin olayları. Oyuncu eylem türlerini senaryo tanımlar ve
@@ -288,7 +288,7 @@ namespace Yanki.Core.Rules
             {
                 if (string.Equals(alan.Ad, bagli, StringComparison.Ordinal))
                 {
-                    hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yalan_soyledi 6. hafta, yay 7. hafta)");
+                    hata(satir, $"{onek}'{bagli}' fonksiyonu henüz bağlı değil (yay 7. hafta)");
                 }
             }
 

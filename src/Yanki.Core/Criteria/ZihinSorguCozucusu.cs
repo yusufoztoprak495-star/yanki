@@ -8,9 +8,8 @@ namespace Yanki.Core.Criteria
 {
     /// <summary>
     /// Sözlükteki zihne dayanan fonksiyonları gerçek veriye bağlar: <c>kisilik</c>, <c>eksen</c>, <c>fikir</c>, <c>fikir_bandi</c>,
-    /// <c>modifier_var</c>, <c>olay_rolu</c>, <c>duygu</c>, <c>duygu_hedefi</c>, <c>stres</c>, <c>inanc</c>, <c>kaynak</c>, <c>hafiza_var</c>.
-    /// <c>gercek</c> ve <c>ayni_mekanda</c> dünya çözücüsüne devredilir. <c>yalan_soyledi</c> (6. hafta) ve <c>yay</c> (7. hafta)
-    /// henüz yoktur. "Ben" rolünün zihni sorgulanır; süreli değerler verilen tick'te hesaplanır (ADR-008).
+    /// <c>modifier_var</c>, <c>olay_rolu</c>, <c>yalan_soyledi</c>, <c>duygu</c>, <c>duygu_hedefi</c>, <c>stres</c>, <c>inanc</c>, <c>kaynak</c>, <c>hafiza_var</c>.
+    /// <c>gercek</c> ve <c>ayni_mekanda</c> dünya çözücüsüne devredilir. <c>yay</c> (7. hafta) henüz yoktur. "Ben" rolünün zihni sorgulanır; süreli değerler verilen tick'te hesaplanır (ADR-008).
     /// Çözücü tek tick için kurulur; tick ilerleyince yenisi kurulur.
     /// </summary>
     public sealed class ZihinSorguCozucusu : ISorguCozucu
@@ -49,8 +48,6 @@ namespace Yanki.Core.Criteria
                     return _dunyaCozucusu.Coz(cagri, baglam);
                 case "olay_rolu":
                     return SorguDegeri.Mantiksal(OlayRolundeMi(Ad(cagri, 0), baglam));
-                case "yalan_soyledi":
-                    throw new NotSupportedException("'yalan_soyledi' yalan kaydı gerektirir; 6. haftada eklenecek.");
                 case "yay":
                     throw new NotSupportedException("'yay' yay değişkenleri gerektirir; 7. haftada eklenecek.");
             }
@@ -76,6 +73,8 @@ namespace Yanki.Core.Criteria
                     return SorguDegeri.Sayi(ben.Stres(_simdikiTick));
                 case "inanc":
                     return SorguDegeri.Sayi(ben.InancDerecesi(Desen(cagri, baglam), _simdikiTick));
+                case "yalan_soyledi":
+                    return SorguDegeri.Mantiksal(ben.YalanSoyledi(Varlik(cagri, 0, baglam)));
                 case "kaynak":
                     return SorguDegeri.Mantiksal(ben.KaynakVar(Desen(cagri, baglam), Varlik(cagri, 1, baglam)));
                 case "hafiza_var":

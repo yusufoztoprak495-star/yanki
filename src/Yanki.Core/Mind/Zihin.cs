@@ -18,6 +18,7 @@ namespace Yanki.Core.Mind
         private readonly SortedDictionary<string, Iliski> _iliskiler = new SortedDictionary<string, Iliski>(StringComparer.Ordinal);
         private readonly SortedDictionary<string, InancKaydi> _inanclar = new SortedDictionary<string, InancKaydi>(StringComparer.Ordinal);
         private readonly List<HafizaKaydi> _hafiza = new List<HafizaKaydi>();
+        private readonly List<AktarimKaydi> _aktarimlar = new List<AktarimKaydi>();
 
         // _hafiza konumlarının, hatırlanan OLAY kimliğine göre artan sıralı dizini. Yalnızca sorguyu hızlandırır; durum değildir, hash'e girmez.
         // Neden gerekli: HafizaVar penceresi hatırlanan olayın tick'ine göre uygulanır; _hafiza ise ekleme sırasındadır ve bu anahtara göre
@@ -110,6 +111,7 @@ namespace Yanki.Core.Mind
                 case ZihinOlaylari.DuyguDegistiTuru: DuyguDegistir(olay); break;
                 case ZihinOlaylari.StresDegistiTuru: StresDegistir(olay); break;
                 case ZihinOlaylari.KanitEklendiTuru: KanitEkle(olay); break;
+                case ZihinOlaylari.AktarimKaydedildiTuru: AktarimEkle(olay); break;
                 default: HafizaEkle(olay); break;
             }
 
@@ -336,7 +338,99 @@ namespace Yanki.Core.Mind
             return false;
         }
 
+        /// <summary>Önermenin en güçlü TEK güncel kanıtı (güncel güce göre; eşitlikte en küçük olay kimliği); kanıt yoksa <c>null</c>.</summary>
+        public Kanit? EnGucluKanit(string onerme, long simdikiTick)
+        {
+            if (!_inanclar.TryGetValue(Onerme.Ayristir(onerme).ToString(), out var kayit))
+            {
+                return null;
+            }
+
+            Kanit? en = null;
+            var enGuc = -1m;
+            foreach (var k in kayit.Kanitlar)
+            {
+                var guc = _sonumleme.KanitGucu(k, simdikiTick);
+                if (en == null || guc > enGuc || (guc == enGuc && k.OlayId < en.OlayId))
+                {
+                    en = k;
+                    enGuc = guc;
+                }
+            }
+
+            return en;
+        }
+
+        /// <summary>Kanıtın bu tick'teki gücü (sönmüş).</summary>
+        public decimal KanitGucu(Kanit kanit, long simdikiTick) => _sonumleme.KanitGucu(kanit, simdikiTick);
+
+        /// <summary>
+        /// Kanıtın etkin kökü: kök yazılıysa o; yoksa <c>gordu</c>/<c>cikarim</c> için zihnin sahibi, <c>duydu</c> için kaynak
+        /// (kök bilinmeyen eski duydu kanıtında anlatan kök sayılır).
+        /// </summary>
+        public string EtkinKok(Kanit kanit)
+        {
+            if (kanit == null)
+            {
+                throw new ArgumentNullException(nameof(kanit));
+            }
+
+            if (kanit.Kok.Length > 0)
+            {
+                return kanit.Kok;
+            }
+
+            return kanit.Tur == KanitTuru.Duydu ? kanit.Kaynak : Id;
+        }
+
+        // ---- Aktarım kaydı ----
+
+        /// <summary>Bu NPC'nin aktarım kayıtları, eklenme sırasıyla.</summary>
+        public IReadOnlyList<AktarimKaydi> Aktarimlar => new ReadOnlyCollection<AktarimKaydi>(new List<AktarimKaydi>(_aktarimlar));
+
+        /// <summary>Bu NPC <paramref name="kime"/>'ye bildiği yanlış bir şeyi (yalan) söylemiş mi (<c>yalan_soyledi</c>).</summary>
+        public bool YalanSoyledi(string kime)
+        {
+            foreach (var a in _aktarimlar)
+            {
+                if (a.Yalan && string.Equals(a.Kime, kime, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Bu önerme <paramref name="kime"/>'ye daha önce anlatılmış mı (doğru ya da yalan).</summary>
+        public bool AktarimVar(string onerme, string kime)
+        {
+            var kanonik = Onerme.Ayristir(onerme).ToString();
+            foreach (var a in _aktarimlar)
+            {
+                if (string.Equals(a.Kime, kime, StringComparison.Ordinal) && string.Equals(a.Onerme, kanonik, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // ---- Hafıza ----
+
+        /// <summary>Olayın hafıza kaydının bu tick'teki önemi; kayıt yoksa ya da unutulduysa <c>null</c>.</summary>
+        public decimal? HafizaOnemi(long olayId, long simdikiTick)
+        {
+            var yer = HafizaDizinYeri(olayId);
+            if (yer >= _hafizaOlayaGore.Count || _hafiza[_hafizaOlayaGore[yer]].OlayId != olayId)
+            {
+                return null;
+            }
+
+            var kayit = _hafiza[_hafizaOlayaGore[yer]];
+            return _sonumleme.HafizaAktifMi(kayit, simdikiTick) ? _sonumleme.HafizaOnemi(kayit, simdikiTick) : (decimal?)null;
+        }
 
         /// <summary>Bu tick'te sorgulanabilen hafıza kayıtları (kalıcılar ve henüz silikleşmemişler), olay kimliğine göre sıralı.</summary>
         public IReadOnlyList<HafizaKaydi> Hafiza(long simdikiTick)
@@ -444,8 +538,23 @@ namespace Yanki.Core.Mind
                 foreach (var k in kanitlar)
                 {
                     sb.Append("B|").Append(kv.Key).Append('|').Append(KanitTurleri.Ad(k.Tur)).Append('|').Append(k.Kaynak)
-                        .Append('|').Append(Uzun(k.Tick)).Append('|').Append(KanonikYazici.Sayi(k.Guc)).Append('|').Append(Uzun(k.OlayId)).Append('\n');
+                        .Append('|').Append(Uzun(k.Tick)).Append('|').Append(KanonikYazici.Sayi(k.Guc)).Append('|').Append(Uzun(k.OlayId));
+                    if (k.Kok.Length > 0)
+                    {
+                        sb.Append('|').Append(k.Kok);
+                    }
+
+                    sb.Append('\n');
                 }
+            }
+
+            // Aktarım kayıtları yalnızca varsa yazılır: kayıt yokken kanonik metin 6. hafta öncesiyle birebir aynıdır (altın hash'ler).
+            var aktarimlar = new List<AktarimKaydi>(_aktarimlar);
+            aktarimlar.Sort((a, b) => a.OlayId.CompareTo(b.OlayId));
+            foreach (var a in aktarimlar)
+            {
+                sb.Append("T|").Append(a.Kime).Append('|').Append(a.Onerme).Append('|').Append(Uzun(a.OlayId)).Append('|')
+                    .Append(Uzun(a.Tick)).Append('|').Append(a.Yalan ? "1" : "0").Append('\n');
             }
 
             var hafiza = new List<HafizaKaydi>(_hafiza);
@@ -525,11 +634,34 @@ namespace Yanki.Core.Mind
                 throw new ArgumentOutOfRangeException("guc", guc, $"Olay #{olay.Id}: kanıt gücü 0..1 olmalı.");
             }
 
+            var kok = OlayYukuOpsiyonel(olay, "kok");
             var anahtar = onerme.ToString();
+            if (tur == KanitTuru.Duydu && kok.Length > 0 && string.Equals(kok, Id, StringComparison.Ordinal))
+            {
+                // Yankı freni (E): söylentinin kökü bizzat bu NPC; kendi söylentisini geri duymak yeni kanıt sayılmaz.
+                return;
+            }
+
             if (!_inanclar.TryGetValue(anahtar, out var kayit))
             {
                 kayit = new InancKaydi(onerme);
                 _inanclar.Add(anahtar, kayit);
+            }
+
+            // Yankı freni (E): aynı önerme için aynı kökten duydu kanıtı varsa yenisi eklenmez, mevcut tazelenir (güç max).
+            if (tur == KanitTuru.Duydu && kok.Length > 0)
+            {
+                for (var i = 0; i < kayit.Kanitlar.Count; i++)
+                {
+                    var eski = kayit.Kanitlar[i];
+                    if (eski.Tur == KanitTuru.Duydu && string.Equals(EtkinKok(eski), kok, StringComparison.Ordinal))
+                    {
+                        var yeniGuclu = guc > eski.Guc;
+                        kayit.Kanitlar[i] = new Kanit(
+                            tur, yeniGuclu ? kaynak : eski.Kaynak, olay.Tick, Math.Max(eski.Guc, guc), olay.Id, kok);
+                        return;
+                    }
+                }
             }
 
             // Aynı önerme, tür ve kaynaktan tekrar gelen kanıt yeni kanıt sayılmaz: mevcut olan tazelenir
@@ -539,12 +671,38 @@ namespace Yanki.Core.Mind
                 var eski = kayit.Kanitlar[i];
                 if (eski.Tur == tur && string.Equals(eski.Kaynak, kaynak, StringComparison.Ordinal))
                 {
-                    kayit.Kanitlar[i] = new Kanit(tur, kaynak, olay.Tick, Math.Max(eski.Guc, guc), olay.Id);
+                    kayit.Kanitlar[i] = new Kanit(tur, kaynak, olay.Tick, Math.Max(eski.Guc, guc), olay.Id, eski.Kok.Length > 0 ? eski.Kok : kok);
                     return;
                 }
             }
 
-            kayit.Kanitlar.Add(new Kanit(tur, kaynak, olay.Tick, guc, olay.Id));
+            kayit.Kanitlar.Add(new Kanit(tur, kaynak, olay.Tick, guc, olay.Id, kok));
+        }
+
+        private void AktarimEkle(Olay olay)
+        {
+            var kime = HedefDenetle(olay.Deger("kime"));
+            var onerme = Onerme.Ayristir(olay.Deger("onerme")).ToString();
+            var yalan = olay.Deger("yalan");
+            if (yalan != "0" && yalan != "1")
+            {
+                throw new ArgumentException($"Olay #{olay.Id}: \"yalan\" 0 ya da 1 olmalı: \"{yalan}\".");
+            }
+
+            _aktarimlar.Add(new AktarimKaydi(olay.Tick, kime, onerme, yalan == "1", olay.Id));
+        }
+
+        private static string OlayYukuOpsiyonel(Olay olay, string anahtar)
+        {
+            foreach (var kv in olay.Yuk)
+            {
+                if (string.Equals(kv.Key, anahtar, StringComparison.Ordinal))
+                {
+                    return kv.Value;
+                }
+            }
+
+            return string.Empty;
         }
 
         private void HafizaEkle(Olay olay)
