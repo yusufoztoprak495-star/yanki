@@ -22,14 +22,14 @@ namespace Yanki.Core.Tests.Simulation
         private const string Kardes = "kardes(Mehmet,Can)";
         private const string DegilBorc = "degil(" + Borc + ")";
 
-        private static string Senaryo(string npcSirasi = "Ayse,Can,Zeki,Veli", string gercekler = "") =>
+        internal static string Senaryo(string npcSirasi = "Ayse,Can,Zeki,Veli", string gercekler = "", string ayseDurustluk = "0.5") =>
             @"{ ""surum"": 1, ""ad"": ""Dedikodu"", ""mekanlar"": [""han"", ""pazar""], ""baglantilar"": [[""han"", ""pazar""]],
   ""oyuncu"": { ""id"": ""oyuncu"", ""konum"": ""han"" },
-  ""npcler"": [" + string.Join(",", npcSirasi.Split(',').Select(Npc)) + @"],
+  ""npcler"": [" + string.Join(",", npcSirasi.Split(',').Select(id => Npc(id, id == "Ayse" ? ayseDurustluk : "0.5"))) + @"],
   ""gercekler"": [" + gercekler + @"], ""olay_turleri"": [""haber""], ""kural_dosyalari"": [""k.json""] }";
 
-        private static string Npc(string id) =>
-            @"{ ""id"": """ + id + @""", ""konum"": """ + (id == "Veli" ? "pazar" : "han") + @""", ""kisilik"": { ""acgozluluk"": 0.5, ""durustluk"": 0.5, ""cesaret"": 0.5, ""sosyallik"": 0.5, ""kin_tutma"": 0.5, ""merhamet"": 0.5 } }";
+        private static string Npc(string id, string durustluk = "0.5") =>
+            @"{ ""id"": """ + id + @""", ""konum"": """ + (id == "Veli" ? "pazar" : "han") + @""", ""kisilik"": { ""acgozluluk"": 0.5, ""durustluk"": " + durustluk + @", ""cesaret"": 0.5, ""sosyallik"": 0.5, ""kin_tutma"": 0.5, ""merhamet"": 0.5 } }";
 
         private static readonly string[] Eylemler =
         {
@@ -50,7 +50,7 @@ namespace Yanki.Core.Tests.Simulation
 } ] }";
 
         /// <summary>Test seçicisi: her çağrıda adayları kaydeder; seçimi (npc, tick) tablosundan yapar.</summary>
-        private sealed class Kaydedici : IActionSelector
+        internal sealed class Kaydedici : IActionSelector
         {
             private readonly Dictionary<string, string> _secimler = new Dictionary<string, string>(StringComparer.Ordinal);
 

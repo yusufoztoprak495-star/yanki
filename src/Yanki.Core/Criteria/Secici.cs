@@ -132,7 +132,14 @@ namespace Yanki.Core.Criteria
         /// biri seçilir, böylece sonuç girdi sırasından bağımsızdır. RNG'den yalnızca bu son durumda değer çekilir.
         /// </summary>
         /// <exception cref="ArgumentException">Aday kimlikleri tekil değilse.</exception>
-        public static SecimSonucu<T> EnIyiSec<T>(IReadOnlyList<Aday<T>> adaylar, ISorguCozucu cozucu, SorguBaglami baglam, AnahtarliRng rng)
+        public static SecimSonucu<T> EnIyiSec<T>(IReadOnlyList<Aday<T>> adaylar, ISorguCozucu cozucu, SorguBaglami baglam, AnahtarliRng rng) =>
+            EnIyiSec(adaylar, cozucu, _ => baglam, rng);
+
+        /// <summary>
+        /// <see cref="EnIyiSec{T}(IReadOnlyList{Aday{T}}, ISorguCozucu, SorguBaglami, AnahtarliRng)"/>, ama her aday kendi bağlamıyla
+        /// değerlendirilir (örn. kriz satırlarının <c>eylem.hedef</c> rolü satıra göre değişir). Seçim kuralı birebir aynıdır.
+        /// </summary>
+        public static SecimSonucu<T> EnIyiSec<T>(IReadOnlyList<Aday<T>> adaylar, ISorguCozucu cozucu, Func<Aday<T>, SorguBaglami> baglamlar, AnahtarliRng rng)
         {
             if (adaylar == null)
             {
@@ -160,7 +167,7 @@ namespace Yanki.Core.Criteria
             var enCokTutan = 0;
             foreach (var aday in sirali)
             {
-                var iz = Puanla(aday, cozucu, baglam);
+                var iz = Puanla(aday, cozucu, baglamlar(aday));
                 izler.Add(iz);
                 if (iz.Elendi)
                 {
