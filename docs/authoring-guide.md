@@ -149,3 +149,10 @@ Stres yavaş söner (0.2/tick); eşik 50 ve 80'dir (denge alanı).
 ## Sonuç kuralları, şablonlar, `yanki validate`
 
 🚧 İlerleyen haftalarda (kural yazımı için şimdilik `samples/MiniHan/kurallar.json` ve `notes/kural-motoru.md`).
+
+## Söylenti kuralları ve tekrar (7. hafta)
+
+`ne_zaman: anlatti` kuralları aynı söylentiyi **her duyuşta** tetikler: Can aynı borç söylentisini Ayşe'den, Hatice'den, Selim'den ve Kemal'den duyarsa kural dört kez çalışır ve (sınırsızsa) dört modifier yazar
+(birikme sınırı ve ×0.9 azalan etki bunları yumuşatır ama sayı yine de şişer). Söylenti tek etki bırakacaksa kurala `en_fazla: 1` (kapsam varsayılanı `npc`: her dinleyen için bir kez) ya da bir `cooldown` yaz.
+Engellenen her tekrar günlükte bir `en_fazla`/`cooldown` fren olayı bırakır (`yanki query <oturum> <npc>` "frenler" bölümü; `yanki why` fren olayından söylentiyi getiren anlatıma iner).
+Süreleri **1 tick = 1 saat** olarak yaz (plan 18 gün = 432 tick, 30 gün = 720 tick).

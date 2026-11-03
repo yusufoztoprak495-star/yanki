@@ -21,9 +21,10 @@
           "hedef": "oyuncu",
           "modifier": "aileme_iftira",
           "deger": -22,
-          "sure": 18
+          "sure": 432
         }
-      ]
+      ],
+      "en_fazla": 1
     },
     {
       "id": "yalan_yakalandi",
@@ -41,7 +42,7 @@
           "hedef": "olay.fail",
           "modifier": "yalanini_yakaladim",
           "deger": -30,
-          "sure": 30
+          "sure": 720
         },
         {
           "tur": "eksen",

@@ -265,7 +265,7 @@ namespace Yanki.Cli
             public OynatmaSonucu Sonuc { get; }
         }
 
-        private static YuklenenOturum? OturumuOynat(string yol, TextWriter hata, out int cikis)
+        private static YuklenenOturum? OturumuOynat(string yol, TextWriter hata, out int cikis, bool senaryoHashDenetle = true)
         {
             cikis = DosyaHatasi;
             if (!File.Exists(yol))
@@ -295,7 +295,7 @@ namespace Yanki.Cli
 
             try
             {
-                return new YuklenenOturum(yol, senaryoYolu, kayit, sim, OturumOynatici.Oynat(sim, kayit, SenaryoDosyasi.Hash(senaryoYolu)));
+                return new YuklenenOturum(yol, senaryoYolu, kayit, sim, OturumOynatici.Oynat(sim, kayit, senaryoHashDenetle ? SenaryoDosyasi.Hash(senaryoYolu) : null));
             }
             catch (SenaryoDegistiHatasi e)
             {
@@ -345,7 +345,8 @@ namespace Yanki.Cli
                 return KullanimHatasi;
             }
 
-            var oturum = OturumuOynat(yol, hata, out var cikis);
+            // --guncelle ve --hash-ekle senaryo değişikliğini bilerek kabul eder (senaryo_hash yenilenir); yalnızca düz replay denetler.
+            var oturum = OturumuOynat(yol, hata, out var cikis, senaryoHashDenetle: !(guncelle || hashEkle));
             if (oturum == null)
             {
                 return cikis;

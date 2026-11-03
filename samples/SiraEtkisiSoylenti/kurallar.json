@@ -22,7 +22,7 @@
           "hedef": "oyuncu",
           "modifier": "aileme_iftira",
           "deger": -22,
-          "sure": 100
+          "sure": 432
         }
       ]
     },
@@ -47,7 +47,7 @@
           "hedef": "olay.fail",
           "modifier": "minnet",
           "deger": 15,
-          "sure": 100
+          "sure": 336
         }
       ]
     },

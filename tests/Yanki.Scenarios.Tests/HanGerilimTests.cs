@@ -173,8 +173,69 @@ namespace Yanki.Scenarios.Tests
         [Fact]
         public void Seed_42_ve_seed_7_son_hashleri_kilitli()
         {
-            Assert.Equal("d98b50f39fc358dd", Calistir(42).SonHash);
-            Assert.Equal("fb0210738ec3d335", Calistir(7).SonHash);
+            Assert.Equal("13e6ccbefed06409", Calistir(42).SonHash);
+            Assert.Equal("792ad19381df8123", Calistir(7).SonHash);
+        }
+
+        // ---- I1 (7. hafta): aile_iftirasi tek tetikleme ve tek kopya ----
+
+        /// <summary>
+        /// Plan 7: Can'da TEK <c>aileme_iftira(oyuncu)</c> modifier'ı (−22, 18 gün = 432 tick). Söylenti Can'a Ayşe, Hatice, Selim ve Kemal'den ulaşır ama kural
+        /// <c>en_fazla: 1</c> olduğundan modifier bir kez yazılır; sonraki duyuşlar <c>en_fazla</c> freni bırakır.
+        /// </summary>
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void I1_aile_iftirasi_Can_icin_tam_bir_modifier_yazar_kopya_hicbir_tickte_1i_asmaz(ulong seed)
+        {
+            var enCok = 0;
+            var sim = Calistir(seed, x =>
+            {
+                var kopya = x.Zihinler["Can"].FikirDokumu("oyuncu", x.SimdikiTick).Katkilar.Count(k => k.Kaynak.Contains("aileme_iftira"));
+                enCok = System.Math.Max(enCok, kopya);
+            });
+
+            var yazilan = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi").ToArray();
+            var modifier = Assert.Single(yazilan);
+            Assert.Equal(("Can", "aileme_iftira", "-22", "432"), (modifier.Deger("npc"), modifier.Deger("tur"), modifier.Deger("deger"), modifier.Deger("sure")));
+            Assert.Equal(1, enCok);                                                                              // aktif kopya hiçbir tick'te 1'i aşmadı
+
+            // Söylentiyi Can başka kişilerden de duydu; her duyuşta kural tetiklenmek ister ama en_fazla engeller.
+            var engellenen = sim.Frenler("en_fazla", "Can").Where(f => f.Deger("kimlik") == "aile_iftirasi").ToArray();
+            Assert.NotEmpty(engellenen);
+            Assert.All(engellenen, f => Assert.Contains(sim.Neden(f.Id), o => o.Tur == "anlatti" && o.Hedef == "Can"));
+        }
+
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void I1_aile_iftirasi_why_Ayse_nin_t1_anlatimindan_oyuncunun_anlatimina_iner_tick_24te_modifier_aktif_ve_etkisi_eksi_22(ulong seed)
+        {
+            var sim = Calistir(seed);
+            var modifier = sim.Gunluk.Olaylar.Single(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi");
+
+            var zincir = sim.Neden(modifier.Id);
+            Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Tick == 1 && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == Borc);
+            Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Tick == 1 && o.Fail == "oyuncu" && o.Hedef == "Ayse" && o.KuralId == "player");
+
+            // 432 tick'lik modifier tick 24'te hâlâ aktif ve etkisi tam −22 (432 > 24; sönmez).
+            var dokum = sim.Zihinler["Can"].FikirDokumu("oyuncu", 24);
+            var iftira = Assert.Single(dokum.Katkilar, k => k.Kaynak.Contains("aileme_iftira"));
+            Assert.Equal(-22m, iftira.Deger);
+            Assert.Equal(-22m, sim.Zihinler["Can"].Fikir("oyuncu", 24));
+        }
+
+        [Fact]
+        public void I1_kriz_sayilari_en_fazla_ve_sure_degisikliginden_etkilenmez()
+        {
+            foreach (var seed in new[] { 42UL, 7UL })
+            {
+                var sim = Calistir(seed);
+                int Say(string tur) => sim.Gunluk.Olaylar.Count(o => o.Tur == tur && o.KuralId.StartsWith("kriz:", System.StringComparison.Ordinal));
+
+                Assert.Equal((1, 1, 1, 0), (Say("itiraf_etti"), Say("sakinlesti"), Say("patladi"), Say("kacti")));
+                Assert.Equal(2, sim.Gunluk.Olaylar.Count(o => o.Tur == "aktarim_kaydedildi" && o.Deger("yalan") == "1"));
+            }
         }
 
         // ---- I2: Hatice yalan → stres → itiraf ----
