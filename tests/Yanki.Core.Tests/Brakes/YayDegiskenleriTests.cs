@@ -39,6 +39,35 @@ namespace Yanki.Core.Tests.Brakes
         private static Olay[] Degisimler(Simulasyon s) => s.Gunluk.Olaylar.Where(o => o.Tur == "yay_degisti").ToArray();
 
         [Fact]
+        public void Yalniz_yay_etkili_kuralda_cooldown_uygulanir_sayac_gunlukten_dogru_NPC_ile_turer()
+        {
+            var s = Kur(new[] { "{ \"id\": \"r\", \"ne_zaman\": \"yardim_etti\", \"cooldown\": 10, \"etkiler\": [ " + YayEtkisi("h") + " ] }" });
+            for (var t = 0; t < 4; t++)
+            {
+                s.Submit(Y);
+                s.Tick(1);
+            }
+
+            Assert.Equal(2, Degisimler(s).Length);                                    // Ali ve Veli birer kez; sonraki tick'ler cooldown'da
+            Assert.NotEmpty(s.Frenler("cooldown"));
+            Assert.DoesNotContain("SAYAC|r||", s.SayaclarKanonikMetni);            // NPC alanı boş sayaç yok
+        }
+
+        [Fact]
+        public void Modifier_ve_yay_etkili_kuralda_tek_tetikleme_bir_kez_sayilir_en_fazla_kapsam_kural()
+        {
+            var s = Kur(new[]
+            {
+                "{ \"id\": \"r\", \"ne_zaman\": \"yardim_etti\", \"kapsam\": \"kural\", \"en_fazla\": 2, \"etkiler\": [ { \"tur\": \"modifier\", \"hedef\": \"olay.fail\", \"modifier\": \"m\", \"deger\": 1, \"sure\": 100 }, " + YayEtkisi("h") + " ] }",
+            });
+            s.Submit(Y);
+            s.Tick(2);
+
+            Assert.Empty(s.Frenler("en_fazla"));                                       // Ali ve Veli = 2 tetikleme = sınır; her biri tek sayılır (hatalı: 4)
+            Assert.Equal(2, Degisimler(s).Length);
+        }
+
+        [Fact]
         public void Baslangic_degeri_senaryodandir_Yay_sorgusu_okur()
         {
             var s = Kur(new[] { Kural("r", string.Empty, YayEtkisi()) });

@@ -118,16 +118,23 @@ namespace Yanki.Core.Brakes
         }
 
         /// <summary><c>yay_degisti</c> olayı: yük <c>degisken</c>, <c>delta</c> (istenen), <c>deger</c> (kırpılmış yeni değer).</summary>
-        public static Olay OlayYap(long id, long tick, int sira, string ad, decimal delta, decimal yeniDeger, IEnumerable<long> nedenler, string kuralId, string mekan) =>
-            new Olay(
-                id, tick, sira, OlayTuru, string.Empty, string.Empty, mekan,
-                new[]
-                {
-                    new KeyValuePair<string, string>("degisken", ad),
-                    new KeyValuePair<string, string>("delta", KanonikYazici.Sayi(delta)),
-                    new KeyValuePair<string, string>("deger", KanonikYazici.Sayi(yeniDeger)),
-                },
-                nedenler, kuralId);
+        public static Olay OlayYap(long id, long tick, int sira, string ad, decimal delta, decimal yeniDeger, IEnumerable<long> nedenler, string kuralId, string mekan, string? ben = null)
+        {
+            // `ben`: yalnızca cooldown/en_fazla/tick_basina_en_fazla tanımlı kuralın yay etkisinde yazılır; sayaç (kural, NPC) çiftini günlükten türetebilsin diye
+            // (gercek olayındaki `ben` ile aynı kural; fren alanı olmayan kuralların olayları ve hash'leri değişmez).
+            var yuk = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("degisken", ad),
+                new KeyValuePair<string, string>("delta", KanonikYazici.Sayi(delta)),
+                new KeyValuePair<string, string>("deger", KanonikYazici.Sayi(yeniDeger)),
+            };
+            if (!string.IsNullOrEmpty(ben))
+            {
+                yuk.Add(new KeyValuePair<string, string>("ben", ben!));
+            }
+
+            return new Olay(id, tick, sira, OlayTuru, string.Empty, string.Empty, mekan, yuk, nedenler, kuralId);
+        }
 
         /// <summary>Kanonik metin: tanımlı değişken yoksa boş; varsa ad sırasıyla <c>YAY|ad|deger</c> satırları.</summary>
         public string KanonikMetin()

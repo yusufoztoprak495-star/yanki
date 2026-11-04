@@ -680,7 +680,7 @@ namespace Yanki.Core.Simulation
             {
                 if (etki.Etki.Tur == EtkiTuru.Yay)
                 {
-                    YayEtkisiniYaz(etki.Kural.Id, etki.Npc, etki.Etki, etki.Tetik, etki.Nedenler);   // algılanmaz, kural tetiklemez: kuyruğa girmez
+                    YayEtkisiniYaz(etki.Kural.Id, etki.Npc, etki.Etki, etki.Tetik, etki.Nedenler, etki.Kural.TetikSiniri != null && etki.Kural.TetikSiniri.Tanimli);   // algılanmaz, kural tetiklemez: kuyruğa girmez
                     continue;
                 }
 
@@ -694,10 +694,10 @@ namespace Yanki.Core.Simulation
 
         // Yay etkisi: değişkenin şimdiki değerine delta eklenir ve aralığa kırpılır; olay istenen delta ile kırpılmış yeni değeri taşır.
         // Kırpma olduysa yay_siniri freni de yazılır. Birden çok delta, etkilerin sabit sırasıyla art arda uygulanır.
-        private void YayEtkisiniYaz(string kuralId, string npc, KuralEtkisi etki, Olay tetik, IReadOnlyList<long> nedenler)
+        private void YayEtkisiniYaz(string kuralId, string npc, KuralEtkisi etki, Olay tetik, IReadOnlyList<long> nedenler, bool benYaz = false)
         {
             var yeni = _yay.Sinirla(etki.Ad, etki.Deger, out var kirpildi);
-            Ekle(YayDegiskenleri.OlayYap(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), etki.Ad, etki.Deger, yeni, nedenler, kuralId, tetik.Mekan));
+            Ekle(YayDegiskenleri.OlayYap(Gunluk.SonrakiId, _tick, Gunluk.SonrakiSira(_tick), etki.Ad, etki.Deger, yeni, nedenler, kuralId, tetik.Mekan, benYaz ? npc : null));
             if (kirpildi)
             {
                 FrenleriYaz(new[] { new FrenBilgisi(FrenTurleri.YaySiniri, kuralId, npc, etki.Ad, tetik.Mekan, new[] { tetik.Id }) });
