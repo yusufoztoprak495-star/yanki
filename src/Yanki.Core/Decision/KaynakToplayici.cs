@@ -97,6 +97,9 @@ namespace Yanki.Core.Decision
                 case "kaynak":
                     KanitKaynagi(b, ZihinSorguCozucusu.Desen(cagri, sorgu), ZihinSorguCozucusu.Varlik(cagri, 1, sorgu), olaylar);
                     break;
+                case "yay":
+                    YayKaynagi(b, ZihinSorguCozucusu.Ad(cagri, 0), olaylar, kaynaksiz);
+                    break;
                 case "ayni_mekanda":
                     // Dünya durumunu okuyan sorgu (konum! gerçekleri; gercek(...) eylemlerde zaten kullanılamaz) tek bir olaya bağlı tutulmaz; uydurulmaz, kaynaksız raporlanır.
                     kaynaksiz.Add($"{cagri.Ad}(...): dünya durumunu okur, tek bir kaynak olaya bağlı tutulmuyor");
@@ -105,6 +108,22 @@ namespace Yanki.Core.Decision
                     HafizaKaynagi(
                         b, ZihinSorguCozucusu.Ad(cagri, 0), ZihinSorguCozucusu.Varlik(cagri, 1, sorgu), ZihinSorguCozucusu.Tam(cagri, 2), olaylar);
                     break;
+            }
+        }
+
+        // yay(ad) 7. haftadan beri yay_degisti olaylarından türer; eksen gibi birikmiş bir değerdir: yalnızca SON değişim kaynak gösterilir (8. hafta, Minor 3), birikim kaynaksız notudur.
+        private static void YayKaynagi(KararBaglami b, string ad, SortedSet<long> olaylar, SortedSet<string> kaynaksiz)
+        {
+            var liste = b.Gunluk.Olaylar;
+            for (var i = liste.Count - 1; i >= 0; i--)
+            {
+                var o = liste[i];
+                if (o.Tur == Yanki.Core.Brakes.YayDegiskenleri.OlayTuru && string.Equals(o.Deger("degisken"), ad, StringComparison.Ordinal))
+                {
+                    olaylar.Add(o.Id);
+                    kaynaksiz.Add($"yay({ad}): birikmiş değer birden çok {o.Tur} olayından gelmiş olabilir; yalnızca son değişim #{o.Id} kaynak gösterildi");
+                    return;
+                }
             }
         }
 

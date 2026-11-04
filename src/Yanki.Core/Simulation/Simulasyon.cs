@@ -166,6 +166,7 @@ namespace Yanki.Core.Simulation
             var krizListesi = KrizleriDenetle(senaryo, krizler, stres);
             KurallariDenetle(senaryo, motor, katalog, krizListesi);
             EylemleriDenetle(senaryo, katalog);
+            KuralEylemKimlikleriniDenetle(motor, katalog);
             KorumaliDenetle(senaryo, motor, katalog);
             YayDenetle(senaryo, motor, katalog);
             var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari(), dedikodu, stres, krizListesi, frenAyarlari ?? new FrenAyarlari());
@@ -1585,6 +1586,25 @@ namespace Yanki.Core.Simulation
                     {
                         Kontrol($"Eylem \"{ey.Id}\"", e.Ad);
                     }
+                }
+            }
+        }
+
+        // Kural ve eylem kimlikleri ayrık olmalı (8. hafta, Minor 5): fren tekilleştirme anahtarı (tür|kimlik|npc|hedef) kural ve eylemi ayırmaz; çakışırsa eylemin
+        // aday freni kuralın freni yüzünden bastırılabilirdi. Olay biçimi değişmesin diye anahtar değil, giriş reddedilir.
+        private static void KuralEylemKimlikleriniDenetle(KuralMotoru motor, EylemKatalogu katalog)
+        {
+            var eylemKimlikleri = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var e in katalog.Eylemler)
+            {
+                eylemKimlikleri.Add(e.Id);
+            }
+
+            foreach (var k in motor.Kurallar)
+            {
+                if (eylemKimlikleri.Contains(k.Id))
+                {
+                    throw new ArgumentException($"Kural ve eylem aynı kimliği taşıyor: \"{k.Id}\" (kural ve eylem kimlikleri ayrık olmalı; fren olayları kimlikle eşleştirilir).", nameof(motor));
                 }
             }
         }

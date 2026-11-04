@@ -136,6 +136,24 @@ namespace Yanki.Core.Decision
                 }
             }
 
+            // Etkisi korumalı bir varlığın konum! gerçeğini yazan (ekleyen ya da kaldıran) eylem mekandan_ayrilamaz ihlalidir (K2, yazar bildirmez). 8. hafta (Minor 4):
+            // eylem YARIM uygulanmaz, aday olmaz. Şablon aday aşamasında ben, oyuncu ve eylem.hedef ile statik çözülür (eylem bağlamında başka rol yoktur).
+            SorguBaglami? sorgu = null;
+            foreach (var etki in eylem.Etkiler)
+            {
+                if (etki.Tur != Rules.EtkiTuru.Gercek)
+                {
+                    continue;
+                }
+
+                sorgu ??= baglam.SorguBaglami(hedef, eylem);
+                var g = Gercek.Ayristir(Rules.GercekSablonu.Doldur(etki.GercekSablonu, rol => sorgu.Coz(rol), Rules.RolKumesi.Hepsi));
+                if (g.Yuklem == "konum!" && g.Argumanlar.Count > 0 && k.Korunuyor(g.Argumanlar[0], KorumaBayraklari.MekandanAyrilamaz))
+                {
+                    return (g.Argumanlar[0], KorumaBayraklari.MekandanAyrilamaz);
+                }
+            }
+
             return null;
         }
 
