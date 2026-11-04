@@ -30,6 +30,7 @@ namespace Yanki.Core.Brakes
             public int SonTickSayisi;
             public int Toplam;
             public long SonOlayId;
+            public bool MetneGirer;
 
             public Kayit Kopya() => (Kayit)MemberwiseClone();
 
@@ -53,6 +54,8 @@ namespace Yanki.Core.Brakes
         private readonly SortedDictionary<string, Kayit> _kayitlar = new SortedDictionary<string, Kayit>(StringComparer.Ordinal);
         private readonly SortedDictionary<string, string> _sonKuralImzasi = new SortedDictionary<string, string>(StringComparer.Ordinal);
         private readonly SortedDictionary<string, string> _sonEylemImzasi = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        // Kanonik metin önbelleği (yalnızca cooldown/en_fazla tanımlı sahiplerin sayaçları); sayaç her değiştiğinde bayatlar.
+        private string? _metin;
         private readonly SortedDictionary<string, long> _frenOlaylari = new SortedDictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>Sınırı tanımlı kural ve eylemler için sayaç kurar; sınırı olmayanlar izlenmez.</summary>
@@ -111,7 +114,7 @@ namespace Yanki.Core.Brakes
                     if (!_sonEylemImzasi.TryGetValue(id, out var onceki) || onceki != imza)
                     {
                         _sonEylemImzasi[id] = imza;
-                        Say(EylemAnahtari(id, olay.Fail, olay.Hedef, siniri.Kapsam), olay);
+                        Say(EylemAnahtari(id, olay.Fail, olay.Hedef, siniri.Kapsam), olay, siniri.KanonikMetneGirer);
                     }
                 }
 
@@ -130,20 +133,21 @@ namespace Yanki.Core.Brakes
                 if (!_sonKuralImzasi.TryGetValue(olay.KuralId, out var onceki) || onceki != imza)
                 {
                     _sonKuralImzasi[olay.KuralId] = imza;
-                    Say(KuralAnahtari(olay.KuralId, npc, kuralSiniri.Kapsam), olay);
+                    Say(KuralAnahtari(olay.KuralId, npc, kuralSiniri.Kapsam), olay, kuralSiniri.KanonikMetneGirer);
                     if (kuralSiniri.TickBasinaEnFazla > 0)
                     {
-                        Say(KuralTickAnahtari(olay.KuralId), olay);   // tick içi sayaç: kapsamdan bağımsız, kanonik metne girmez
+                        Say(KuralTickAnahtari(olay.KuralId), olay, false);   // tick içi sayaç: kapsamdan bağımsız, kanonik metne girmez
                     }
                 }
             }
         }
 
-        private void Say(string anahtar, Olay olay)
+        private void Say(string anahtar, Olay olay, bool metneGirer)
         {
+            _metin = null;
             if (!_kayitlar.TryGetValue(anahtar, out var k))
             {
-                k = new Kayit();
+                k = new Kayit { MetneGirer = metneGirer };
                 _kayitlar.Add(anahtar, k);
             }
 
@@ -216,10 +220,15 @@ namespace Yanki.Core.Brakes
         /// <summary>Kanonik metin: yalnızca cooldown ya da en_fazla tanımlı kural/eylemlerin sayaçları, ordinal sıralı; hiçbiri yoksa boş.</summary>
         public string KanonikMetin()
         {
+            if (_metin != null)
+            {
+                return _metin;
+            }
+
             var sb = new StringBuilder();
             foreach (var kv in _kayitlar)
             {
-                if (SinirliAnahtar(kv.Key))
+                if (kv.Value.MetneGirer)
                 {
                     sb.Append("SAYAC|").Append(kv.Key).Append('|')
                         .Append(kv.Value.SonTick.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append('|')
@@ -227,14 +236,8 @@ namespace Yanki.Core.Brakes
                 }
             }
 
-            return sb.ToString();
-        }
-
-        private bool SinirliAnahtar(string anahtar)
-        {
-            var parcalar = anahtar.Split('|');
-            var tablo = parcalar[0] == "k" ? _kurallar : _eylemler;
-            return tablo.TryGetValue(parcalar[1], out var s) && s.KanonikMetneGirer;
+            _metin = sb.ToString();
+            return _metin;
         }
 
         /// <summary>Bir <c>DegerlendirFrenli</c> çağrısının adım içi artışları; kayıtlar ilk dokunuşta temel sayaçtan kopyalanır.</summary>
