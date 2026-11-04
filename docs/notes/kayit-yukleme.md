@@ -20,4 +20,4 @@ CLI: `yanki devam <kayit.json> [--eylem ...] [--tick M] --kaydet <yeni.json>` ba
 ## Sınır
 
 Özel ayarlar (`ZihinAyarlari`, `DedikoduAyarlari`, `StresAyarlari`, `FrenAyarlari`, `IActionSelector`) kayda girmez. v0.1'de yalnızca varsayılan ayarlar ve varsayılan seçici için garanti verilir; başka seçiciyle yüklenen kayıt `gunluk_hash` ile yakalanır.
-Anlık görüntü (snapshot) v0.2'dir; yükleme süresi oynatma süresidir (`docs/notes/frenler.md` ölçümleri: gerçekçi 50 NPC fikstüründe 168 tick ≈ 2 dk, stres fikstüründe ≈ 31 sn).
+Anlık görüntü (snapshot) v0.2'dir; yükleme süresi oynatma süresidir (`docs/notes/frenler.md` ölçümleri: 8. hafta çelişki dizini sonrası `OturumOynatici` ile ölçüldü: gerçekçi 8 NPC 0.68 sn, 50 NPC ≈ 59 sn (ADR-015); önceki 7. hafta ölçümü: gerçekçi 50 NPC ≈ 2 dk, stres fikstüründe ≈ 31 sn).
