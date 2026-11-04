@@ -444,6 +444,12 @@ namespace Yanki.Core.Simulation
         private static string YakalamaAnahtari(string npc, long tick) =>
             npc + "@" + tick.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+        /// <summary>
+        /// Şimdiki tick'in SONUNDAKİ durumu okuyan salt okunur sorgu çözücüsü (8. hafta, A kararı). Diyalog katmanı <see cref="OlayYayinlandi"/> aboneliğinde kullanır.
+        /// Simülasyonu, günlüğü ve durum hash'ini değiştirmez; hash'e girmez.
+        /// </summary>
+        public Criteria.ISorguCozucu SorguCozucusu() => new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick, _dedikodu, yay: _yay);
+
         /// <summary>Şu anki dünya ve zihin durumunun hash'i (16 karakter onaltılık).</summary>
         public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler, _sayaclar.KanonikMetin() + _yay.KanonikMetin());
 
