@@ -44,5 +44,5 @@ Dürüst bölüm. Zihin kanonik metin önbelleği (Z3) 50 NPC dedikodulu tick'in
 
 ## Bu hafta ne öğrendim
 
-- Her engellemeyi olay yapmak ucuz değil: kural frenleri gerçekçi fikstürde olayların %4-10'u. Aday frenlerini tekilleştirdik, kural frenlerini henüz değil (ADR-013'te ödünleşim olarak yazılı).
+- Her engellemeyi olay yapmak ucuz değil: fren olayları (kural ve aday frenleri birlikte) gerçekçi fikstürde olayların %4-10'u. Aday frenlerini tekilleştirdik, kural frenlerini henüz değil (ADR-013'te ödünleşim olarak yazılı).
 - "Ölçülmedi" ile "ölçüldü ve yok" farklı cümleler; Blazor WASM hızı ikincisi değil, birincisi.

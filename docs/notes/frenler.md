@@ -38,12 +38,12 @@ Cooldown'ın doğru kullanımı `samples/FrenliHan`'da gösterilir (kural tekrar
 
 Stres fikstürü (her NPC her tick eylem seçer), 168 tick, 3 çalıştırmanın ortancası, bu makinede. Önceki değerler 6. hafta sonundaki ölçümdür; Z3 (zihin kanonik metin önbelleği) ve 7. haftanın diğer işlerinden sonra:
 
-| | Önceki (ms/tick) | Şimdi (ms/tick) | Değişim | 168 tick yükleme (baştan oynatma) |
-|---|---|---|---|---|
-| 8 NPC dedikodusuz | 2.52 | **2.08** | −17% | 0.35 sn |
-| 8 NPC dedikodulu | 4.62 | **3.79** | −18% | 0.64 sn |
-| 50 NPC dedikodusuz | 79.5 | **32.4** | −59% | 5.4 sn |
-| 50 NPC dedikodulu | 523.1 | **183.7** | −65% | 30.9 sn (önceden ≈ 88 sn) |
+|                    | Önceki (ms/tick) | Şimdi (ms/tick) | Değişim | 168 tick yükleme (baştan oynatma) |
+| ------------------ | ---------------- | --------------- | ------- | --------------------------------- |
+| 8 NPC dedikodusuz  | 2.52             | **2.08**        | −17%    | 0.35 sn                           |
+| 8 NPC dedikodulu   | 4.62             | **3.79**        | −18%    | 0.64 sn                           |
+| 50 NPC dedikodusuz | 79.5             | **32.4**        | −59%    | 5.4 sn                            |
+| 50 NPC dedikodulu  | 523.1            | **183.7**       | −65%    | 30.9 sn (önceden ≈ 88 sn)         |
 
 - **5 ms hedefi:** 8 NPC'de TUTULDU (2.08 / 3.79). 50 NPC'de tutmuyor: dedikodusuz 32.4 ms (6.5×), dedikodulu 183.7 ms (37×).
 - **Tick başına olay:** 8 NPC ≈ 96 (dedikodusuz), 50 NPC ≈ 1738 (dedikodusuz) ve ≈ 1698 (dedikodulu). Dedikodulu 50 NPC'de kanıtların %99.7'si `gordu` (126946 / 127268), NPC başına en çok 328 önerme; `karar_verildi` günlük boyutunun %10.7'si.
@@ -52,31 +52,32 @@ Stres fikstürü (her NPC her tick eylem seçer), 168 tick, 3 çalıştırmanın
 - **Kalan fark (50 NPC):** dedikodusuz 32.4 → 5 ms için ≈ 6.5×; dedikodulu 183.7 → 5 ms için ≈ 37×. Dedikodu maliyeti ≈ 151 ms/tick (183.7 − 32.4): konuşan başına O(n²) inanılan taraması (NPC başına 328 önerme) ve algı hacmi (≈ 1700 olay/tick).
 
 **Sonraki optimizasyon adayları (VERİYLE sunulur, SEÇİLMEDİ; karar Yusuf'un):**
-1. *Gossip: önerme dizini / yüklem ön filtresi.* `anlat` eyleminin `konu_desenleri`ne uymayan önermeler tarama dışına çıkar. Dedikodu maliyetinin (≈ 151 ms/tick) çoğu bu taramadadır; olay biçimi ve hash değişmez. Beklenen kazanç: dedikodulu 50 NPC'de büyük (tahmin: ≥ 2×), ölçülmeden söz verilmez.
-2. *Z4: kanıt + hafıza olaylarının birleştirilmesi.* Algı başına iki olay yerine biri: olay sayısı ≈ %45 azalır (kanıt + hafıza ≈ olayların %89'u). **Olay biçimini değiştirir, bütün hash'leri kaydırır**; Yusuf'un onayı gerekir.
-3. *Z4: silik hafızanın durumdan düşürülmesi / önem eşiği.* Hafıza büyümesini keser, davranışı ve hash'i değiştirebilir (algı hafızası önem 0.2).
-4. *Hash'i artımlı yapmak.* FNV zincirleme olduğu için ön ekin yeniden kullanımı ancak ön ekteki zihinler değişmediğinde mümkündür; stres fikstüründe her zihin her tick değiştiğinden kazanç yok, gerçek senaryolarda küçük.
+
+1. _Gossip: önerme dizini / yüklem ön filtresi._ `anlat` eyleminin `konu_desenleri`ne uymayan önermeler tarama dışına çıkar. Dedikodu maliyetinin (≈ 151 ms/tick) çoğu bu taramadadır; olay biçimi ve hash değişmez. Beklenen kazanç: dedikodulu 50 NPC'de büyük (tahmin: ≥ 2×), ölçülmeden söz verilmez.
+2. _Z4: kanıt + hafıza olaylarının birleştirilmesi._ Algı başına iki olay yerine biri: olay sayısı ≈ %45 azalır (kanıt + hafıza ≈ olayların %89'u). **Olay biçimini değiştirir, bütün hash'leri kaydırır**; Yusuf'un onayı gerekir.
+3. _Z4: silik hafızanın durumdan düşürülmesi / önem eşiği._ Hafıza büyümesini keser, davranışı ve hash'i değiştirebilir (algı hafızası önem 0.2).
+4. _Hash'i artımlı yapmak._ FNV zincirleme olduğu için ön ekin yeniden kullanımı ancak ön ekteki zihinler değişmediğinde mümkündür; stres fikstüründe her zihin her tick değiştiğinden kazanç yok, gerçek senaryolarda küçük.
 
 ## Son ölçüm tablosu (7. hafta sonu, aynı tablo, iki fikstür AYRI etiketli)
 
 `tools/olcum`, benchmark değil; 168 tick, 3 çalıştırmanın ortancası, aynı makine. Son satırlar `TetikSayaclari.KanonikMetin` önbelleği (sayaç metni yalnızca sayaç değişince yeniden kurulur; hash'ler değişmedi) sonrasıdır.
 
-| Fikstür | NPC | ms/tick | 5 ms hedefi | olay | fren olayı |
-|---|---|---|---|---|---|
-| **STRES** (her NPC her tick eylem seçer), dedikodusuz | 8 | 2.40 | tutuldu | 16200 | 0 |
-| **STRES**, dedikodulu | 8 | 4.08 | tutuldu | 16107 | 0 |
-| **STRES**, dedikodusuz | 50 | 35.8 | tutmadı (≈ 7×) | 292041 | 0 |
-| **STRES**, dedikodulu | 50 | 186.1 | tutmadı (≈ 37×) | 285312 | 0 |
-| **GERÇEKÇİ** (dedikodu açık) | 8 | 6.58 | tutmadı (≈ 1.3×) | 11412 | 1156 |
-| **GERÇEKÇİ** (dedikodu açık) | 50 | ≈ 685–722 | tutmadı (≈ 140×) | 327763 | 13459 |
+| Fikstür                                               | NPC | ms/tick   | 5 ms hedefi      | olay   | fren olayı |
+| ----------------------------------------------------- | --- | --------- | ---------------- | ------ | ---------- |
+| **STRES** (her NPC her tick eylem seçer), dedikodusuz | 8   | 2.40      | tutuldu          | 16200  | 0          |
+| **STRES**, dedikodulu                                 | 8   | 4.08      | tutuldu          | 16107  | 0          |
+| **STRES**, dedikodusuz                                | 50  | 35.8      | tutmadı (≈ 7×)   | 292041 | 0          |
+| **STRES**, dedikodulu                                 | 50  | 186.1     | tutmadı (≈ 37×)  | 285312 | 0          |
+| **GERÇEKÇİ** (dedikodu açık)                          | 8   | 6.58      | tutmadı (≈ 1.3×) | 11412  | 1156       |
+| **GERÇEKÇİ** (dedikodu açık)                          | 50  | ≈ 685–722 | tutmadı (≈ 140×) | 327763 | 13459      |
 
 **Gerçekçi fikstürün varsayımları** (`tools/olcum/GercekciFikstur.cs`, `--gercekci`; stres fikstürü DEĞİŞMEDİ): sahte içerik, Kasaba Hanı değil. 8 mekan (han merkez, 7 bağlantı); NPC'ler mekanlara eşit olmayan dağılır (han 6/20, pazar 4/20, mahalle 3/20 … orman 1/20); 9 eylem (`selam`, `yardim`, `tehdit`, `git`, `anlat`, `yalan_soyle`, `calis`, `sohbet`, `dinlen`); **her zaman aday olan eylem yok** (`dinlen` yalnızca stres > 5), yani NPC'ler çoğu tick boşta kalır (50 NPC'de 168 tick'te yalnızca 8142 karar); `selam`, `yardim`, `tehdit`, `git`, `calis`, `sohbet` cooldown'lıdır; 12 kural (üçü `cooldown`, üçü `en_fazla`); 4 kriz; dedikodu açık (oyuncu t1'de han'daki dört NPC'ye dört borç söylentisi anlatır, ayrıca 2 yalan önermesi); oyuncu 6 kez yardım/tehdit eder. Kişilikler anahtarlı RNG'den (seed 4321).
-**Okuma:** gerçekçi 50 NPC fikstürü stresten DAHA YAVAŞ. Olası neden (ölçülmüş değil, hipotez): han'a kümelenme (50 NPC'nin ≈ 15'i) herkesin herkesi görmesini, yani **algı olayı hacmini** büyütür (141 bin `gordu`, olayların %43'ü; 8 NPC'de 3146); algı maliyeti mekandaki kişi sayısının karesiyle büyür. Fren makinesi maliyeti: 8 NPC'de cooldown/en_fazla alanları çıkarılınca 3.7 ms (frenli 7.4–9.0 ms; bu oyunda yaklaşık 2×), fren olayı olayların %10 (8 NPC) ve %4.1 (50 NPC) kadarıdır, çünkü kural frenleri engellenen her tetiklemede yazılır. Beklenti ("boşta NPC'li fikstür daha hızlı") DOĞRULANMADI.
+**Okuma:** gerçekçi 50 NPC fikstürü stresten DAHA YAVAŞ. Olası neden (ölçülmüş değil, hipotez): han'a kümelenme (50 NPC'nin ≈ 15'i) herkesin herkesi görmesini, yani **algı olayı hacmini** büyütür (141 bin `gordu`, olayların %43'ü; 8 NPC'de 3146); algı maliyeti mekandaki kişi sayısının karesiyle büyür. Fren alanlarının maliyeti: ilk ölçümde (sayaç önbelleği öncesi) 8 NPC'de cooldown/en_fazla alanları çıkarılınca 3.7 ms, frenli 7.4–9.0 ms (yaklaşık 2×); 3.7 ms'nin koşulu kayıtlı değildi, bu yüzden önbellek sonrası 6.6 ms ile eşlenmemeli (ADR-013 önce eşlemişti, düzeltildi). Aynı oturumda, aynı (önbellekli) kodda, ortanca 5 çalıştırma yeniden ölçüldü: **fren alanları çıkarılmış 2.38 ms, frenli 5.80 ms** (≈ 2.4×; tablodaki 6.58 ms ile fark makine gürültüsüdür). Varyantlar aynı işi yapmaz (kararlar 1344 ve 1063; frenli günlüğe 1156 fren olayı ekler, olay 10788 ve 11412), yani bu saf "fren makinesi maliyeti" değil, fren alanlarının fikstürdeki toplam etkisidir. Fren olayı olayların %10 (8 NPC) ve %4.1 (50 NPC) kadarıdır; bu oran aday frenleri dahil bütün fren olaylarınındır, çünkü kural frenleri engellenen her tetiklemede yazılır. Beklenti ("boşta NPC'li fikstür daha hızlı") DOĞRULANMADI.
 
 ## Denenen ve kapatılan optimizasyonlar (Yusuf'un kararı: yalnızca 1 uygulandı, <%30 kazanç ise geri al)
 
-1. **Gossip önerme dizini / yüklem ön filtresi: DENENDİ, KAZANÇ YOK, GERİ ALINDI.** Dedikodulu 50 NPC, A/B aynı makinede: dizinsiz 171.1 / 179.5 ms/tick, dizinli 198.3 / 193.0 ms/tick (kazanç yok, hafif kayıp; eşik %30). 1479 + 117 test ve 4 golden yeşildi, yani doğruluk sorunu değil. Sonuç: dedikodu maliyeti (≈ 150 ms/tick) konu taramasında DEĞİL; yeri bilinmiyor, **profil gerekir** (11–12. hafta).
+1. **Gossip önerme dizini / yüklem ön filtresi: DENENDİ, KAZANÇ YOK, GERİ ALINDI.** Dedikodulu 50 NPC, A/B aynı makinede: dizinsiz 171.1 / 179.5 ms/tick, dizinli 198.3 / 193.0 ms/tick (kazanç yok, hafif kayıp; eşik %30). o günkü 1479 + 117 test (güncel sayı `docs/DURUM.md`'de) ve 4 golden yeşildi, yani doğruluk sorunu değil. Sonuç: dedikodu maliyeti (≈ 150 ms/tick) konu taramasında DEĞİL; yeri bilinmiyor, **profil gerekir** (11–12. hafta).
 2. **Z4 kanıt + hafıza birleştirme: UYGULANMADI → 11–12. hafta adayı.** Olay biçimini değiştirir, tüm hash'leri kaydırır.
 3. **Z4 önem eşiği / silik hafızanın durumdan düşmesi: UYGULANMADI → 11–12. hafta adayı.** Davranışı ve hash'i değiştirebilir.
 4. **Artımlı hash: KAPANDI.** FNV zincirleme olduğundan ön ek yeniden kullanımı ancak ön ekteki zihinler değişmezse mümkün; stres fikstüründe kazanç yok (hash'in payı: 50 NPC dedikodusuzda önbelleksiz tam hesap 37 ms, ama önbellekli yol bunu zaten kaldırdı).
-**Açık:** Blazor WASM'de tick süresi ve yükleme ölçülmedi (10. hafta). 5 ms kriteri 12. haftada BenchmarkDotNet ölçümüyle karara bağlanır (silinmedi).
+   **Açık:** Blazor WASM'de tick süresi ve yükleme ölçülmedi (10. hafta). 5 ms kriteri 12. haftada BenchmarkDotNet ölçümüyle karara bağlanır (silinmedi).

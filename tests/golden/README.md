@@ -19,6 +19,10 @@ dotnet run --project src/Yanki.Cli -c Release -- replay tests/golden/<dosya>.jso
 # Hash BİLEREK değiştiyse tek komutla güncelle (dosyadaki son_hash yeniden yazılır):
 dotnet run --project src/Yanki.Cli -c Release -- replay tests/golden/<dosya>.json --guncelle
 
+# Yalnızca senaryo dosyası değişti, davranış (son_hash ve gunluk_hash) aynı (yorum, boşluk): sadece senaryo_hash yenilenir.
+# Davranış değişmişse reddeder (kod 3 / 5); o durumda --guncelle kullan.
+dotnet run --project src/Yanki.Cli -c Release -- replay tests/golden/<dosya>.json --senaryo-hash-yenile
+
 # Hepsini güncelle:
 for f in tests/golden/*.json; do dotnet run --project src/Yanki.Cli -c Release -- replay "$f" --guncelle; done
 

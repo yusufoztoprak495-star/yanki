@@ -99,7 +99,7 @@ Yay değişkenlerinin ve fren olaylarının zihin olayı sayılmaması (algılan
 
 - Kolaylaşan: "bu neden olmadı?" sorusu `yanki why <fren olayı>` ile; cooldown/sınır/korumalı varlık/yay ile hikâye yayını sarmal açmadan yönlendirmek; kayıt/yüklemenin kesintisiz koşuyla birebir aynı olması (testli); "kimden duydu" sorgusunun doğru kalması.
 - Zorlaşan: fren olayı hacmi (özellikle kural frenleri); `kapsam` ayrıntısı; `oldurulemez`/`calinamaz`'ın yazarın bildirmesine bağımlı olması; 50 NPC performansı (5 ms kriteri tutmuyor).
-- Yeniden bakılacak: kural frenleri için tekilleştirme; gerçekçi fikstürdeki fren makinesi maliyeti (8 NPC'de frenli 6.6 ms, fren alanları çıkarılmış 3.7 ms); Z4 (11–12. hafta); Blazor WASM ölçümü (10. hafta); 12. haftada 5 ms kararı.
+- Yeniden bakılacak: kural frenleri için tekilleştirme; gerçekçi fikstürdeki fren alanlarının maliyeti (aynı oturumda aynı kodda yeniden ölçüldü, 8 NPC, ortanca: frenli 5.80 ms, fren alanları çıkarılmış 2.38 ms; iki varyant aynı işi yapmaz, kararlar 1063 ve 1344, frenli 1156 fren olayı ekler; önceki 3.7 ms'lik rakamın koşulu kayıtlı değildi ve 6.6 ms ile karşılaştırılamaz, bkz. `docs/notes/frenler.md`); Z4 (11–12. hafta); Blazor WASM ölçümü (10. hafta); 12. haftada 5 ms kararı.
 
 ## Yapılacaklar
 

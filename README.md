@@ -9,7 +9,7 @@
 
 **Anlatı oyunları için deterministik, tekrar oynatılabilir NPC hafızası ve sonuç sistemi; Unity, Godot ve sunucuda çalışan açık bir C# kütüphanesi.**
 
-> 🚧 **Erken geliştirme aşamasında.** 12 haftalık planın 7. haftası: olay kaydı, zihin ve doğrudan algı, sonuç kuralları, tick döngüsü, utility AI ile NPC'lerin kendi eylemleri ve hareketi, karar izi, **dedikodu (`duydu` kanıtı aktarımı, konu sınırı), yalan, stres ve kişiliğe uygun kriz** (`yanki why` söylentiyi ilk anlatana, krizi eyleme kadar indirir), CLI (`run`, `query`, `why`, `replay`, `devam`), **frenler (cooldown, tetiklenme ve zincir sınırları, korumalı bayraklar, yay değişkenleri; her fren günlükte iz bırakır ve "bu neden olmadı?" cevaplanır)**, kayıt/yükleme (sürüm 2) ve dört golden replay.
+> 🚧 **Erken geliştirme aşamasında.** 12 haftalık planın 7. haftası: olay kaydı, zihin ve doğrudan algı, sonuç kuralları, tick döngüsü, utility AI ile NPC'lerin kendi eylemleri ve hareketi, karar izi, **dedikodu (`duydu` kanıtı aktarımı, konu sınırı), yalan, stres ve kişiliğe uygun kriz** (`yanki why` söylentiyi ilk anlatana, krizi eyleme kadar indirir), CLI (`run`, `query`, `why`, `replay`, `devam`), **frenler (cooldown, tetiklenme ve zincir sınırları, korumalı bayraklar, yay değişkenleri; her fren günlükte iz bırakır ve "bu neden olmadı?" cevaplanır)**, kayıt/yükleme (sürüm 2; `replay --guncelle | --hash-ekle | --senaryo-hash-yenile`) ve dört golden replay.
 
 ## 1. Rozetler
 
