@@ -5,7 +5,17 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-04
-- **PR:** [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta: frenler ve sağlamlık; `hafta-07` → `main`), Yusuf'un incelemesini bekliyor. [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
+- **PR:** [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta: frenler ve sağlamlık), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi. Bu belge güncellemesi `docs/hafta-08-girdisi` dalında (yalnızca "Hafta 8 başlangıç işleri" bölümü eklendi), Yusuf'un incelemesini bekliyor.
+
+## Hafta 8 başlangıç işleri
+
+Hafta 8 planı bu işlerle başlamalı (burada yalnızca liste var; görevlerin kendisi yapılmadı, kod ve ölçüm değişmedi):
+
+1. **Performans ifadesini düzelt.** 5 ms hedefi yalnızca 8 NPC stres fikstüründe tutuyor. Gerçekçi fikstürde 8 NPC'de de tutmuyor (ölçümler 5.80 ms ve 6.58 ms). 9. haftada 8 NPC'lik Kasaba Hanı planlı olduğu için bu karar 12. haftaya bırakılmayacak.
+2. **5.80 ms ve 6.58 ms ölçümlerinin neden farklı olduğunu açıkla.**
+3. **Karar seçenekleri:** hedefin korunması mı, optimizasyon mu, yoksa hedefin gerçekçi fikstüre göre yeniden tanımlanması mı gerektiğini seçenekler ve maliyetleriyle Yusuf'a sun. **Kararı Yusuf verecek.**
+4. **`Korumalilik.cs`'nin test edilmeyen dallarını kapat** (PR #11'de patch coverage %68,65).
+5. **ADR-013 onayını Yusuf'tan al** (durum hâlâ "Önerildi").
 
 ## Biten haftalar
 
@@ -167,5 +177,5 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 ## Sıradaki hafta
 
-- **7. hafta:** tamamlandı, [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) Yusuf'un incelemesini bekliyor (merge'i Yusuf yapar). Z4 ve gossip maliyeti 11–12. hafta adayıdır.
-- **8. hafta:** görev metni Yusuf'tan gelecek (kapsam için plan bölüm 12).
+- **7. hafta:** tamamlandı, [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) merge edildi. Z4 ve gossip maliyeti 11–12. hafta adayıdır.
+- **8. hafta:** görev metni Yusuf'tan gelecek (kapsam için plan bölüm 12); önce yukarıdaki "Hafta 8 başlangıç işleri" bölümüne bak.
