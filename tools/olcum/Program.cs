@@ -394,17 +394,52 @@ namespace Yanki.Olcum
                 kosuSirasi + "|cpu:" + string.Join(",", cpuSirasi)));
         }
 
+        // 8. hafta (DURAK 1 onayı): 168 tick baştan oynatmanın GERÇEK süresi. Kayıt çalışmış simülasyondan üretilir; yeni kurulmuş simülasyonda
+        // `OturumOynatici.Oynat` zamanlanır (kurulum ayrı satır). Çıktı: OYNAT;npc;tekrar;oynat_ortanca_ms;oynat_en_dusuk_ms;oynat_en_yuksek_ms;kurulum_ortanca_ms;son_hash_tutuyor;gunluk_hash_tutuyor
+        private static void Oynat(int npcSayisi, int tekrar, bool dedikodu)
+        {
+            var kaynak = Kur(npcSayisi, 42, dedikodu);
+            Kos(kaynak, TickSayisi);
+            var kayit = OturumKaydi.Uret(kaynak, "olcum.json");
+            Kur(npcSayisi, 42, dedikodu); // ısınma
+            var oynat = new List<double>();
+            var kurulum = new List<double>();
+            var tutuyor = true;
+            var gunlukTutuyor = true;
+            for (var i = 0; i < tekrar; i++)
+            {
+                var k0 = Stopwatch.GetTimestamp();
+                var sim = Kur(npcSayisi, 42, dedikodu);
+                kurulum.Add((Stopwatch.GetTimestamp() - k0) * 1000.0 / Stopwatch.Frequency);
+                var t0 = Stopwatch.GetTimestamp();
+                var sonuc = OturumOynatici.Oynat(sim, kayit);
+                oynat.Add((Stopwatch.GetTimestamp() - t0) * 1000.0 / Stopwatch.Frequency);
+                tutuyor &= sonuc.HashTutuyor;
+                gunlukTutuyor &= sonuc.GunlukHashTutuyor;
+            }
+
+            oynat.Sort();
+            kurulum.Sort();
+            var ic = CultureInfo.InvariantCulture;
+            Console.WriteLine(string.Join(";", "OYNAT", npcSayisi.ToString(ic), tekrar.ToString(ic), oynat[oynat.Count / 2].ToString("F1", ic), oynat[0].ToString("F1", ic), oynat[oynat.Count - 1].ToString("F1", ic), kurulum[kurulum.Count / 2].ToString("F1", ic), tutuyor ? "evet" : "HAYIR", gunlukTutuyor ? "evet" : "HAYIR"));
+        }
+
         public static int Main(string[] args)
         {
             var npcler = new[] { 3, 10, 50 };
             int? tekrar = null;
             var dedikodu = false;
             var ozet = false;
+            var oynat = false;
             for (var i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--ozet")
                 {
                     ozet = true;
+                }
+                else if (args[i] == "--oynat")
+                {
+                    oynat = true;
                 }
                 else if (args[i] == "--npc" && i + 1 < args.Length)
                 {
@@ -431,9 +466,19 @@ namespace Yanki.Olcum
                 }
                 else
                 {
-                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci | --butce] [--ozet]");
+                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci | --butce] [--ozet | --oynat]");
                     return 1;
                 }
+            }
+
+            if (oynat)
+            {
+                foreach (var n in npcler)
+                {
+                    Oynat(n, tekrar ?? 3, dedikodu);
+                }
+
+                return 0;
             }
 
             if (ozet)
