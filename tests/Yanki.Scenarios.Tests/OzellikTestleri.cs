@@ -20,8 +20,9 @@ namespace Yanki.Scenarios.Tests
     /// </summary>
     public class OzellikTestleri
     {
-        private const int Ornek = 20;
-        private const string Tohum = "7Hjd1O9bXz0e";
+        // CI: sabit tohum ve 20 örnek. CI DIŞI geniş koşu için ortam değişkenleri: YANKI_CSCHECK_ORNEK (örnek sayısı), YANKI_CSCHECK_TOHUM (CsCheck tohumu).
+        private static readonly int Ornek = int.TryParse(Environment.GetEnvironmentVariable("YANKI_CSCHECK_ORNEK"), out var o) && o > 0 ? o : 20;
+        private static readonly string Tohum = Environment.GetEnvironmentVariable("YANKI_CSCHECK_TOHUM") is { Length: > 0 } t ? t : "7Hjd1O9bXz0e";
         private const int Tick = 24;
 
         private static readonly string[] HanOnermeleri =
@@ -289,6 +290,94 @@ namespace Yanki.Scenarios.Tests
                     Assert.Equal(GunlukHashu.Hesapla(kesintisiz.Gunluk), GunlukHashu.Hesapla(yuklenen.Gunluk));
                 },
                 iter: Ornek, seed: Tohum, threads: 1);
+        }
+
+        // ---- Zincir derinliği: döngülü kurallarla ANLAMLI test (HanGerilim/FrenliHan zincirleri D'ye hiç ulaşmaz) ----
+
+        private const string DongulukKurallar = @"{ ""kurallar"": [
+  { ""id"": ""a"", ""ne_zaman"": ""yardim_etti"", ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""minnet"", ""deger"": 1, ""sure"": 1000 } ] },
+  { ""id"": ""b"", ""ne_zaman"": ""modifier_eklendi"", ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""oyuncu"", ""eksen"": ""guven"", ""delta"": 1 } ] },
+  { ""id"": ""c"", ""ne_zaman"": ""eksen_degisti"", ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""oyuncu"", ""modifier"": ""minnet"", ""deger"": 1, ""sure"": 1000 } ] }
+] }";
+
+        private static readonly string DongulukSenaryo = @"{ ""surum"": 1, ""ad"": ""Zincir"", ""mekanlar"": [""han""], ""baglantilar"": [],
+  ""oyuncu"": { ""id"": ""oyuncu"", ""konum"": ""han"" },
+  ""npcler"": [
+    { ""id"": ""Ali"", ""konum"": ""han"", ""kisilik"": { ""acgozluluk"": 0.5, ""durustluk"": 0.5, ""cesaret"": 0.5, ""sosyallik"": 0.5, ""kin_tutma"": 0.5, ""merhamet"": 0.5 } },
+    { ""id"": ""Veli"", ""konum"": ""han"", ""kisilik"": { ""acgozluluk"": 0.5, ""durustluk"": 0.5, ""cesaret"": 0.5, ""sosyallik"": 0.5, ""kin_tutma"": 0.5, ""merhamet"": 0.5 } }
+  ],
+  ""gercekler"": [], ""olay_turleri"": [""yardim_etti""], ""kural_dosyalari"": [""k.json""] }";
+
+        [Fact]
+        public void Zincir_dongulu_kurallarda_rastgele_tetikler_ve_D_icin_derinlik_D_yi_asmaz_zincir_durur()
+        {
+            var kuralKaynagi = Yanki.Core.Rules.KuralYukleyici.Yukle(DongulukKurallar, "k.json", new[] { "yardim_etti" });
+            Assert.True(kuralKaynagi.Basarili);
+            var senaryo = SenaryoYukleyici.Yukle(DongulukSenaryo, "s.json").Senaryo!;
+            var zincirFrenSayisi = 0;
+
+            Gen.Int[1, 6].Select(Gen.Int[1, 12].List[1, 4]).Sample(
+                g =>
+                {
+                    var (d, tetikler) = (g.Item1, g.Item2);
+                    var sim = Simulasyon.Olustur(senaryo, kuralKaynagi.Kurallar, 42, frenAyarlari: new Yanki.Core.Brakes.FrenAyarlari(d));
+                    for (var t = 1; t <= 24; t++)
+                    {
+                        foreach (var _ in tetikler.Where(x => x == t))
+                        {
+                            sim.Submit(new PlayerAction("yardim_etti", "Ali"));
+                        }
+
+                        sim.Tick(1);
+                    }
+
+                    var kurallar = new HashSet<string> { "a", "b", "c" };
+                    var derinlik = new Dictionary<long, int>();
+                    var enBuyuk = 0;
+                    foreach (var o in sim.Gunluk.Olaylar)
+                    {
+                        var en = o.NedenOlaylar.Count == 0 ? 0 : o.NedenOlaylar.Max(n => derinlik[n]);
+                        derinlik[o.Id] = kurallar.Contains(o.KuralId) ? en + 1 : o.KuralId == "algi" ? en : 0;
+                        enBuyuk = Math.Max(enBuyuk, derinlik[o.Id]);
+                        Assert.Equal(derinlik[o.Id], sim.ZincirDerinligi(o.Id));
+                    }
+
+                    Assert.True(enBuyuk <= d, $"D={d}, ölçülen en büyük derinlik {enBuyuk}");
+                    zincirFrenSayisi += sim.Frenler("zincir").Count;
+                    foreach (var f in sim.Frenler("zincir"))
+                    {
+                        Assert.Contains(sim.Neden(f.Id), o => o.Tur == "yardim_etti" && o.KuralId == "player");   // fren zincirin köküne iner
+                    }
+                },
+                iter: Ornek, seed: Tohum, threads: 1);
+
+            Assert.True(zincirFrenSayisi > 0, "hiçbir örnek D sınırına ulaşmadı: değişmez anlamsız kaldı");
+        }
+
+        // ---- Yalan gizliliği: yalanın GERÇEKTEN söylendiği senaryoyla (SiraEtkisiKriz: sır + baskı) ----
+
+        [Fact]
+        public void Yalan_gizliligi_yalan_soylenen_rastgele_kriz_senaryolarinda_korunur()
+        {
+            var yalanli = 0;
+            PlayerAction Anlat(string h, string o) => new PlayerAction("anlatti", h, new[] { new KeyValuePair<string, string>("onerme", o) });
+            var sirli = new[] { Anlat("Hatice", "sir_sakliyor(Hatice,Mehmet)"), Anlat("Hatice", "borclu(Mehmet,Ayse,500)") };
+            var havuz = new List<PlayerAction> { sirli[0], sirli[1], new PlayerAction("hakaret_et", "Hatice") };
+            Gen.Int[1, Tick].Select(Gen.Int[0, 2]).List[1, 6].Select(Gen.Int[1, 60]).Sample(
+                g =>
+                {
+                    var takvim = g.Item1.ToLookup(e => e.Item1, e => havuz[e.Item2]);
+                    var sim = Kos("SiraEtkisiKriz", g.Item2, takvim, Tick, SinirlarIcinde);
+                    YalanGizliligi(sim);
+                    NedenleriGunluktedir(sim);
+                    if (sim.Zihinler["Hatice"].Aktarimlar.Any(a => a.Yalan))
+                    {
+                        yalanli++;
+                    }
+                },
+                iter: Ornek, seed: Tohum, threads: 1);
+
+            Assert.True(yalanli > 0, "hiçbir örnekte yalan söylenmedi: değişmez anlamsız kaldı");
         }
 
         // ---- FrenliHan ----
