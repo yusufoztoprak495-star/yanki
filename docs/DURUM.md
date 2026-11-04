@@ -16,7 +16,7 @@ Hafta 8 bu işlerle başladı (durum her maddenin başında; bölüm hafta sonun
 2. **[YAPILDI]** 5.80 ve 6.58 ms: fark kod kaynaklı değil, süreçlerde çift mod görüldü, modun nedeni bilinmiyor (ADR-015).
    _Geçmiş madde:_ açıkla.
 3. **[YAPILDI]** Karar Yusuf'undu: optimizasyon (çelişki dizini, 8 NPC gerçekçi 11.16 → 2.88 ms) + yeniden tanım (ADR-015).
-4. **`Korumalilik.cs`'nin test edilmeyen dallarını kapat** (PR #11'de patch coverage %68,65).
+4. **[YAPILDI]** `Korumalilik.cs` kapsanmayan dallar kapandı: dosya satır kapsamı (iki test projesi birleşik) %83.6 → %100. `Rol.Oyuncu` dalı yükleyiciden ulaşılamazdı ama elle kurulan nesnede korumayı sessizce kapatıyordu; açık hata fırlatır (silmek yerine, `konusan`/`dinleyen` de aynı sessiz yola düşüyordu). Codecov "patch" oranı PR diff'ine bağlıdır, yerelde birebir üretilemez.
 5. **ADR-013 onayını Yusuf'tan al** (durum hâlâ "Önerildi").
 
 ## Biten haftalar
