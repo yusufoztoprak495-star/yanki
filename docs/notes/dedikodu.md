@@ -78,3 +78,9 @@ Kalan fark (50 NPC: 523.1 / 79.5 ≈ 6.6×) **7. hafta açık kararıdır** (Z3/
 - Hedef türü `npc` ya da `oyuncu`dur; hem NPC hem oyuncuya anlatabilmek için iki eylem yazılır (`anlat`, `anlat_oyuncuya`).
 - İki NPC aynı tick'te aynı dinleyene aynı kökü yazarsa sonuç NPC kimlik sırasına bağlıdır (girdi sırasına değil).
 - Cooldown, tetiklenme ve zincir derinliği sınırları, fren olayları 7. haftada.
+
+## 7. hafta
+
+- **Aynı söylenti her duyuşta tetikler:** `anlatti` kuralları aynı söylentiyi her duyuşta çalıştırır (HanGerilim'de Can söylentiyi dört kişiden duydu). Söylenti tek etki bırakacaksa kurala `en_fazla: 1` ya da `cooldown` yazılır (`aile_iftirasi` bu yüzden `en_fazla: 1`; tepe fikir −59.62 → −22).
+- **Gossip önerme dizini denendi, GERİ ALINDI:** `KonuHesabi.Dogru` için konuşan başına, desen kümesi başına uyan önerme konumlarını (yüklem ön filtresi) bulan tick içi dizin eklendi; dedikodulu 50 NPC'de kazanç sağlamadı (dizinsiz 171–180 ms/tick, dizinli 193–198 ms/tick, eşik %30'du). Dedikodu maliyeti konu taramasında değilmiş; profil gerekir (11–12. hafta).
+- **Kaynak bilgisi (G):** `docs/notes/zihin.md`; ADR-012 madde 4 yerini ADR-013 madde 7'ye bırakır.

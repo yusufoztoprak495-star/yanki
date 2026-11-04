@@ -56,3 +56,7 @@ Dedikodu, `duydu` aktarımı, konu sınırı ve yalan kaydı 6. haftada yapıld�
 - Önerme türetmede boş fail/hedef atlanır (`selamladi(Ali)`). İkisi de boşsa kanıt üretilmez, yalnızca hafıza yazılır.
 - Önerme adı olay türünden gelir, bu yüzden olay türleri ASCII kimlik olmalı.
 - Gözlenen kanıt çelişen eski inancı ezebilir (`degil(p)` 0.9, eski `duydu` 0.4). Dengesi dedikoduyla birlikte 6. haftada sınanacak.
+
+## 7. hafta
+
+Fren olayları (`fren_uygulandi`) ve `yay_degisti` algılanmaz ve kural tetiklemez; `ZihinOlayiMi`'ye girmezler. Algı olayları zincir derinliğine eklenmez (kural çıktısı `1 + nedenlerinin en büyüğü`, algı olayı nedenlerinin en büyüğünü taşır).

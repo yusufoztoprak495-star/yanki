@@ -2,6 +2,16 @@
 
 > **Yazar: Claude Code** (Yusuf'un isteğiyle). Bu not 7. hafta boyunca doldurulur; T16'da tamamlanır. **Karar (Yusuf)** satırları Yusuf'un kararlarıdır.
 
+## Ne yapıyor?
+
+Frenler kural ve eylem tekrarlarını sınırlar, korumalı varlıkları ihlalden korur, yay değişkenleriyle dramatik yayı yönlendirir; her fren günlükte `fren_uygulandi` olarak iz bırakır, böylece "bu neden olmadı?" sorusu `yanki why <fren olayı>` ile cevaplanır. Kararlar ve sapmalar: `docs/adr/0013-frenler-kayit-ve-kaynak-modeli.md`; yazım: `docs/authoring-guide.md`.
+
+- **Fren olayı:** `fren`, `kimlik`, `npc`, `hedef`; `KuralId: fren:<tur>`; algılanmaz, kural tetiklemez. Kural frenleri engellenen her tetiklemede yazılır (`tanimsiz_rol`: (kural, tetikleyici) başına tek, `npc` boş); aday frenleri engel başına bir kez ve yalnızca ön koşullar tutsaydı.
+- **Sayaçlar** (`cooldown`, `kapsam`, `tick_basina_en_fazla`, `en_fazla`, genel sınır M) hafızadan okunmaz, olay günlüğünden türer; adım içinde hemen güncellenir (tek durum görüntüsünün belgeli istisnası).
+- **Zincir derinliği** günlükten türer; D=4 aşılırsa kural çalışmaz ve `zincir` freni yazılır (etki düşer, ertelenmez).
+- **Korumalı bayraklar:** `oldurulemez` ve `calinamaz` YALNIZCA `ihlal_bayraklari` bildiren eylem ve kurallarda uygulanır; `mekandan_ayrilamaz` yerleşik harekete ve `konum!` yazımına motor tarafından uygulanır.
+- **Yay değişkenleri:** `yay_degisti` kırpılmış değeri taşır, `yay_siniri` freni; `yay(ad)` kriterde okunur.
+
 ## HanGerilim: `hafiza_var(...)` ön koşulları cooldown'a çevrilmeli mi? (T11)
 
 **Karar (Yusuf):** Hayır. `samples/HanGerilim` eylemlerinin `hafiza_var(itiraf_etti | sakinlesti | patladi | kacti, ben, 24)` ön koşulları değişmez; cooldown bu koşulların yerini tutmaz.
@@ -46,3 +56,27 @@ Stres fikstürü (her NPC her tick eylem seçer), 168 tick, 3 çalıştırmanın
 2. *Z4: kanıt + hafıza olaylarının birleştirilmesi.* Algı başına iki olay yerine biri: olay sayısı ≈ %45 azalır (kanıt + hafıza ≈ olayların %89'u). **Olay biçimini değiştirir, bütün hash'leri kaydırır**; Yusuf'un onayı gerekir.
 3. *Z4: silik hafızanın durumdan düşürülmesi / önem eşiği.* Hafıza büyümesini keser, davranışı ve hash'i değiştirebilir (algı hafızası önem 0.2).
 4. *Hash'i artımlı yapmak.* FNV zincirleme olduğu için ön ekin yeniden kullanımı ancak ön ekteki zihinler değişmediğinde mümkündür; stres fikstüründe her zihin her tick değiştiğinden kazanç yok, gerçek senaryolarda küçük.
+
+## Son ölçüm tablosu (7. hafta sonu, aynı tablo, iki fikstür AYRI etiketli)
+
+`tools/olcum`, benchmark değil; 168 tick, 3 çalıştırmanın ortancası, aynı makine. Son satırlar `TetikSayaclari.KanonikMetin` önbelleği (sayaç metni yalnızca sayaç değişince yeniden kurulur; hash'ler değişmedi) sonrasıdır.
+
+| Fikstür | NPC | ms/tick | 5 ms hedefi | olay | fren olayı |
+|---|---|---|---|---|---|
+| **STRES** (her NPC her tick eylem seçer), dedikodusuz | 8 | 2.40 | tutuldu | 16200 | 0 |
+| **STRES**, dedikodulu | 8 | 4.08 | tutuldu | 16107 | 0 |
+| **STRES**, dedikodusuz | 50 | 35.8 | tutmadı (≈ 7×) | 292041 | 0 |
+| **STRES**, dedikodulu | 50 | 186.1 | tutmadı (≈ 37×) | 285312 | 0 |
+| **GERÇEKÇİ** (dedikodu açık) | 8 | 6.58 | tutmadı (≈ 1.3×) | 11412 | 1156 |
+| **GERÇEKÇİ** (dedikodu açık) | 50 | ≈ 685–722 | tutmadı (≈ 140×) | 327763 | 13459 |
+
+**Gerçekçi fikstürün varsayımları** (`tools/olcum/GercekciFikstur.cs`, `--gercekci`; stres fikstürü DEĞİŞMEDİ): sahte içerik, Kasaba Hanı değil. 8 mekan (han merkez, 7 bağlantı); NPC'ler mekanlara eşit olmayan dağılır (han 6/20, pazar 4/20, mahalle 3/20 … orman 1/20); 9 eylem (`selam`, `yardim`, `tehdit`, `git`, `anlat`, `yalan_soyle`, `calis`, `sohbet`, `dinlen`); **her zaman aday olan eylem yok** (`dinlen` yalnızca stres > 5), yani NPC'ler çoğu tick boşta kalır (50 NPC'de 168 tick'te yalnızca 8142 karar); `selam`, `yardim`, `tehdit`, `git`, `calis`, `sohbet` cooldown'lıdır; 12 kural (üçü `cooldown`, üçü `en_fazla`); 4 kriz; dedikodu açık (oyuncu t1'de han'daki dört NPC'ye dört borç söylentisi anlatır, ayrıca 2 yalan önermesi); oyuncu 6 kez yardım/tehdit eder. Kişilikler anahtarlı RNG'den (seed 4321).
+**Okuma:** gerçekçi 50 NPC fikstürü stresten DAHA YAVAŞ. Olası neden (ölçülmüş değil, hipotez): han'a kümelenme (50 NPC'nin ≈ 15'i) herkesin herkesi görmesini, yani **algı olayı hacmini** büyütür (141 bin `gordu`, olayların %43'ü; 8 NPC'de 3146); algı maliyeti mekandaki kişi sayısının karesiyle büyür. Fren makinesi maliyeti: 8 NPC'de cooldown/en_fazla alanları çıkarılınca 3.7 ms (frenli 7.4–9.0 ms; bu oyunda yaklaşık 2×), fren olayı olayların %10 (8 NPC) ve %4.1 (50 NPC) kadarıdır, çünkü kural frenleri engellenen her tetiklemede yazılır. Beklenti ("boşta NPC'li fikstür daha hızlı") DOĞRULANMADI.
+
+## Denenen ve kapatılan optimizasyonlar (Yusuf'un kararı: yalnızca 1 uygulandı, <%30 kazanç ise geri al)
+
+1. **Gossip önerme dizini / yüklem ön filtresi: DENENDİ, KAZANÇ YOK, GERİ ALINDI.** Dedikodulu 50 NPC, A/B aynı makinede: dizinsiz 171.1 / 179.5 ms/tick, dizinli 198.3 / 193.0 ms/tick (kazanç yok, hafif kayıp; eşik %30). 1479 + 117 test ve 4 golden yeşildi, yani doğruluk sorunu değil. Sonuç: dedikodu maliyeti (≈ 150 ms/tick) konu taramasında DEĞİL; yeri bilinmiyor, **profil gerekir** (11–12. hafta).
+2. **Z4 kanıt + hafıza birleştirme: UYGULANMADI → 11–12. hafta adayı.** Olay biçimini değiştirir, tüm hash'leri kaydırır.
+3. **Z4 önem eşiği / silik hafızanın durumdan düşmesi: UYGULANMADI → 11–12. hafta adayı.** Davranışı ve hash'i değiştirebilir.
+4. **Artımlı hash: KAPANDI.** FNV zincirleme olduğundan ön ek yeniden kullanımı ancak ön ekteki zihinler değişmezse mümkün; stres fikstüründe kazanç yok (hash'in payı: 50 NPC dedikodusuzda önbelleksiz tam hesap 37 ms, ama önbellekli yol bunu zaten kaldırdı).
+**Açık:** Blazor WASM'de tick süresi ve yükleme ölçülmedi (10. hafta). 5 ms kriteri 12. haftada BenchmarkDotNet ölçümüyle karara bağlanır (silinmedi).

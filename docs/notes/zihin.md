@@ -46,3 +46,8 @@ Durum yedi olayla ilerler: `modifier_eklendi`, `eksen_degisti`, `duygu_degisti`,
 
 - Stres deltası sönmüş güncel değere eklenir (50 → 10 tick sonra 40, +20 ile 60). Sönme oranı onaylandı, bu ekleme kuralı ayrıca konuşulmadı.
 - Kişilik aralık dışıysa `ArgumentOutOfRangeException` verir. `yanki validate` geldiğinde dosya ve satırla gösterilecek.
+
+## 7. hafta: kaynak bilgisi ve kanonik metin önbelleği
+
+- **Kaynak modeli (ADR-013):** her (önerme, kök, kaynak) ayrı `duydu` kanıtıdır, hiçbiri silinmez; güven her kökün en güçlü güncel kanıtından noisy-or ile hesaplanır (`gordu`/çıkarım kanıtları tek tek). `kaynak(desen, kisi)`, `KimdenDuydu` ve geri anlatmama hepsini görür.
+- **Kanonik metin önbelleği (Z3):** `Zihin.KanonikMetin()` önbellekli; bölüm önbellekleri (önerme başına `B` blokları, `T` ve `H` blokları) ilgili mutasyon yolunda, bütün metin `Uygula`'nın başında bayatlar. `KanonikMetinTam()` önbelleksiz referanstır ve her tick karşılaştırılır. Önbellek durum değildir, günlükten yeniden kurulur, hash'e girmez.
