@@ -58,13 +58,19 @@ namespace Yanki.Core.Tests.Brakes
         {
             var s = Kur(new[]
             {
-                "{ \"id\": \"r\", \"ne_zaman\": \"yardim_etti\", \"kapsam\": \"kural\", \"en_fazla\": 2, \"etkiler\": [ { \"tur\": \"modifier\", \"hedef\": \"olay.fail\", \"modifier\": \"m\", \"deger\": 1, \"sure\": 100 }, " + YayEtkisi("h") + " ] }",
+                "{ \"id\": \"r\", \"ne_zaman\": \"yardim_etti\", \"kapsam\": \"kural\", \"en_fazla\": 3, \"etkiler\": [ { \"tur\": \"modifier\", \"hedef\": \"olay.fail\", \"modifier\": \"m\", \"deger\": 1, \"sure\": 100 }, " + YayEtkisi("h") + " ] }",
             });
             s.Submit(Y);
             s.Tick(2);
+            Assert.Empty(s.Frenler("en_fazla"));                                       // ilk eylem: Ali ve Veli = 2 tetikleme (sınır 3)
 
-            Assert.Empty(s.Frenler("en_fazla"));                                       // Ali ve Veli = 2 tetikleme = sınır; her biri tek sayılır (hatalı: 4)
-            Assert.Equal(2, Degisimler(s).Length);
+            s.Submit(Y);
+            s.Tick(2);
+
+            // Her tetikleme bir kez sayılırsa üçüncü tetikleme (Ali ya da Veli) çalışır, dördüncüsü en_fazla ile kesilir: 3 yay değişimi, 1 fren.
+            // Modifier ve yay olayı iki kez sayılırsa (hatalı) sayaç ilk eylemde 4'e çıkar, ikinci eylemde hiçbiri çalışmaz: 2 değişim.
+            Assert.Equal(3, Degisimler(s).Length);
+            Assert.Single(s.Frenler("en_fazla"));
         }
 
         [Fact]
