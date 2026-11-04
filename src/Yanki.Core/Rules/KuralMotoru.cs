@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Yanki.Core.Brakes;
 using Yanki.Core.Criteria;
 using Yanki.Core.Events;
 using Yanki.Core.Mind;
@@ -73,6 +74,22 @@ namespace Yanki.Core.Rules
         }
     }
 
+    /// <summary>Bir değerlendirmenin sonucu: üretilen etkiler ve uygulanan frenler (ikisi de değerlendirme sırasıyla).</summary>
+    public sealed class KuralDegerlendirmesi
+    {
+        /// <summary>Üretilecek etkiler.</summary>
+        public IReadOnlyList<UretilenEtki> Etkiler { get; }
+
+        /// <summary>Uygulanan frenler; olaya çevirmek çağıranın işidir (değerlendirme saf kalır).</summary>
+        public IReadOnlyList<FrenBilgisi> Frenler { get; }
+
+        internal KuralDegerlendirmesi(IReadOnlyList<UretilenEtki> etkiler, IReadOnlyList<FrenBilgisi> frenler)
+        {
+            Etkiler = etkiler;
+            Frenler = frenler;
+        }
+    }
+
     /// <summary>
     /// Sonuç kuralı motoru (plan 5.6, 6. adım 3). Saf bir değerlendiricidir: durumu değiştirmez, yalnızca etki listesi döndürür;
     /// çağıran etkileri <see cref="OlayYap"/> ile olaya çevirip günlüğe ekler (etkiler doğrudan state değiştirmez).
@@ -111,23 +128,55 @@ namespace Yanki.Core.Rules
 
         /// <summary>Tetikleyicileri değerlendirir ve üretilecek etkileri sırayla döndürür.</summary>
         public IReadOnlyList<UretilenEtki> Degerlendir(
-            IReadOnlyList<TetikBilgisi> tetikler, Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, string oyuncuId)
+            IReadOnlyList<TetikBilgisi> tetikler, Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, string oyuncuId) =>
+            DegerlendirFrenli(tetikler, dunya, zihinler, gunluk, tick, oyuncuId).Etkiler;
+
+        /// <summary>
+        /// <see cref="Degerlendir"/>, ek olarak uygulanan frenleri de döndürür (7. hafta). Hâlâ saftır: ne günlüğe ne duruma yazar;
+        /// fren olaylarını çağıran yazar.
+        /// <para>
+        /// Cooldown ve tetiklenme sınırları için <paramref name="fren"/> içinde sayaçlar verilir (günlükten türetilmiş sayaçlar, okunur; adım içi artışlar
+        /// yerel bir görünümde tutulur: sıra tetikleyici → kural → NPC). Genel sınır M (<c>fren.GenelSinir</c>) tick başına en fazla sonuç çıktısıdır;
+        /// kural tetiklemesi bölünmez, sınırı aşan tetikleme düşer ve sonraki tick'e ertelenmez.
+        /// Kontrol sırası: zincir (derinlik), cooldown, en_fazla, tick_siniri, genel_sinir.
+        /// </para>
+        /// </summary>
+        public KuralDegerlendirmesi DegerlendirFrenli(
+            IReadOnlyList<TetikBilgisi> tetikler, Dunya dunya, ZihinDeposu zihinler, OlayGunlugu gunluk, long tick, string oyuncuId,
+            FrenBaglami? fren = null)
         {
+            var sayaclar = fren?.Sayaclar;
+            var genelSinir = fren?.GenelSinir;
             if (tetikler == null)
             {
                 throw new ArgumentNullException(nameof(tetikler));
             }
 
-            var cozucu = new ZihinSorguCozucusu(dunya, zihinler, gunluk, tick);
+            var cozucu = new ZihinSorguCozucusu(dunya, zihinler, gunluk, tick, yay: fren?.Yay);
             var yazilanGercekler = new SortedSet<string>(StringComparer.Ordinal);
             var sonuc = new List<UretilenEtki>();
+            var frenler = new List<FrenBilgisi>();
+            var gorunum = sayaclar?.YeniGorunum();
+            var sonucSayisi = 0;
 
             foreach (var tetik in tetikler)
             {
                 foreach (var kural in _kurallar)
                 {
-                    if (!string.Equals(kural.NeZaman, tetik.Olay.Tur, StringComparison.Ordinal) || !RollerTanimli(kural, tetik.Olay, oyuncuId))
+                    if (!string.Equals(kural.NeZaman, tetik.Olay.Tur, StringComparison.Ordinal))
                     {
+                        continue;
+                    }
+
+                    if (!RollerTanimli(kural, tetik.Olay, oyuncuId))
+                    {
+                        // Rol denetimi NPC'ye bağlı değildir: (kural, tetikleyici) başına tek fren, npc alanı boş. Kriterlere bakılmaz
+                        // (tanımsız rolle değerlendirilemezler). Olayı kimse algılamadıysa kural zaten değerlendirilmezdi, fren de yazılmaz.
+                        if (tetik.Algilayanlar.Count > 0)
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.TanimsizRol, kural.Id, string.Empty, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                        }
+
                         continue;
                     }
 
@@ -139,6 +188,13 @@ namespace Yanki.Core.Rules
                             continue;
                         }
 
+                        // Korumalı varlık ihlali: kural çalışmaz, korumali freni yazılır (kriterleri tutmuş kural için).
+                        if (fren != null && !fren.Korumali.Bos && IhlalVarMi(kural, npc, tetik.Olay, fren.Korumali, out var ihlalVarligi))
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.Korumali, kural.Id, npc, ihlalVarligi, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                            continue;
+                        }
+
                         var nedenler = new SortedSet<long> { tetik.Olay.Id };
                         foreach (var n in tetik.AlgiNedenleri(npc))
                         {
@@ -146,19 +202,61 @@ namespace Yanki.Core.Rules
                         }
 
                         var nedenListesi = new ReadOnlyCollection<long>(new List<long>(nedenler));
+
+                        // Zincir derinliği: bu tetikleme 1 + nedenlerinin en büyük derinliğinde olay üretecek; D'yi aşıyorsa kural çalışmaz.
+                        if (fren?.Zincir != null && fren.Zincir.EnBuyuk(nedenListesi) + 1 > fren.ZincirSiniri)
+                        {
+                            frenler.Add(new FrenBilgisi(FrenTurleri.Zincir, kural.Id, npc, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                            continue;
+                        }
+
+                        // Önce etkiler denenir: tetiklendi = en az bir etki üretildi. Sınır aşılırsa deneme düşer (yazılanGercekler'e de işlemez).
+                        var deneme = new List<UretilenEtki>();
+                        var denemeGercekleri = new SortedSet<string>(yazilanGercekler, StringComparer.Ordinal);
+                        var denemeFrenleri = new List<FrenBilgisi>();
                         foreach (var etki in kural.Etkiler)
                         {
-                            var uretilen = EtkiUret(kural, etki, npc, tetik.Olay, baglam, nedenListesi, dunya, yazilanGercekler);
+                            var uretilen = EtkiUret(kural, etki, npc, tetik.Olay, baglam, nedenListesi, dunya, denemeGercekleri, denemeFrenleri, fren?.Korumali);
                             if (uretilen != null)
                             {
-                                sonuc.Add(uretilen);
+                                deneme.Add(uretilen);
                             }
                         }
+
+                        if (denemeFrenleri.Exists(f => f.Tur == FrenTurleri.Korumali))
+                        {
+                            frenler.AddRange(denemeFrenleri);   // etki korumalı varlığın konum! gerçeğini yazacaktı: kural çalışmaz
+                            continue;
+                        }
+
+                        if (deneme.Count == 0)
+                        {
+                            frenler.AddRange(denemeFrenleri);   // tetiklenmedi: atlanan etkilerin izi (kisi_olmayan_hedef) kalır
+                            continue;
+                        }
+
+                        var engel = gorunum?.Engel(kural, npc, tick);
+                        if (engel == null && genelSinir.HasValue && sonucSayisi + deneme.Count > genelSinir.Value)
+                        {
+                            engel = FrenTurleri.GenelSinir;
+                        }
+
+                        if (engel != null)
+                        {
+                            frenler.Add(new FrenBilgisi(engel, kural.Id, npc, string.Empty, tetik.Olay.Mekan, new[] { tetik.Olay.Id }));
+                            continue;
+                        }
+
+                        yazilanGercekler.UnionWith(denemeGercekleri);
+                        frenler.AddRange(denemeFrenleri);
+                        sonuc.AddRange(deneme);
+                        sonucSayisi += deneme.Count;
+                        gorunum?.Kaydet(kural, npc, tick);
                     }
                 }
             }
 
-            return new ReadOnlyCollection<UretilenEtki>(sonuc);
+            return new KuralDegerlendirmesi(new ReadOnlyCollection<UretilenEtki>(sonuc), new ReadOnlyCollection<FrenBilgisi>(frenler));
         }
 
         /// <summary>Üretilen etkiyi günlüğe eklenecek olaya çevirir. Olay tetikleyicinin mekanında geçer.</summary>
@@ -179,14 +277,25 @@ namespace Yanki.Core.Rules
                     return ZihinOlaylari.EksenDegisti(id, tick, sira, e.Npc, e.Hedef, e.Etki.Ad, e.Etki.Deger, e.Nedenler, kuralId, mekan);
                 case EtkiTuru.Duygu:
                     return ZihinOlaylari.DuyguDegisti(id, tick, sira, e.Npc, e.Etki.Ad, e.Etki.Deger, e.Hedef, e.Nedenler, kuralId, mekan);
+                case EtkiTuru.Yay:
+                    throw new InvalidOperationException("yay etkisi Simulasyon tarafından (değişkenin şimdiki değerine göre kırpılarak) yazılır.");
                 case EtkiTuru.Hafiza:
                     return ZihinOlaylari.HafizaEklendi(id, tick, sira, e.Npc, e.Tetik.Id, e.Etki.Deger, e.Nedenler, kuralId, mekan);
                 default:
+                    // Gerçek olayında NPC bilgisi yoktur; cooldown/en_fazla/tick_basina_en_fazla tanımlı kuralın sayacı (kural, NPC)
+                    // çiftini günlükten türetebilsin diye YALNIZCA bu kuralların olayına `ben` yükü eklenir (fren alanı olmayan
+                    // kuralların olayları ve gunluk hash'leri değişmez).
+                    var yuk = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("gercek", e.Gercek) };
+                    if (e.Kural.TetikSiniri != null && e.Kural.TetikSiniri.Tanimli)
+                    {
+                        yuk.Add(new KeyValuePair<string, string>("ben", e.Npc));
+                    }
+
                     return new Olay(
                         id, tick, sira,
                         e.Etki.Kaldir ? Dunya.GercekKaldirildi : Dunya.GercekEklendi,
                         string.Empty, string.Empty, mekan,
-                        new[] { new KeyValuePair<string, string>("gercek", e.Gercek) },
+                        yuk,
                         e.Nedenler, kuralId);
             }
         }
@@ -246,7 +355,8 @@ namespace Yanki.Core.Rules
 
         internal static UretilenEtki? EtkiUret(
             KuralTanimi kural, KuralEtkisi etki, string npc, Olay tetik, SorguBaglami baglam,
-            IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler)
+            IReadOnlyList<long> nedenler, Dunya dunya, SortedSet<string> yazilanGercekler, List<FrenBilgisi>? frenler = null,
+            Korumalilik? korumali = null)
         {
             switch (etki.Tur)
             {
@@ -254,6 +364,14 @@ namespace Yanki.Core.Rules
                 {
                     var g = Gercek.Ayristir(GercekSablonu.Doldur(etki.GercekSablonu, rol => baglam.Coz(rol), RolKumesi.Hepsi));
                     var metin = g.ToString();
+
+                    // Korumalı varlığın konum! gerçeğini yazmak mekandan_ayrilamaz ihlalidir (motor uygular, yazar bildirmez).
+                    if (korumali != null && g.Yuklem == "konum!" && g.Argumanlar.Count > 0 && korumali.Korunuyor(g.Argumanlar[0], KorumaBayraklari.MekandanAyrilamaz))
+                    {
+                        frenler?.Add(new FrenBilgisi(FrenTurleri.Korumali, kural.Id, npc, g.Argumanlar[0], tetik.Mekan, new[] { tetik.Id }));
+                        return null;
+                    }
+
                     var varMi = dunya.Var(g);
 
                     // Değişiklik yapmayan etki (zaten var olanı eklemek, olmayanı kaldırmak) ve aynı adımda zaten üretilen etki atlanır.
@@ -271,6 +389,7 @@ namespace Yanki.Core.Rules
                 }
 
                 case EtkiTuru.Hafiza:
+                case EtkiTuru.Yay:
                     return new UretilenEtki(kural, etki, npc, tetik, string.Empty, string.Empty, nedenler);
                 default:
                 {
@@ -278,15 +397,32 @@ namespace Yanki.Core.Rules
 
                     // Modifier, eksen ve duygu hedefi bir kişi (NPC ya da oyuncu) olmalı. Hedef bir mekan ya da eşya ise (ör. Hedefi mekan olan
                     // bir oyuncu eylemi, ayrildi/geldi olayları) etki üretilmez: zihne mekan adına ilişki kaydı yazılıp durum bozulmaz.
-                    // 7. hafta: bu atlama için fren olayı yazılacak.
+                    // Atlama günlükte iz bırakır: kisi_olmayan_hedef freni (7. hafta).
                     if (hedef.Length > 0 && !KisiMi(dunya, hedef))
                     {
+                        frenler?.Add(new FrenBilgisi(FrenTurleri.KisiOlmayanHedef, kural.Id, npc, hedef, tetik.Mekan, new[] { tetik.Id }));
                         return null;
                     }
 
                     return new UretilenEtki(kural, etki, npc, tetik, hedef, string.Empty, nedenler);
                 }
             }
+        }
+
+        private static bool IhlalVarMi(KuralTanimi kural, string npc, Olay olay, Korumalilik korumali, out string varlik)
+        {
+            foreach (var ib in kural.IhlalBayraklari)
+            {
+                var v = ib.Coz(npc, string.Empty, olay.Fail, olay.Hedef);
+                if (v.Length > 0 && korumali.Korunuyor(v, ib.Bayrak))
+                {
+                    varlik = v;
+                    return true;
+                }
+            }
+
+            varlik = string.Empty;
+            return false;
         }
 
         private static bool KisiMi(Dunya dunya, string kimlik)

@@ -262,8 +262,9 @@ namespace Yanki.Core.Tests.Simulation
 
             Assert.Equal(4, sim.SimdikiTick);
             Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "anlatti" && o.Fail == "Zeki" && o.Hedef == "Ayse");
+            // 7. hafta (G): Zeki'den duyulan geri yankı AYRI kaynak olarak tutulur (kimden duyuldu silinmez) ama güveni artırmaz.
             var kanitlar = sim.Zihinler["Ayse"].Kanitlar(Borc);
-            Assert.Single(kanitlar);
+            Assert.Equal(new[] { "oyuncu", "Zeki" }, kanitlar.Select(k => k.Kaynak).ToArray());
             Assert.Equal(once, sim.Zihinler["Ayse"].Guven(Borc, 4));
         }
 

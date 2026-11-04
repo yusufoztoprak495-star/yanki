@@ -149,3 +149,23 @@ Stres yavaş söner (0.2/tick); eşik 50 ve 80'dir (denge alanı).
 ## Sonuç kuralları, şablonlar, `yanki validate`
 
 🚧 İlerleyen haftalarda (kural yazımı için şimdilik `samples/MiniHan/kurallar.json` ve `notes/kural-motoru.md`).
+
+## Söylenti kuralları ve tekrar (7. hafta)
+
+`ne_zaman: anlatti` kuralları aynı söylentiyi **her duyuşta** tetikler: Can aynı borç söylentisini Ayşe'den, Hatice'den, Selim'den ve Kemal'den duyarsa kural dört kez çalışır ve (sınırsızsa) dört modifier yazar
+(birikme sınırı ve ×0.9 azalan etki bunları yumuşatır ama sayı yine de şişer). Söylenti tek etki bırakacaksa kurala `en_fazla: 1` (kapsam varsayılanı `npc`: her dinleyen için bir kez) ya da bir `cooldown` yaz.
+Engellenen her tekrar günlükte bir `en_fazla`/`cooldown` fren olayı bırakır (`yanki query <oturum> <npc>` "frenler" bölümü; `yanki why` fren olayından söylentiyi getiren anlatıma iner).
+Süreleri **1 tick = 1 saat** olarak yaz (plan 18 gün = 432 tick, 30 gün = 720 tick).
+
+## Frenler, korumalar ve yay değişkenleri (7. hafta)
+
+**Cooldown ve sınırlar.** Kurala `cooldown` (tick), `kapsam` (`kural` \| `npc`, varsayılan `npc`), `tick_basina_en_fazla` ve `en_fazla`; eyleme `cooldown`, `kapsam` (`npc` \| `hedef`, varsayılan `hedef`) ve `en_fazla` yazılır. `kapsam` `cooldown` ve `en_fazla` içindir; `tick_basina_en_fazla` her zaman kural genelinde sayılır.
+"Tetiklendi": kural için tüm kriterler tuttu ve en az bir etki üretildi; eylem için karar başına bir. `cooldown: 24` ve t=10'da çalışan kural t=33'te kapalı, t=34'te açıktır. Senaryoda `frenler.tick_basina_en_fazla_sonuc` genel sınırı (M) yazar; yazmazsan `max(32, 8 × NPC sayısı)` uygulanır. Süreleri 1 tick = 1 saat ile yaz.
+`cooldown` krizden sonra beklemenin yerini TUTMAZ: bunun için `hafiza_var(kriz_olayi, ben, 24)` kullan (`docs/notes/frenler.md`).
+
+**Korumalı bayraklar.** Senaryoda `korumali: { "Hanci": ["mekandan_ayrilamaz"], "kese": ["calinamaz"] }` (kapalı küme: `oldurulemez`, `calinamaz`, `mekandan_ayrilamaz`). **Sınır:** `oldurulemez` ve `calinamaz` YALNIZCA `ihlal_bayraklari` bildiren eylem ve kurallarda uygulanır; motorda yerleşik öldürme/çalma eylemi yoktur, bildirmeyi unutan yazarı motor yakalayamaz.
+Eylem/kural: `"ihlal_bayraklari": [{ "bayrak": "calinamaz", "varlik": "kese" }]` (`varlik` rol ya da sabit kimlik: `eylem.hedef`, `ben`, `olay.hedef`, `olay.fail`). İhlal eden aday `adaylar`'a hiç girmez (nedeni karar izinde görünür); ihlal eden kural çalışmaz. `mekandan_ayrilamaz` yerleşik harekete uygulanır, bildirilmez. Oyuncu için senaryoda `oyuncu_ihlalleri: { "eylem_turu": [{ "bayrak", "varlik" }] }`; `Submit` reddeder.
+
+**Yay değişkenleri.** Senaryoda `yay_degiskenleri: { "kasaba_gerginligi": { "baslangic": 0, "min": 0, "max": 5 } }`. Etki `{ "tur": "yay", "degisken": "kasaba_gerginligi", "delta": 2 }` (kural ve eylem); değer aralığa kırpılır, kırpılırsa `yay_siniri` freni yazılır. Kriterde `yay(kasaba_gerginligi)` (kural ve eylem; kriz satırında yasak). `yay_degisti` algılanmaz ve kural tetiklemez.
+
+**Frenleri okuma.** `yanki query <oturum> <npc>` "frenler" bölümünü gösterir, `yanki why <oturum> <fren olayı>` engellenen tetikleyiciye iner (kural frenleri); aday frenlerinin (korumalı, cooldown) zinciri eylemin son tetiklemesine iner ya da boştur (kök senaryodaki koruma bildirimidir). Fren türleri: `cooldown`, `en_fazla`, `tick_siniri`, `genel_sinir`, `zincir`, `korumali`, `tanimsiz_rol`, `kisi_olmayan_hedef`, `yay_siniri`.

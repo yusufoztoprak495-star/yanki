@@ -17,10 +17,10 @@ namespace Yanki.Core.Rules
     /// </summary>
     public static class KuralYukleyici
     {
-        private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler" };
+        private static readonly string[] KuralAnahtarlari = { "id", "ne_zaman", "kriterler", "etkiler", "cooldown", "kapsam", "tick_basina_en_fazla", "en_fazla", "ihlal_bayraklari" };
 
         // Sözlükte olup çözücüsü henüz bağlı olmayan fonksiyonlar (ZihinSorguCozucusu): çalışma anında patlamasınlar diye baştan reddedilir.
-        internal static readonly string[] BagliOlmayanFonksiyonlar = { "yay" };
+        internal static readonly string[] BagliOlmayanFonksiyonlar = new string[0];
 
         /// <summary>
         /// Çekirdeğin bildiği olay türleri: dünya ve zihin olayları. Oyuncu eylem türlerini senaryo tanımlar ve
@@ -151,7 +151,7 @@ namespace Yanki.Core.Rules
             {
                 if (Array.IndexOf(KuralAnahtarlari, kv.Key) < 0)
                 {
-                    Hata(kv.Value.Satir, $"Kuralda bilinmeyen alan \"{kv.Key}\" (id, ne_zaman, kriterler, etkiler)");
+                    Hata(kv.Value.Satir, $"Kuralda bilinmeyen alan \"{kv.Key}\" (id, ne_zaman, kriterler, etkiler, cooldown, kapsam, tick_basina_en_fazla, en_fazla, ihlal_bayraklari)");
                 }
             }
 
@@ -164,6 +164,14 @@ namespace Yanki.Core.Rules
             else if (nzDugumu.MetinDeger == Decision.YerlesikTurler.KararVerildi)
             {
                 Hata(nzDugumu.Satir, $"\"{Decision.YerlesikTurler.KararVerildi}\" ne_zaman olamaz: karar izi olayları algılanmaz ve kural tetiklemez (ADR-011)");
+            }
+            else if (nzDugumu.MetinDeger == Brakes.YayDegiskenleri.OlayTuru)
+            {
+                Hata(nzDugumu.Satir, $"\"{Brakes.YayDegiskenleri.OlayTuru}\" ne_zaman olamaz: yay olayları algılanmaz ve kural tetiklemez (sarmal açmasın, ADR-013)");
+            }
+            else if (nzDugumu.MetinDeger == Brakes.FrenOlayi.Tur)
+            {
+                Hata(nzDugumu.Satir, $"\"{Brakes.FrenOlayi.Tur}\" ne_zaman olamaz: fren olayları algılanmaz ve kural tetiklemez (ADR-013)");
             }
             else if (!bilinen.Contains(nzDugumu.MetinDeger))
             {
@@ -253,7 +261,21 @@ namespace Yanki.Core.Rules
                 return null;
             }
 
-            return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir);
+            var ihlaller = Brakes.IhlalBayragi.OkuDizi(oge, "ihlal_bayraklari", new[] { "ben", "olay.fail", "olay.hedef" }, Hata);
+            foreach (var ib in ihlaller)
+            {
+                if (ib.Rolu.HasValue)
+                {
+                    roller.Add(ib.Rolu.Value);
+                }
+            }
+
+            if (hatalar.Count > once)
+            {
+                return null;
+            }
+
+            return new KuralTanimi(kimlik, neZaman, kriterler, etkiler, roller, oge.Satir, Brakes.TetikSiniri.Oku(oge, false, Hata), ihlaller);
         }
 
         // ayrildi/geldi olaylarının Hedef alanı karşı mekandır; mekana modifier/eksen/duygu yazılamaz.
@@ -339,7 +361,7 @@ namespace Yanki.Core.Rules
             var turDugumu = d.Al("tur");
             if (turDugumu == null || turDugumu.Tur != JsonTuru.Metin)
             {
-                hata(d.Satir, onek + "metin olarak \"tur\" alanı gerekli (modifier, eksen, duygu, hafiza, gercek)");
+                hata(d.Satir, onek + "metin olarak \"tur\" alanı gerekli (modifier, eksen, duygu, hafiza, gercek, yay)");
                 return null;
             }
 
@@ -351,8 +373,9 @@ namespace Yanki.Core.Rules
                 case "duygu": izinli = new[] { "tur", "duygu", "siddet", "hedef" }; break;
                 case "hafiza": izinli = new[] { "tur", "onem" }; break;
                 case "gercek": izinli = new[] { "tur", "islem", "gercek" }; break;
+                case "yay": izinli = new[] { "tur", "degisken", "delta" }; break;
                 default:
-                    hata(turDugumu.Satir, onek + $"bilinmeyen etki türü \"{turDugumu.MetinDeger}\" (modifier, eksen, duygu, hafiza, gercek)");
+                    hata(turDugumu.Satir, onek + $"bilinmeyen etki türü \"{turDugumu.MetinDeger}\" (modifier, eksen, duygu, hafiza, gercek, yay)");
                     return null;
             }
 
@@ -373,6 +396,25 @@ namespace Yanki.Core.Rules
 
             switch (turDugumu.MetinDeger)
             {
+                case "yay":
+                {
+                    var ad = Metin(d, "degisken", onek, hata);
+                    var delta = Sayi(d, "delta", onek, hata);
+                    if (ad != null && !Kimlik.GecerliKimlikMi(ad))
+                    {
+                        hata(d.Al("degisken")!.Satir, onek + $"yay değişkeni adı geçersiz kimlik: \"{ad}\"");
+                        return null;
+                    }
+
+                    if (delta.HasValue && delta.Value == 0m)
+                    {
+                        hata(d.Al("delta")!.Satir, onek + "\"delta\" sıfır olamaz (değişiklik yapmayan etki)");
+                        return null;
+                    }
+
+                    return ad == null || !delta.HasValue ? null : KuralEtkisi.Yay(ad, delta.Value, d.Satir);
+                }
+
                 case "modifier":
                 {
                     var hedef = Hedef(d, "hedef", true, onek, roller, hata, kume);

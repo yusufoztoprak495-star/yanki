@@ -1,4 +1,5 @@
 using System;
+using Yanki.Core.Brakes;
 using Yanki.Core.Criteria;
 using Yanki.Core.Events;
 using Yanki.Core.Mind;
@@ -39,8 +40,16 @@ namespace Yanki.Core.Decision
         /// <summary>Konuşma eylemlerinin konu hesabı (tick içi önbellekli, salt okunur); konuşma eylemi yoksa <c>null</c> olabilir.</summary>
         public KonuHesabi? KonuHesabi { get; }
 
+        /// <summary>Cooldown/en_fazla sayaçları (salt okunur, günlükten türetilmiş); sınırlı eylem yoksa <c>null</c> olabilir.</summary>
+        public TetikSayaclari? Sayaclar { get; }
+
+        /// <summary>Korumalı varlıklar; yoksa <c>null</c> (korumalı varlık yok).</summary>
+        public Korumalilik? Korumali { get; }
+
         /// <summary>Bağlam kurar.</summary>
-        public KararBaglami(string npc, string oyuncuId, ulong seed, long tick, Dunya dunya, Zihin zihin, OlayGunlugu gunluk, ISorguCozucu cozucu, KonuHesabi? konuHesabi = null)
+        public KararBaglami(
+            string npc, string oyuncuId, ulong seed, long tick, Dunya dunya, Zihin zihin, OlayGunlugu gunluk, ISorguCozucu cozucu, KonuHesabi? konuHesabi = null,
+            TetikSayaclari? sayaclar = null, Korumalilik? korumali = null)
         {
             if (string.IsNullOrEmpty(npc))
             {
@@ -56,6 +65,8 @@ namespace Yanki.Core.Decision
             Gunluk = gunluk ?? throw new ArgumentNullException(nameof(gunluk));
             Cozucu = cozucu ?? throw new ArgumentNullException(nameof(cozucu));
             KonuHesabi = konuHesabi;
+            Sayaclar = sayaclar;
+            Korumali = korumali;
         }
 
         /// <summary>Verilen hedef için sorgu bağlamı: <c>ben</c> = karar veren, <c>eylem.hedef</c> = aday hedefi (boşsa tanımsız).</summary>

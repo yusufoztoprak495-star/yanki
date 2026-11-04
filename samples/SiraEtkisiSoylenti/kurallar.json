@@ -1,0 +1,80 @@
+{
+  "kurallar": [
+    {
+      "id": "aile_iftirasi",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(borclu(Mehmet, *, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "inanc(kardes(Mehmet, ben))",
+          "op": ">",
+          "deger": 0.3
+        }
+      ],
+      "en_fazla": 1,
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "aileme_iftira",
+          "deger": -22,
+          "sure": 432
+        }
+      ]
+    },
+    {
+      "id": "yardim_minneti",
+      "ne_zaman": "yardim_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "modifier_var(olay.fail, aileme_iftira)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "minnet",
+          "deger": 15,
+          "sure": 336
+        }
+      ]
+    },
+    {
+      "id": "yardim_supheli",
+      "ne_zaman": "yardim_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "modifier_var(olay.fail, aileme_iftira)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "supheli",
+          "deger": -10,
+          "sure": 100
+        }
+      ]
+    }
+  ]
+}

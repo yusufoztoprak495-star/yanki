@@ -1,5 +1,5 @@
 {
-  "surum": 1,
+  "surum": 2,
   "seed": 42,
   "senaryo": "../../samples/HanGerilim/scenario.json",
   "tick_sayisi": 24,
@@ -50,5 +50,8 @@
       "hedef": "Selim"
     }
   ],
-  "son_hash": "690f2f4ee9d3d385"
+  "son_hash": "13e6ccbefed06409",
+  "gunluk_hash": "70bbb55256544cd2",
+  "senaryo_hash": "aa9ff6767b76478d",
+  "bekleyen_eylemler": []
 }

@@ -107,7 +107,7 @@ namespace Yanki.Core.Mind
     public static class DurumHashu
     {
         /// <summary>Dünya ve zihinlerin birleşik durum hash'i.</summary>
-        public static string Hesapla(Dunya dunya, ZihinDeposu zihinler)
+        public static string Hesapla(Dunya dunya, ZihinDeposu zihinler, string ekMetin = "")
         {
             if (dunya == null)
             {
@@ -119,7 +119,7 @@ namespace Yanki.Core.Mind
                 throw new ArgumentNullException(nameof(zihinler));
             }
 
-            return Hash64.Hex(Hash64.Hesapla(dunya.KanonikMetin() + zihinler.KanonikMetin()));
+            return Hash64.Hex(Hash64.Hesapla(dunya.KanonikMetin() + zihinler.KanonikMetin() + ekMetin));
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Yanki.Core.Tests.Simulation
 
             var kayit = OturumKaydi.Uret(s, "senaryo.json");
 
-            Assert.Equal(1, kayit.Surum);
+            Assert.Equal(2, kayit.Surum);
             Assert.Equal(99UL, kayit.Seed);
             Assert.Equal("senaryo.json", kayit.Senaryo);
             Assert.Equal(5, kayit.TickSayisi);
@@ -94,7 +94,7 @@ namespace Yanki.Core.Tests.Simulation
         [Theory]
         [InlineData("{")]
         [InlineData("[]")]
-        [InlineData("{ \"surum\": 2, \"seed\": 1, \"senaryo\": \"s.json\", \"tick_sayisi\": 1, \"eylemler\": [], \"son_hash\": \"0000000000000000\" }")]
+        [InlineData("{ \"surum\": 3, \"seed\": 1, \"senaryo\": \"s.json\", \"tick_sayisi\": 1, \"eylemler\": [], \"son_hash\": \"0000000000000000\" }")]
         [InlineData("{ \"surum\": 1, \"seed\": -1, \"senaryo\": \"s.json\", \"tick_sayisi\": 1, \"eylemler\": [], \"son_hash\": \"0000000000000000\" }")]
         [InlineData("{ \"surum\": 1, \"seed\": 1, \"senaryo\": \"s.json\", \"tick_sayisi\": -1, \"eylemler\": [], \"son_hash\": \"0000000000000000\" }")]
         [InlineData("{ \"surum\": 1, \"seed\": 1, \"senaryo\": \"s.json\", \"tick_sayisi\": 1, \"eylemler\": [], \"son_hash\": \"XYZ\" }")]

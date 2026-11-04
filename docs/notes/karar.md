@@ -88,3 +88,9 @@ Bu hafta için yeterli; cooldown, tetiklenme sınırı ve fren olayları 7. haft
 - Mekan hedefli olayda atlanan etki için fren olayı (7. hafta).
 - Eksenin toplam değerinin tek kaynak olayı yok; şimdilik son değişim olayı kaynak gösteriliyor ve birikim `kaynaksiz` içinde not ediliyor. Eksen değişimlerinin tümünü izlemek gerekirse zihin modelinin değişmesi gerekir.
 - `komsu_mekan` eyleminde `eylem.hedef` bir mekan olduğundan hedefe karşı fikir/ilişki hesabı yok; mekana karşı ilişki ihtiyacı çıkarsa ayrı bir karar gerekir.
+
+## 7. hafta
+
+- **Aday frenleri:** `AdayUretici` cooldown/`en_fazla` (eylem) ve korumalı bayrak filtresini ön koşullardan önce uygular; ihlal/engel eden aday `Adaylar`'a girmez, nedeni `Elenenler`'de ve karar izinde görünür. Adım 5 saf kalır: `AdayUretimi.Frenler` bilgi taşır, fren olayları 6.1'de NPC kimlik sırasıyla yazılır ve yalnızca ön koşullar (ve konuşmada konu) tutsaydı aday olacaksa, engel başına bir kez.
+- **Eylem etkileri iki aşamalı:** 6.3'te eylem ve kriz etkilerinin hepsi, hiçbiri yazılmadan, adım öncesi durumdan üretilir (`gercek` var/yok denetimi dahil); sonra aynı sırayla yazılır. İki NPC aynı tick'te aynı tek değerli gerçeği farklı değerlerle yazarsa ikisi de yazılır ve son kimlik kazanır.
+- `Simulasyon.KararIzi(npc)` yalnızca adayı olan tick'te güncellenir; dönen izin `Tick` alanı hangi tick'in kararı olduğunu söyler.

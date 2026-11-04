@@ -15,6 +15,43 @@ namespace Yanki.Cli
     /// </summary>
     internal static class SenaryoDosyasi
     {
+        /// <summary>
+        /// Senaryo girdilerinin hash'i (<c>senaryo_hash</c>): senaryo, kural, eylem ve kriz dosyalarının metinleri, senaryodaki sırayla.
+        /// Dosya okunamıyorsa (ya da senaryo geçersizse) <c>null</c>; asıl hata <see cref="Yukle"/> tarafından raporlanır.
+        /// </summary>
+        public static string? Hash(string senaryoYolu)
+        {
+            if (!File.Exists(senaryoYolu))
+            {
+                return null;
+            }
+
+            var metin = File.ReadAllText(senaryoYolu);
+            var sonuc = SenaryoYukleyici.Yukle(metin, senaryoYolu);
+            if (!sonuc.Basarili)
+            {
+                return null;
+            }
+
+            var klasor = Path.GetDirectoryName(Path.GetFullPath(senaryoYolu))!;
+            var metinler = new List<string> { metin };
+            foreach (var liste in new[] { sonuc.Senaryo!.KuralDosyalari, sonuc.Senaryo.EylemDosyalari, sonuc.Senaryo.KrizDosyalari })
+            {
+                foreach (var ad in liste)
+                {
+                    var yol = Path.Combine(klasor, ad);
+                    if (!File.Exists(yol))
+                    {
+                        return null;
+                    }
+
+                    metinler.Add(File.ReadAllText(yol));
+                }
+            }
+
+            return SenaryoHashu.Hesapla(metinler);
+        }
+
         /// <summary>Başarısızlıkta hataları <paramref name="hata"/>'ya yazar ve <c>null</c> döner.</summary>
         public static Simulasyon? Yukle(string senaryoYolu, ulong seed, TextWriter hata)
         {

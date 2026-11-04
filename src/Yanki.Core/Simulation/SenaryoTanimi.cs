@@ -68,6 +68,18 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public IReadOnlyList<string> EylemDosyalari { get; }
 
+        /// <summary>Yay değişkenleri (<c>yay_degiskenleri</c>), ad sırasıyla; yoksa boş.</summary>
+        public IReadOnlyList<Brakes.YayTanimi> YayDegiskenleri { get; }
+
+        /// <summary>Korumalı varlıklar (<c>korumali</c>).</summary>
+        public Brakes.Korumalilik Korumali { get; }
+
+        /// <summary>Oyuncu eylem türü → ihlal edebileceği bayraklar (<c>oyuncu_ihlalleri</c>); <c>Submit</c> ihlal eden eylemi reddeder.</summary>
+        public IReadOnlyDictionary<string, IReadOnlyList<Brakes.IhlalBayragi>> OyuncuIhlalleri { get; }
+
+        /// <summary>Senaryo düzeyindeki genel frenler (<c>frenler</c>); yazılmadıysa hiçbir sınır yok.</summary>
+        public Brakes.GenelFrenler Frenler { get; }
+
         /// <summary>Senaryo kurar. Tutarlılık denetimi <c>SenaryoYukleyici</c>'dadır.</summary>
         public SenaryoTanimi(
             string ad,
@@ -80,8 +92,22 @@ namespace Yanki.Core.Simulation
             IEnumerable<string> olayTurleri,
             IEnumerable<string> kuralDosyalari,
             IEnumerable<string>? eylemDosyalari = null,
-            IEnumerable<string>? krizDosyalari = null)
+            IEnumerable<string>? krizDosyalari = null,
+            Brakes.GenelFrenler? frenler = null,
+            Brakes.Korumalilik? korumali = null,
+            IEnumerable<KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>>? oyuncuIhlalleri = null,
+            IEnumerable<Brakes.YayTanimi>? yayDegiskenleri = null)
         {
+            YayDegiskenleri = new ReadOnlyCollection<Brakes.YayTanimi>(new List<Brakes.YayTanimi>(yayDegiskenleri ?? new Brakes.YayTanimi[0]));
+            Korumali = korumali ?? Brakes.Korumalilik.Yok;
+            var oi = new SortedDictionary<string, IReadOnlyList<Brakes.IhlalBayragi>>(StringComparer.Ordinal);
+            foreach (var kv in oyuncuIhlalleri ?? new KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>[0])
+            {
+                oi[kv.Key] = kv.Value;
+            }
+
+            OyuncuIhlalleri = oi;
+            Frenler = frenler ?? Brakes.GenelFrenler.Yok;
             Ad = ad ?? string.Empty;
             Mekanlar = new ReadOnlyCollection<string>(new List<string>(mekanlar));
             Baglantilar = new ReadOnlyCollection<KeyValuePair<string, string>>(new List<KeyValuePair<string, string>>(baglantilar));

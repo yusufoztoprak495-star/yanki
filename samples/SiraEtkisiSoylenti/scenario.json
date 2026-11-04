@@ -1,0 +1,60 @@
+{
+  "surum": 1,
+  "ad": "SiraEtkisiSoylenti",
+  "mekanlar": [
+    "han"
+  ],
+  "baglantilar": [],
+  "oyuncu": {
+    "id": "oyuncu",
+    "konum": "han"
+  },
+  "npcler": [
+    {
+      "id": "Ayse",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.5,
+        "sosyallik": 0.9,
+        "kin_tutma": 0.3,
+        "merhamet": 0.6
+      }
+    },
+    {
+      "id": "Can",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.7,
+        "cesaret": 0.6,
+        "sosyallik": 0.5,
+        "kin_tutma": 0.6,
+        "merhamet": 0.5
+      }
+    },
+    {
+      "id": "Kemal",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.5,
+        "sosyallik": 0.5,
+        "kin_tutma": 0.5,
+        "merhamet": 0.5
+      }
+    }
+  ],
+  "gercekler": [],
+  "olay_turleri": [
+    "yardim_etti"
+  ],
+  "kural_dosyalari": [
+    "kurallar.json"
+  ],
+  "eylem_dosyalari": [
+    "eylemler.json"
+  ]
+}

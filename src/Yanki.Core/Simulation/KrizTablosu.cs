@@ -360,6 +360,10 @@ namespace Yanki.Core.Simulation
                         }
 
                         KuralYukleyici.KriterRolleriniDenetle(kriter, kd.Satir, i + 1, roller, Hata, kume);
+                        if (string.Equals(kriter.Alan.Ad, "yay", StringComparison.Ordinal))
+                        {
+                            Hata(kd.Satir, $"kriter #{i + 1}: 'yay' kriz satırında kullanılamaz (kriz stres eşiğinden doğar; yazar yayı kurallarla ve eylemlerle yönlendirir)");
+                        }
                         EylemYukleyici.AlanBaglamDenetle(kriter.Alan, eylemHedefTuru, hedefGecerli, kd.Satir, $"kriter #{i + 1}: ", Hata, AktarimTuru.Yok);
                         kriterler.Add(Kriter.Olustur(kriter.Alan.ToString(), kriter.Op, kriter.Deger, kriter.Agirlik, true));
                     }
@@ -380,6 +384,12 @@ namespace Yanki.Core.Simulation
                     for (var i = 0; i < etkiDugumu.Elemanlar.Count; i++)
                     {
                         var etki = KuralYukleyici.EtkiOku(etkiDugumu.Elemanlar[i], i + 1, roller, Hata, kume);
+                        if (etki != null && etki.Tur == EtkiTuru.Yay)
+                        {
+                            Hata(etkiDugumu.Elemanlar[i].Satir, $"Etki #{i + 1}: 'yay' etkisi kriz satırında kullanılamaz (kural ve eylem etkisidir)");
+                            etki = null;
+                        }
+
                         if (etki != null)
                         {
                             etkiler.Add(etki);

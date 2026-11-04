@@ -120,7 +120,7 @@ namespace Yanki.Core.Decision
         /// <summary>Ad çekirdeğe ayrılmış mı (dünya/zihin olayları dahil).</summary>
         public static bool AyrilmisMi(string tur)
         {
-            if (tur == Ayrildi || tur == Geldi || tur == KararVerildi || tur == OyuncuHareketi || tur == Anlatti || tur == AktarimKaydi)
+            if (tur == Brakes.FrenOlayi.Tur || tur == Brakes.YayDegiskenleri.OlayTuru || tur == Ayrildi || tur == Geldi || tur == KararVerildi || tur == OyuncuHareketi || tur == Anlatti || tur == AktarimKaydi)
             {
                 return true;
             }
@@ -226,6 +226,12 @@ namespace Yanki.Core.Decision
         /// <summary>Stres tabanı (0..100); yoksa <c>null</c>. <see cref="CelisenOzellikler"/> varsa zorunludur.</summary>
         public decimal? StresTabani { get; }
 
+        /// <summary>Cooldown ve en_fazla sınırları (7. hafta); fren alanı yazılmadıysa <c>null</c> ve eylem eskisi gibi çalışır.</summary>
+        public Brakes.TetikSiniri? TetikSiniri { get; }
+
+        /// <summary>Bu eylemin ihlal edebileceği korumalı bayraklar (<c>ihlal_bayraklari</c>); ihlal eden aday adaylar listesine girmez.</summary>
+        public IReadOnlyList<Brakes.IhlalBayragi> IhlalBayraklari { get; }
+
         /// <summary>
         /// Bu eylem seçilince konuşanın stresine eklenecek miktar: <c>StresTabani × Σ(çelişen özelliklerin kişilik değeri)</c>, 6 ondalığa yuvarlanmış.
         /// Çelişen özellik ya da taban yoksa 0.
@@ -302,7 +308,9 @@ namespace Yanki.Core.Decision
             IEnumerable<OnermeDeseni>? konuDesenleri = null,
             IEnumerable<string>? yalanOnermeleri = null,
             string gorunurluk = "",
-            decimal? stresTabani = null)
+            decimal? stresTabani = null,
+            Brakes.TetikSiniri? tetikSiniri = null,
+            IReadOnlyList<Brakes.IhlalBayragi>? ihlalBayraklari = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -364,6 +372,8 @@ namespace Yanki.Core.Decision
             YalanOnermeleri = new ReadOnlyCollection<string>(yalanlar);
             Gorunurluk = aktarim == AktarimTuru.Yok ? string.Empty : (string.IsNullOrEmpty(gorunurluk) ? "sessiz" : gorunurluk);
             StresTabani = stresTabani;
+            TetikSiniri = tetikSiniri;
+            IhlalBayraklari = ihlalBayraklari ?? new Brakes.IhlalBayragi[0];
             Id = id;
             OlayTuru = olayTuru ?? string.Empty;
             Hedef = hedef;

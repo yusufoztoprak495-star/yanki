@@ -77,7 +77,7 @@ namespace Yanki.Core.Tests.Mind
             new Zihin("Can", new Kisilik(0.5m, 0.5m, 0.5m, 0.5m, 0.5m, 0.5m), new ZihinAyarlari { KanitSonumuTickBasina = 0.01m });
 
         [Fact]
-        public void Ayni_kokten_daha_zayif_tekrar_kanitin_hicbir_alanini_degistirmez()
+        public void Ayni_kokten_daha_zayif_tekrar_guveni_ve_gucluyu_degistirmez_ama_kaynagi_korur()
         {
             var z = Sonumlu();
             z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
@@ -86,40 +86,35 @@ namespace Yanki.Core.Tests.Mind
 
             z.Uygula(Duydu(2, 12, "Can", Borc, "Veli", 0.3m, "oyuncu"));   // güncel güç 0.4 > 0.3
 
-            var k = Assert.Single(z.Kanitlar(Borc));
-            Assert.Equal("Ayse", k.Kaynak);
-            Assert.Equal(2, k.Tick);
-            Assert.Equal(0.5m, k.Guc);
-            Assert.Equal(1, k.OlayId);
-            Assert.Equal("oyuncu", k.Kok);
-            Assert.Equal(tek.Guven(Borc, 50), z.Guven(Borc, 50));          // sönüm sıfırlanmadı (yankı freni delinmedi)
+            var en = z.EnGucluKanit(Borc, 12)!;
+            Assert.Equal(("Ayse", 2L, 0.5m, 1L, "oyuncu"), (en.Kaynak, en.Tick, en.Guc, en.OlayId, en.Kok));
+            Assert.Equal(2, z.Kanitlar(Borc).Count);                       // Veli de duyuldu: silinmez
+            Assert.Equal(tek.Guven(Borc, 50), z.Guven(Borc, 50));          // güven kök başına tek sayılır, sönüm sıfırlanmadı
         }
 
         [Fact]
-        public void Ayni_kokten_esit_guclu_tekrar_mevcudu_korur()
+        public void Ayni_kokten_esit_guclu_tekrar_en_guclu_kanit_olarak_mevcudu_korur()
         {
             var z = Yeni();
             z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
             z.Uygula(Duydu(2, 9, "Can", Borc, "Veli", 0.5m, "oyuncu"));
 
-            var k = Assert.Single(z.Kanitlar(Borc));
-            Assert.Equal((1L, 2L, "Ayse"), (k.OlayId, k.Tick, k.Kaynak));
+            var en = z.EnGucluKanit(Borc, 9)!;
+            Assert.Equal((1L, 2L, "Ayse"), (en.OlayId, en.Tick, en.Kaynak));
+            Assert.Equal(2, z.Kanitlar(Borc).Count);
         }
 
         [Fact]
-        public void Ayni_kokten_guncel_guce_gore_daha_guclu_tekrar_butun_alanlari_yeniler()
+        public void Ayni_kokten_guncel_guce_gore_daha_guclu_tekrar_en_guclu_kanit_olur_eskisi_silinmez()
         {
             var z = Sonumlu();
             z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));   // tick 12'de güncel 0.4
 
             z.Uygula(Duydu(2, 12, "Can", Borc, "Veli", 0.45m, "oyuncu"));  // 0.45 > 0.4
 
-            var k = Assert.Single(z.Kanitlar(Borc));
-            Assert.Equal("Veli", k.Kaynak);
-            Assert.Equal(12, k.Tick);
-            Assert.Equal(0.45m, k.Guc);
-            Assert.Equal(2, k.OlayId);
-            Assert.Equal("oyuncu", k.Kok);
+            var en = z.EnGucluKanit(Borc, 12)!;
+            Assert.Equal(("Veli", 12L, 0.45m, 2L, "oyuncu"), (en.Kaynak, en.Tick, en.Guc, en.OlayId, en.Kok));
+            Assert.Equal(2, z.Kanitlar(Borc).Count);
         }
 
         [Fact]
@@ -130,18 +125,18 @@ namespace Yanki.Core.Tests.Mind
             // ham güç 0.5 > 0.45 ama mevcut 20 tick sonra 0.3'e sönmüş: yeni kanıt (0.45) daha güçlüdür
             z.Uygula(Duydu(2, 22, "Can", Borc, "Veli", 0.45m, "oyuncu"));
 
-            Assert.Equal(2, Assert.Single(z.Kanitlar(Borc)).OlayId);
+            Assert.Equal(2, z.EnGucluKanit(Borc, 22)!.OlayId);
         }
 
         [Fact]
-        public void Why_zayif_tekrarda_guclu_kaynagin_olayina_iner()
+        public void Why_zayif_tekrarda_guclu_kaynagin_olayina_iner_kimden_duydu_ikisini_de_listeler()
         {
             var z = Sonumlu();
             z.Uygula(Duydu(1, 2, "Can", Borc, "Ayse", 0.5m, "oyuncu"));
             z.Uygula(Duydu(2, 5, "Can", Borc, "Veli", 0.2m, "oyuncu"));
 
             Assert.Equal(1, z.EnGucluKanit(Borc, 6)!.OlayId);
-            Assert.Equal("Ayse", Assert.Single(z.KimdenDuydu(Borc)).Kaynak);
+            Assert.Equal(new[] { "Ayse", "Veli" }, z.KimdenDuydu(Borc).Select(k => k.Kaynak).ToArray());
         }
 
         [Fact]

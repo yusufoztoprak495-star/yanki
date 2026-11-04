@@ -19,7 +19,7 @@ namespace Yanki.Core.Simulation
 
         private static readonly string[] KokAnahtarlari =
         {
-            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari",
+            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler", "korumali", "oyuncu_ihlalleri", "yay_degiskenleri",
         };
 
         /// <summary>Senaryo metnini okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -270,8 +270,160 @@ namespace Yanki.Core.Simulation
                 return new SenaryoYuklemeSonucu(null, hatalar);
             }
 
+            Brakes.GenelFrenler? genelFrenler = null;
+            var frenDugumu = kok.Al("frenler");
+            if (frenDugumu != null)
+            {
+                if (frenDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(frenDugumu.Satir, "\"frenler\" bir nesne olmalı (tick_basina_en_fazla_sonuc)");
+                }
+                else
+                {
+                    int? m = null;
+                    foreach (var kv in frenDugumu.Ozellikler)
+                    {
+                        if (kv.Key != "tick_basina_en_fazla_sonuc")
+                        {
+                            Hata(kv.Value.Satir, $"\"frenler\" içinde bilinmeyen alan \"{kv.Key}\" (tick_basina_en_fazla_sonuc)");
+                        }
+                        else if (kv.Value.Tur != JsonTuru.Sayi || kv.Value.SayiDeger < 1m || kv.Value.SayiDeger != decimal.Truncate(kv.Value.SayiDeger) || kv.Value.SayiDeger > 1000000m)
+                        {
+                            Hata(kv.Value.Satir, "\"tick_basina_en_fazla_sonuc\" 1 ile 1000000 arasında bir tam sayı olmalı");
+                        }
+                        else
+                        {
+                            m = (int)kv.Value.SayiDeger;
+                        }
+                    }
+
+                    genelFrenler = m == null ? null : new Brakes.GenelFrenler(m);
+                }
+            }
+
+            var korumaGirdisi = new List<KeyValuePair<string, IEnumerable<string>>>();
+            var korumaDugumu = kok.Al("korumali");
+            if (korumaDugumu != null)
+            {
+                if (korumaDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(korumaDugumu.Satir, "\"korumali\" bir nesne olmalı: { \"Varlik\": [\"oldurulemez\", ...] }");
+                }
+                else
+                {
+                    foreach (var kv in korumaDugumu.Ozellikler)
+                    {
+                        if (!Kimlik.GecerliKimlikMi(kv.Key))
+                        {
+                            Hata(kv.Value.Satir, $"korumali: geçersiz varlık kimliği \"{kv.Key}\"");
+                            continue;
+                        }
+
+                        var bayraklar = new List<string>();
+                        if (kv.Value.Tur != JsonTuru.Dizi || kv.Value.Elemanlar.Count == 0)
+                        {
+                            Hata(kv.Value.Satir, $"korumali \"{kv.Key}\": boş olmayan bayrak dizisi bekleniyor (oldurulemez, calinamaz, mekandan_ayrilamaz)");
+                            continue;
+                        }
+
+                        foreach (var b in kv.Value.Elemanlar)
+                        {
+                            if (b.Tur != JsonTuru.Metin || !Brakes.KorumaBayraklari.Gecerli(b.MetinDeger))
+                            {
+                                Hata(b.Satir, $"korumali \"{kv.Key}\": bilinmeyen bayrak (oldurulemez, calinamaz, mekandan_ayrilamaz)");
+                            }
+                            else
+                            {
+                                bayraklar.Add(b.MetinDeger);
+                            }
+                        }
+
+                        korumaGirdisi.Add(new KeyValuePair<string, IEnumerable<string>>(kv.Key, bayraklar));
+                    }
+                }
+            }
+
+            var oyuncuIhlalleri = new List<KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>>();
+            var oiDugumu = kok.Al("oyuncu_ihlalleri");
+            if (oiDugumu != null)
+            {
+                if (oiDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(oiDugumu.Satir, "\"oyuncu_ihlalleri\" bir nesne olmalı: { \"eylem_turu\": [ { \"bayrak\", \"varlik\" } ] }");
+                }
+                else
+                {
+                    foreach (var kv in oiDugumu.Ozellikler)
+                    {
+                        var sarma = JsonDegeri.Nesne(("oyuncu_ihlalleri." + kv.Key, kv.Value));
+                        oyuncuIhlalleri.Add(new KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>(
+                            kv.Key, Brakes.IhlalBayragi.OkuDizi(sarma, "oyuncu_ihlalleri." + kv.Key, new[] { "ben", "eylem.hedef" }, Hata)));
+                    }
+                }
+            }
+
+            var yayTanimlari = new List<Brakes.YayTanimi>();
+            var yayDugumu = kok.Al("yay_degiskenleri");
+            if (yayDugumu != null)
+            {
+                if (yayDugumu.Tur != JsonTuru.Nesne)
+                {
+                    Hata(yayDugumu.Satir, "\"yay_degiskenleri\" bir nesne olmalı: { \"ad\": { \"baslangic\", \"min\", \"max\" } }");
+                }
+                else
+                {
+                    foreach (var kv in yayDugumu.Ozellikler)
+                    {
+                        var d = kv.Value;
+                        if (!Kimlik.GecerliKimlikMi(kv.Key))
+                        {
+                            Hata(d.Satir, $"yay_degiskenleri: geçersiz değişken adı \"{kv.Key}\"");
+                            continue;
+                        }
+
+                        decimal? Say(string anahtar)
+                        {
+                            var n = d.Tur == JsonTuru.Nesne ? d.Al(anahtar) : null;
+                            if (n == null || n.Tur != JsonTuru.Sayi)
+                            {
+                                Hata(n?.Satir ?? d.Satir, $"yay_degiskenleri \"{kv.Key}\": \"{anahtar}\" sayı olmalı");
+                                return null;
+                            }
+
+                            return n.SayiDeger;
+                        }
+
+                        var b = Say("baslangic");
+                        var mn = Say("min");
+                        var mx = Say("max");
+                        if (d.Tur == JsonTuru.Nesne)
+                        {
+                            foreach (var alan in d.Ozellikler)
+                            {
+                                if (alan.Key != "baslangic" && alan.Key != "min" && alan.Key != "max")
+                                {
+                                    Hata(alan.Value.Satir, $"yay_degiskenleri \"{kv.Key}\": bilinmeyen alan \"{alan.Key}\" (baslangic, min, max)");
+                                }
+                            }
+                        }
+
+                        if (b.HasValue && mn.HasValue && mx.HasValue)
+                        {
+                            if (mn.Value > mx.Value || b.Value < mn.Value || b.Value > mx.Value)
+                            {
+                                Hata(d.Satir, $"yay_degiskenleri \"{kv.Key}\": min ≤ baslangic ≤ max olmalı");
+                            }
+                            else
+                            {
+                                yayTanimlari.Add(new Brakes.YayTanimi(kv.Key, b.Value, mn.Value, mx.Value));
+                            }
+                        }
+                    }
+                }
+            }
+
             return new SenaryoYuklemeSonucu(
-                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari),
+                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler, new Brakes.Korumalilik(korumaGirdisi), oyuncuIhlalleri, yayTanimlari),
                 hatalar);
         }
 

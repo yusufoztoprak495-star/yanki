@@ -1,0 +1,71 @@
+{
+  "kurallar": [
+    {
+      "id": "tehdit_gerginligi",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "kapsam": "kural",
+      "en_fazla": 3,
+      "etkiler": [
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 2
+        }
+      ]
+    },
+    {
+      "id": "tehdit_korkusu",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "cooldown": 12,
+      "kapsam": "npc",
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "tehdit_korkusu",
+          "deger": -12,
+          "sure": 40
+        }
+      ]
+    },
+    {
+      "id": "gergin_ofke",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "yay(kasaba_gerginligi)",
+          "op": ">=",
+          "deger": 4
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "gergin_ofke",
+          "deger": -10,
+          "sure": 40
+        }
+      ]
+    }
+  ]
+}

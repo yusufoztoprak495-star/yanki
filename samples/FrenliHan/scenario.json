@@ -1,0 +1,81 @@
+{
+  "surum": 1,
+  "ad": "FrenliHan",
+  "mekanlar": [
+    "han",
+    "pazar"
+  ],
+  "baglantilar": [
+    [
+      "han",
+      "pazar"
+    ]
+  ],
+  "oyuncu": {
+    "id": "oyuncu",
+    "konum": "han"
+  },
+  "npcler": [
+    {
+      "id": "Hanci",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.4,
+        "durustluk": 0.7,
+        "cesaret": 0.5,
+        "sosyallik": 0.9,
+        "kin_tutma": 0.4,
+        "merhamet": 0.6
+      }
+    },
+    {
+      "id": "Ciftci",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.3,
+        "durustluk": 0.6,
+        "cesaret": 0.4,
+        "sosyallik": 0.3,
+        "kin_tutma": 0.5,
+        "merhamet": 0.7
+      }
+    },
+    {
+      "id": "Yabanci",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.8,
+        "durustluk": 0.3,
+        "cesaret": 0.8,
+        "sosyallik": 0.7,
+        "kin_tutma": 0.5,
+        "merhamet": 0.2
+      }
+    }
+  ],
+  "gercekler": [],
+  "olay_turleri": [
+    "tehdit_etti"
+  ],
+  "kural_dosyalari": [
+    "kurallar.json"
+  ],
+  "eylem_dosyalari": [
+    "eylemler.json"
+  ],
+  "korumali": {
+    "Hanci": [
+      "mekandan_ayrilamaz"
+    ],
+    "kese": [
+      "calinamaz"
+    ]
+  },
+  "yay_degiskenleri": {
+    "kasaba_gerginligi": {
+      "baslangic": 0,
+      "min": 0,
+      "max": 5
+    }
+  }
+}

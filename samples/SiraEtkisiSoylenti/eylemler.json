@@ -1,0 +1,47 @@
+{
+  "eylemler": [
+    {
+      "id": "anlat",
+      "olay_turu": "anlatti",
+      "hedef": "npc",
+      "taban": 2,
+      "aktarim": "dogru",
+      "konu_desenleri": [
+        "borclu(*,*,*)",
+        "kardes(*,*)"
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "egri": {
+            "tur": "lojistik",
+            "k": 6,
+            "m": 0.4
+          }
+        },
+        {
+          "alan": "konu_puani(eylem.hedef)"
+        }
+      ],
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "sosyallik"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.3,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ]
+    }
+  ]
+}

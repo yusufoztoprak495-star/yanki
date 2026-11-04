@@ -19,6 +19,10 @@ dotnet run --project src/Yanki.Cli -c Release -- replay tests/golden/<dosya>.jso
 # Hash BİLEREK değiştiyse tek komutla güncelle (dosyadaki son_hash yeniden yazılır):
 dotnet run --project src/Yanki.Cli -c Release -- replay tests/golden/<dosya>.json --guncelle
 
+# Yalnızca senaryo dosyası değişti, davranış (son_hash ve gunluk_hash) aynı (yorum, boşluk): sadece senaryo_hash yenilenir.
+# Davranış değişmişse reddeder (kod 3 / 5); o durumda --guncelle kullan.
+dotnet run --project src/Yanki.Cli -c Release -- replay tests/golden/<dosya>.json --senaryo-hash-yenile
+
 # Hepsini güncelle:
 for f in tests/golden/*.json; do dotnet run --project src/Yanki.Cli -c Release -- replay "$f" --guncelle; done
 
@@ -33,4 +37,5 @@ Hash güncellemesi **PR'da gerekçe ister**: PR açıklamasına hangi golden dos
 
 Hedef: 3–5 oturum; biri Blazor WebAssembly çıktısıyla karşılaştırılır (plan bölüm 9).
 
-**Durum:** `mini-han-1.json` (4. hafta, oyuncu eylemleri) ve `mini-karar-1.json` (5. hafta, NPC kararları + oyuncu hareketi, seed 42, 24 tick; NPC kararları dosyaya yazılmaz, tekrar hesaplanır). `han-gerilim-1.json` (6. hafta, #3: söylenti zinciri + yalan/stres/itiraf + hakaret/tehdit/patlama, seed 42, 24 tick, `690f2f4ee9d3d385`; oyuncu anlatımları ve hakaret eylem günlüğündedir, NPC kararları tekrar hesaplanır). Yenileri ilerleyen haftalarda.
+**Durum:** `mini-han-1.json` (4. hafta, oyuncu eylemleri) ve `mini-karar-1.json` (5. hafta, NPC kararları + oyuncu hareketi, seed 42, 24 tick; NPC kararları dosyaya yazılmaz, tekrar hesaplanır). `han-gerilim-1.json` (6. hafta, #3: söylenti zinciri + yalan/stres/itiraf + hakaret/tehdit/patlama, seed 42, 24 tick, `13e6ccbefed06409` (7. hafta: kaynak bilgisi düzeltmesi ve `aile_iftirasi` `en_fazla: 1` + süre düzeltmesi sonrası; önceki hash'ler `690f2f4ee9d3d385`, `d98b50f39fc358dd`); oyuncu anlatımları ve hakaret eylem günlüğündedir, NPC kararları tekrar hesaplanır). Yenileri ilerleyen haftalarda.
+`frenli-han-1.json` (7. hafta, #4: `samples/FrenliHan`, seed 42, 24 tick; cooldown, `en_fazla`, `yay_siniri` ve `korumali` fren olayları; oyuncunun beş tehdidi eylem günlüğündedir, NPC kararları tekrar hesaplanır). Üç eski golden sürüm 2'ye geçti (`gunluk_hash`, `senaryo_hash`, `bekleyen_eylemler`); `son_hash` değerleri değişmedi.

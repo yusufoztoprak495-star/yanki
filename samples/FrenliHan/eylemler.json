@@ -1,0 +1,53 @@
+{
+  "eylemler": [
+    {
+      "id": "git",
+      "hedef": "komsu_mekan",
+      "taban": 0.25,
+      "on_kosullar": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ]
+    },
+    {
+      "id": "hirsizlik",
+      "olay_turu": "hirsizlik_yapildi",
+      "hedef": "yok",
+      "taban": 0.5,
+      "ihlal_bayraklari": [
+        {
+          "bayrak": "calinamaz",
+          "varlik": "kese"
+        }
+      ],
+      "on_kosullar": [
+        {
+          "alan": "kisilik(acgozluluk)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.4
+        }
+      ]
+    },
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.3,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ]
+    }
+  ]
+}

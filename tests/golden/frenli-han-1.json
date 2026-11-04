@@ -1,0 +1,37 @@
+{
+  "surum": 2,
+  "seed": 42,
+  "senaryo": "../../samples/FrenliHan/scenario.json",
+  "tick_sayisi": 24,
+  "eylemler": [
+    {
+      "tick": 2,
+      "tur": "tehdit_etti",
+      "hedef": "Ciftci"
+    },
+    {
+      "tick": 4,
+      "tur": "tehdit_etti",
+      "hedef": "Ciftci"
+    },
+    {
+      "tick": 8,
+      "tur": "tehdit_etti",
+      "hedef": "Ciftci"
+    },
+    {
+      "tick": 12,
+      "tur": "tehdit_etti",
+      "hedef": "Ciftci"
+    },
+    {
+      "tick": 16,
+      "tur": "tehdit_etti",
+      "hedef": "Ciftci"
+    }
+  ],
+  "son_hash": "4aece0e5ce0931bd",
+  "gunluk_hash": "eeb3bf6effbeaf50",
+  "senaryo_hash": "8abd615d6170cd8c",
+  "bekleyen_eylemler": []
+}

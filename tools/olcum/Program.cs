@@ -24,6 +24,32 @@ namespace Yanki.Olcum
     {
         private const int TickSayisi = 168;
 
+        // --gercekci: ayrı, gerçekçi 50 NPC fikstürü (GercekciFikstur.cs); stres fikstürü değişmez.
+        private static bool _gercekci;
+
+        private static void Girdi(Simulasyon sim, int tick)
+        {
+            if (_gercekci)
+            {
+                GercekciFikstur.Girdi(sim, tick);
+            }
+        }
+
+        private static void Kos(Simulasyon sim, int tickSayisi)
+        {
+            if (!_gercekci)
+            {
+                sim.Tick(tickSayisi);
+                return;
+            }
+
+            for (var t = 1; t <= tickSayisi; t++)
+            {
+                GercekciFikstur.Girdi(sim, t);
+                sim.Tick(1);
+            }
+        }
+
         private static readonly string[] Mekanlar = { "han", "pazar", "degirmen", "kilise", "mahalle" };
 
         private const string Eylemler = @"{ ""eylemler"": [
@@ -109,6 +135,11 @@ namespace Yanki.Olcum
 
         private static Simulasyon Kur(int npcSayisi, ulong seed, bool dedikodu = false)
         {
+            if (_gercekci)
+            {
+                return GercekciFikstur.Kur(npcSayisi, seed);
+            }
+
             var senaryo = SenaryoYukleyici.Yukle(SenaryoJson(npcSayisi), "olcum.json");
             if (!senaryo.Basarili || senaryo.Senaryo == null)
             {
@@ -185,7 +216,7 @@ namespace Yanki.Olcum
             {
                 var sim = Kur(npcSayisi, 42, dedikodu);
                 var sw = Stopwatch.StartNew();
-                sim.Tick(TickSayisi);
+                Kos(sim, TickSayisi);
                 sw.Stop();
                 sureler.Add(sw.Elapsed.TotalMilliseconds);
                 son = sim;
@@ -216,12 +247,27 @@ namespace Yanki.Olcum
             var oturum = Encoding.UTF8.GetByteCount(OturumKaydi.Yaz(OturumKaydi.Uret(son, "olcum.json")));
             var ic = CultureInfo.InvariantCulture;
 
-            Console.WriteLine($"### {npcSayisi} NPC, {TickSayisi} tick ({(dedikodu ? "dedikodulu" : "dedikodusuz")} stres fikstürü: her NPC her tick eylem seçer)");
+            Console.WriteLine(_gercekci
+                ? $"### {npcSayisi} NPC, {TickSayisi} tick (GERÇEKÇİ fikstür: 8 mekan, 9 eylem, 12 kural, dedikodu açık, NPC'ler çoğu tick boşta)"
+                : $"### {npcSayisi} NPC, {TickSayisi} tick ({(dedikodu ? "dedikodulu" : "dedikodusuz")} stres fikstürü: her NPC her tick eylem seçer)");
             Console.WriteLine();
             Console.WriteLine("| ölçü | değer |");
             Console.WriteLine("|---|---|");
             Console.WriteLine($"| tick başına ortalama süre | {(ortanca / TickSayisi).ToString("F3", ic)} ms (toplam {ortanca.ToString("F1", ic)} ms, {tekrar} çalıştırmanın ortancası) |");
             Console.WriteLine($"| olay sayısı | {olaylar.Count} (karar_verildi {kararSayisi}) |");
+            var kuralKimlikleri = new SortedSet<string>(son.Kurallar.Select(k => k.Id), StringComparer.Ordinal);
+            var kuralCikti = new SortedDictionary<long, int>();
+            foreach (var o in olaylar)
+            {
+                if (kuralKimlikleri.Contains(o.KuralId))
+                {
+                    kuralCikti.TryGetValue(o.Tick, out var n);
+                    kuralCikti[o.Tick] = n + 1;
+                }
+            }
+
+            var enYuksek = kuralCikti.Count == 0 ? new KeyValuePair<long, int>(0, 0) : kuralCikti.OrderByDescending(k => k.Value).ThenBy(k => k.Key).First();
+            Console.WriteLine($"| tick başına en yüksek kural çıktısı (M için) | {enYuksek.Value} (tick {enYuksek.Key}); fren olayı {olaylar.Count(o => o.Tur == "fren_uygulandi")} |");
             Console.WriteLine($"| günlük boyutu | {(toplam / 1024.0).ToString("F1", ic)} KiB |");
             Console.WriteLine($"| karar_verildi boyutu | {(karar / 1024.0).ToString("F1", ic)} KiB = %{(100.0 * karar / toplam).ToString("F1", ic)} |");
             Console.WriteLine($"| karar_verildi bayt/olay | {(kararSayisi == 0 ? 0 : karar / kararSayisi)} |");
@@ -242,6 +288,52 @@ namespace Yanki.Olcum
                 Console.WriteLine($"| NPC başına en çok önerme | {enCok} |");
             }
 
+            // Hash maliyetinin tick içindeki payı: aynı koşuyu tick tick sür ve her tick sonunda önbelleksiz tam durum hash'ini ayrıca zamanla.
+            {
+                var hizalama = Kur(npcSayisi, 42, dedikodu);
+                double tamToplam = 0;
+                var sw2 = new Stopwatch();
+                for (var i = 0; i < TickSayisi; i++)
+                {
+                    Girdi(hizalama, i + 1);
+                    hizalama.Tick(1);
+                    sw2.Restart();
+                    var tamMetin = new StringBuilder("ZIHIN|1\n");
+                    foreach (var kimlik in hizalama.Zihinler.Kimlikler)
+                    {
+                        tamMetin.Append(hizalama.Zihinler[kimlik].KanonikMetinTam());
+                    }
+
+                    Yanki.Core.World.Hash64.Hesapla(tamMetin.ToString());
+                    sw2.Stop();
+                    tamToplam += sw2.Elapsed.TotalMilliseconds;
+                }
+
+                Console.WriteLine($"| önbelleksiz tam zihin hash'i (tick başına ortalama) | {(tamToplam / TickSayisi).ToString("F3", ic)} ms = tick süresinin %{(100.0 * (tamToplam / TickSayisi) / (ortanca / TickSayisi)).ToString("F1", ic)} |");
+            }
+
+            var hSw = Stopwatch.StartNew();
+            for (var i = 0; i < 20; i++)
+            {
+                son.DurumHash();
+            }
+
+            var tamHash = hSw.Elapsed.TotalMilliseconds / 20;
+            hSw.Restart();
+            for (var i = 0; i < 20; i++)
+            {
+                son.Dunya.DurumHash();
+            }
+
+            var dunyaHash = hSw.Elapsed.TotalMilliseconds / 20;
+            hSw.Restart();
+            for (var i = 0; i < 20; i++)
+            {
+                son.Zihinler.KanonikMetin();
+            }
+
+            var zihinHash = hSw.Elapsed.TotalMilliseconds / 20;
+            Console.WriteLine($"| durum hash (son durumda tek çağrı) | {tamHash.ToString("F3", ic)} ms (dünya {dunyaHash.ToString("F3", ic)}, zihinler {zihinHash.ToString("F3", ic)}); tick başına bir çağrı = tick süresinin %{(100.0 * tamHash / (ortanca / TickSayisi)).ToString("F1", ic)} |");
             Console.WriteLine($"| son durum hash'i | {son.DurumHash()} |");
             Console.WriteLine($"| oturum dosyası | {oturum} bayt (NPC kararları ve izler dosyaya yazılmaz) |");
             Console.WriteLine();
@@ -270,13 +362,18 @@ namespace Yanki.Olcum
                 {
                     dedikodu = true;
                 }
+                else if (args[i] == "--gercekci")
+                {
+                    _gercekci = true;
+                    dedikodu = true;
+                }
                 else if (args[i] == "--tekrar" && i + 1 < args.Length)
                 {
                     tekrar = int.Parse(args[++i], CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu]");
+                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci]");
                     return 1;
                 }
             }

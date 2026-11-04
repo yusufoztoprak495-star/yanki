@@ -43,3 +43,10 @@ Bir tick'te çalışan adımlar (plan 6):
 - **Karar (Yusuf):** 1 tick = 1 oyun saati (`zihin.md`). Çekirdek bunu varsaymaz, yalnızca sönme oranları buna göre seçildi.
 - **Karar (Yusuf, 5. hafta):** Adım 6 sırası (olaylar → algı → etkiler ve `konum!`), eş zamanlı algı, hareketin iki dış olay üretmesi, oyuncu hareketinin `Submit` anında komşuluk denetimi ve adım 1'de hemen işlenmesi, tick başına tek hareket. Ayrıntı: ADR-011.
 - Oyuncu hareketi 4. haftadan 5. haftaya kalmıştı; tamamlandı.
+
+## 7. hafta
+
+- **Kaskad v0 aynı:** kural çıktıları ve eylem etkileri bir sonraki tick'e kalır; bu yüzden zincir derinliği tick'ler arası ölçülür ve D'yi aşan etki ertelenmez, düşer (ADR-013).
+- **Adım 3:** kurallar frenlerle çalışır (`FrenBaglami`). **Adım 5:** `AdayUretici` frenleri hesaplar (saf), **6.1:** NPC kimlik sırasıyla aday fren olayları, kriz, `karar_verildi` ve eylem olayları; **6.3:** etkiler iki aşamalı (üret, sonra yaz).
+- **Adım 7:** durum hash'i = dünya + zihinler + `SAYAC|` (yalnızca cooldown/`en_fazla` tanımlıysa) + `YAY|` (yalnızca yay tanımlıysa). Fren yazmayan senaryoda kanonik metin eskisiyle birebir aynıdır.
+- Fren ve `yay_degisti` olayları tetik kuyruklarına (`_devredilenler`, `_saklananOlaylar`) girmez.

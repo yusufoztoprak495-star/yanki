@@ -51,3 +51,7 @@ Gerçek bir kural (`samples/MiniHan/kurallar.json`):
 
 - `hafiza` etkisi her zaman tetikleyici olayı hatırlatır, başka olay seçilemez.
 - Etki hedefi senaryoda olmayan bir sabit kimlikse `Simulasyon.Olustur` reddeder.
+
+## 7. hafta
+
+`KuralMotoru.DegerlendirFrenli` saf kalır ve etkilerin yanında fren bilgisini döndürür (`KuralDegerlendirmesi`); olayları `Simulasyon` yazar. Sıra: kriterler tuttu → korumalı bayrak → zincir derinliği → etkiler denenir (tetiklendi = en az bir etki üretildi) → cooldown, `en_fazla`, `tick_siniri`, `genel_sinir`. Sayaçlar `TetikSayaclari` (günlükten türer) ve adım içi `Gorunum` ile okunur. Yeni etki türü `yay`. Sınırlı kuralın `gercek` olayına `ben` yükü eklenir (NPC bilgisi sayaç için).

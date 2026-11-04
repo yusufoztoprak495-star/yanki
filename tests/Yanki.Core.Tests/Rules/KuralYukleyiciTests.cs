@@ -153,7 +153,7 @@ namespace Yanki.Core.Tests.Rules
         [Fact]
         public void Bilinmeyen_alan_sema_hatasidir()
         {
-            HataVar(Tek("\"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ], \"cooldown\": 5"), "cooldown");
+            HataVar(Tek("\"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ], \"bilinmeyen_fren\": 5"), "bilinmeyen_fren");
             HataVar(Tek("\"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3, \"fazla\": 1 } ]"), "fazla");
         }
 
@@ -181,7 +181,6 @@ namespace Yanki.Core.Tests.Rules
 
         [Theory]
         [InlineData("{ \"alan\": \"fikir(konusan)\", \"op\": \"<\", \"deger\": 1 }", "konusan")]
-        [InlineData("{ \"alan\": \"yay(gerginlik)\", \"op\": \">\", \"deger\": 1 }", "yay")]
         public void Kural_baglaminda_cozulemeyen_kriterler_reddedilir(string kriter, string parca)
         {
             HataVar(Tek("\"kriterler\": [ " + kriter + " ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.3 } ]"), parca);

@@ -34,8 +34,8 @@ Mekanlar: `han` — `pazar`. Oyuncu handadır.
 
 | Kural              | `ne_zaman`    | Koşul                                                                   | Etki                                                                                  |
 | ------------------ | ------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `aile_iftirasi`    | `anlatti`     | `olay_konusu(borclu(Mehmet,*,*))` ve `inanc(kardes(Mehmet, ben)) > 0.3` | `oyuncu` hedefli `aileme_iftira` modifier'ı −22, 18 tick (yalnızca Mehmet'in kardeşi) |
-| `yalan_yakalandi`  | `itiraf_etti` | `olay_rolu(hedef)`                                                      | `olay.fail` için `yalanini_yakaladim` −30 (30 tick), güven −10, öfke 0.6              |
+| `aile_iftirasi`    | `anlatti`     | `olay_konusu(borclu(Mehmet,*,*))` ve `inanc(kardes(Mehmet, ben)) > 0.3` | `oyuncu` hedefli `aileme_iftira` modifier'ı −22, **432 tick = 18 gün** (1 tick = 1 saat); **`en_fazla: 1`** (yalnızca Mehmet'in kardeşi) |
+| `yalan_yakalandi`  | `itiraf_etti` | `olay_rolu(hedef)`                                                      | `olay.fail` için `yalanini_yakaladim` −30 (**720 tick = 30 gün**), güven −10, öfke 0.6              |
 | `hakarete_kirgin`  | `hakaret_et`  | `olay_rolu(hedef)`                                                      | `oyuncu`ya güven −60                                                                  |
 | `patlamadan_korku` | `patladi`     | `olay_rolu(tanik)`                                                      | `olay.fail`e korku +10                                                                |
 
@@ -64,10 +64,27 @@ Oyuncu eylem günlüğü: tick 1'de beş anlatım (Ayşe'ye `borclu(Mehmet,Ayse,
 ## Beklenen sonuç
 
 Değişmezler (testle, `tests/Yanki.Scenarios.Tests/HanGerilimTests.cs`; koşudan ÖNCE yazıldı): I1 Ayşe → Can söylentisi ve yalnızca Can'da `aileme_iftira`, `why` oyuncunun anlatımına iner; I2 Hatice tam 2 farklı yalan, 1 itiraf, sonra yalan yok, itiraf kurbanında `yalanini_yakaladim`, yalan yalnızca Hatice'de; I3 Selim 2 tehdit, 1 patlama, sonra tehdit yok; I4 Can en fazla 2 tehdit, krizden sonra tehdit yok; I5 24 tickte tam 3 kriz (`itiraf`, `patla`, `sakinles`); I6 aynı seed aynı hash.
-Seed 42 son durum hash'i `690f2f4ee9d3d385` (golden #3: `tests/golden/han-gerilim-1.json`). Seed 7 de aynı sayıları verir (2 yalan, 1 itiraf, Can 2 / Selim 2 tehdit, 1 patlama, 1 sakinleşme); yalnızca yalanların kurbanı ve hash'i (`4bf5ab4e4786f4de`) farklıdır.
+Seed 42 son durum hash'i `13e6ccbefed06409` (önceki hash'ler: kaynak bilgisi düzeltmesinden önce `690f2f4ee9d3d385`, ondan sonra ama `en_fazla`/süre düzeltmesinden önce `d98b50f39fc358dd`) (golden #3: `tests/golden/han-gerilim-1.json`). Seed 7 de aynı sayıları verir (2 yalan, 1 itiraf, Can 2 / Selim 2 tehdit, 1 patlama, 1 sakinleşme); yalnızca yalanların kurbanı ve hash'i (`792ad19381df8123`; önceki `fb0210738ec3d335` ve `4bf5ab4e4786f4de`) farklıdır.
 
 ## Bilinen sınırlar
 
 - Tekrar sınırı `hafiza_var` ile (24 tick); gerçek cooldown 7. haftada. 7. hafta cooldown'ı gelince bu ön koşullar yeniden değerlendirilecek; golden #3 değişirse Yusuf'un onayı alınır.
 - Kriz sonrası stres ~24 iken tek güçlü eylem yeniden krize yetebilir (24 + 27 ≥ 50); düşüş ve `stres_tabani` dengesi 11. hafta denge turunda ölçülecek. Burada `hafiza_var` bekleme süresi bunu 24 tick engeller.
 - Can'ın iki tehdidi söylentinin yan etkisidir (soğuma → tehdit); senaryo bunu bilerek gösterir.
+
+## 7. hafta düzeltmesi: `aile_iftirasi` `en_fazla: 1` ve süreler (Yusuf'un kararı)
+
+Söylenti Can'a Ayşe, Hatice, Selim ve Kemal'den ulaşır (`anlatti` kuralları aynı söylentiyi her duyuşta tetikler) ve kural sınırsızken her seferinde yeni `aileme_iftira` yazıyordu.
+Plan 7'nin örneği TEK `aileme_iftira(−22, 18 gün)` modifier'ıdır. Süreler 1 tick = 1 saat ile yazılır: 18 gün = 432, 30 gün = 720 tick (eskiden 18 ve 30 yazılmıştı).
+
+| Ölçü (seed 42 ve 7)                       | Önce                                           | Sonra (`en_fazla: 1`, 432 tick)                |
+| ----------------------------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| `aile_iftirasi` Can için tetikleme        | 4                                              | 1 (3 `en_fazla` freni)                         |
+| Aynı anda aktif `aileme_iftira` kopyası   | en çok 3                                       | 1                                              |
+| Can → oyuncu fikri                        | −22 (t2) → −59.62 (t5–t21) → t24 −22 / −41.8   | −22 (t2'den t24'e kadar, sönmez)               |
+| Kriz sayıları (`itiraf`/`sakinlesti`/`patladi`/`kacti`) | 1 / 1 / 1 / 0                    | 1 / 1 / 1 / 0 (değişmedi)                      |
+| Yalan, tehdit (Can / Selim)               | 2, 2 / 2                                       | 2, 2 / 2 (değişmedi)                           |
+| `son_hash` seed 42                        | `d98b50f39fc358dd`                             | `13e6ccbefed06409`                             |
+| `son_hash` seed 7                         | `fb0210738ec3d335`                             | `792ad19381df8123`                             |
+
+Golden #3 (`han-gerilim-1.json`): `son_hash` `d98b50f39fc358dd` → `13e6ccbefed06409`, `gunluk_hash` `a60e723a848c1d0a` → `70bbb55256544cd2`, `senaryo_hash` `98398fdabe69c505` → `aa9ff6767b76478d`.

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Yanki.Core.Brakes;
 using Yanki.Core.Criteria;
 
 namespace Yanki.Core.Rules
@@ -22,6 +23,9 @@ namespace Yanki.Core.Rules
 
         /// <summary>Dünya gerçeği ekler ya da kaldırır (<c>gercek_eklendi</c> / <c>gercek_kaldirildi</c>).</summary>
         Gercek,
+
+        /// <summary>Yay değişkenini değiştirir (<c>yay_degisti</c>, 7. hafta): <c>Ad</c> değişken, <c>Deger</c> delta.</summary>
+        Yay,
     }
 
     /// <summary>
@@ -85,6 +89,10 @@ namespace Yanki.Core.Rules
         /// <summary>Gerçek etkisi.</summary>
         public static KuralEtkisi Gercek(string sablon, bool kaldir, int satir = 0) =>
             new KuralEtkisi(EtkiTuru.Gercek, string.Empty, string.Empty, 0m, 0, sablon, kaldir, satir);
+
+        /// <summary>Yay değişkeni etkisi (delta, değişken aralığına kırpılır).</summary>
+        public static KuralEtkisi Yay(string degisken, decimal delta, int satir = 0) =>
+            new KuralEtkisi(EtkiTuru.Yay, string.Empty, degisken, delta, 0, string.Empty, false, satir);
     }
 
     /// <summary>
@@ -111,10 +119,17 @@ namespace Yanki.Core.Rules
         /// <summary>Kaynak dosyadaki 1 tabanlı satır; bilinmiyorsa 0.</summary>
         public int Satir { get; }
 
+        /// <summary>Cooldown ve tetiklenme sınırları (7. hafta); fren alanı yazılmadıysa <c>null</c> ve kural eskisi gibi çalışır.</summary>
+        public TetikSiniri? TetikSiniri { get; }
+
+        /// <summary>Bu kuralın ihlal edebileceği korumalı bayraklar (<c>ihlal_bayraklari</c>); ihlal eden kural çalışmaz, <c>korumali</c> freni yazılır.</summary>
+        public IReadOnlyList<IhlalBayragi> IhlalBayraklari { get; }
+
         /// <summary>Kural kurar.</summary>
         /// <exception cref="ArgumentException">Kimlik ya da olay türü boşsa, etki yoksa.</exception>
         public KuralTanimi(
-            string id, string neZaman, IEnumerable<Kriter> kriterler, IEnumerable<KuralEtkisi> etkiler, IEnumerable<Rol> gerekliRoller, int satir = 0)
+            string id, string neZaman, IEnumerable<Kriter> kriterler, IEnumerable<KuralEtkisi> etkiler, IEnumerable<Rol> gerekliRoller, int satir = 0, TetikSiniri? tetikSiniri = null,
+            IReadOnlyList<IhlalBayragi>? ihlalBayraklari = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -140,6 +155,8 @@ namespace Yanki.Core.Rules
             roller.Sort();
             GerekliRoller = new ReadOnlyCollection<Rol>(roller);
             Satir = satir;
+            TetikSiniri = tetikSiniri;
+            IhlalBayraklari = ihlalBayraklari ?? new IhlalBayragi[0];
         }
     }
 

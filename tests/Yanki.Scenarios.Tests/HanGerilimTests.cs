@@ -18,7 +18,7 @@ namespace Yanki.Scenarios.Tests
     {
         private const string Borc = "borclu(Mehmet,Ayse,500)";
 
-        internal static Simulasyon Calistir(ulong seed = 42)
+        internal static Simulasyon Calistir(ulong seed = 42, System.Action<Simulasyon>? herTickSonunda = null)
         {
             var yol = Path.Combine(RepoKoku(), "samples", "HanGerilim", "scenario.json");
             var hata = new StringWriter();
@@ -29,10 +29,18 @@ namespace Yanki.Scenarios.Tests
             Anlat(sim, "Hatice", Borc);
             Anlat(sim, "Hatice", "borclu(Selim,Hatice,200)");
             Anlat(sim, "Hatice", "sir_sakliyor(Hatice,Mehmet)");
-            sim!.Tick(9);
-            sim.Submit(new PlayerAction("hakaret_et", "Selim"));
-            sim.Tick(15);
-            Assert.Equal(24, sim.SimdikiTick);
+            for (var t = 1; t <= 24; t++)
+            {
+                if (t == 10)
+                {
+                    sim!.Submit(new PlayerAction("hakaret_et", "Selim"));   // tick 9 sonunda gönderilir, tick 10'da işlenir
+                }
+
+                sim!.Tick(1);
+                herTickSonunda?.Invoke(sim);
+            }
+
+            Assert.Equal(24, sim!.SimdikiTick);
             return sim;
         }
 
@@ -66,23 +74,31 @@ namespace Yanki.Scenarios.Tests
             Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Fail == "oyuncu" && o.Hedef == "Ayse" && o.KuralId == "player");
 
             // Can'ın Borc kanıtının kökü her seed için oyuncudur.
-            var kanit = Assert.Single(sim.Zihinler["Can"].Kanitlar(Borc));
-            Assert.Equal("oyuncu", kanit.Kok);
+            var kanitlar = sim.Zihinler["Can"].Kanitlar(Borc);
+            Assert.All(kanitlar, k => Assert.Equal("oyuncu", k.Kok));
         }
 
         [Fact]
-        public void I1_Seed_42_Canin_borc_kanitinin_son_hali_Haticenin_kanitidir()
+        public void I1_Seed_42_Canin_en_guclu_borc_kaniti_Haticenin_kanitidir_ve_Ayse_de_kaynak_olarak_korunur()
         {
             var sim = Calistir(42);
+            var can = sim.Zihinler["Can"];
 
-            // Ayşe t1'de 0.49 ile anlattı; Hatice t3'te aynı kökten 0.4886 ile anlattı. Yankı freni aynı kökten tek kanıt tutar ve
-            // güncel (sönmüş) güçle karşılaştırır: t3'te Ayşe'nin kanıtı sönmüş 0.4880 < Hatice'nin 0.4886, bu yüzden Ayşe'nin yerini Hatice alır
-            // (Kaynak, Guc, Tick, OlayId hepsi Hatice'nin olayından gelir).
-            var kanit = Assert.Single(sim.Zihinler["Can"].Kanitlar(Borc));
+            // Ayşe t1'de 0.49 ile anlattı; Hatice t3'te aynı kökten 0.4886 ile anlattı. Güncel (sönmüş) güçle t3'te Ayşe 0.4880 < Hatice 0.4886:
+            // en güçlü kanıt Hatice'nin (Kaynak, Guc, Tick, OlayId hepsi onun olayından). 7. hafta (G): Ayşe'nin kanıtı SİLİNMEZ,
+            // Can söylentiyi Ayşe'den de duyduğunu unutmaz; güven yine kök başına tek sayılır.
+            var kanit = can.EnGucluKanit(Borc, sim.SimdikiTick)!;
             Assert.Equal("Hatice", kanit.Kaynak);
             Assert.Equal(3, kanit.Tick);
             Assert.Equal(0.4886m, kanit.Guc);
             Assert.Equal("oyuncu", kanit.Kok);
+
+            var kaynaklar = sim.KimdenDuydu("Can", Borc).Select(k => k.Kaynak).ToList();
+            Assert.Contains("Ayse", kaynaklar);
+            Assert.Contains("Hatice", kaynaklar);
+            Assert.True(can.KaynakVar(Borc, "Ayse"));
+            Assert.True(can.KaynakVar(Borc, "Hatice"));
+            Assert.Equal(can.KanitGucu(kanit, sim.SimdikiTick), can.Guven(Borc, sim.SimdikiTick));   // tek kök: güven en güçlü kanıta eşit
         }
 
         [Fact]
@@ -92,6 +108,134 @@ namespace Yanki.Scenarios.Tests
 
             var etkilenenler = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.Deger("tur") == "aileme_iftira").Select(o => o.Deger("npc")).Distinct().ToArray();
             Assert.Equal(new[] { "Can" }, etkilenenler);
+        }
+
+        // ---- 7. hafta (G): kaynak bilgisi değişmezi ve hash'ler ----
+
+        /// <summary>
+        /// Kalıcı değişmez: her tick'te her NPC'nin her önermesi için güven, bağımsız yazılmış şu formüle eşittir:
+        /// 1 − Π(gordu/çıkarım kanıtlarının 1−güç) × Π(her duydu KÖKÜNÜN en güçlü güncel kanıtının 1−gücü).
+        /// Aynı kök iki kez sayılırsa (çift sayım) bu eşitlik bozulur.
+        /// </summary>
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void Guven_her_kokun_en_guclu_guncel_kanitinin_noisy_or_birlesimidir(ulong seed)
+        {
+            var kontrolEdilen = 0;
+            var ayniKokluCok = 0;
+            Calistir(seed, sim =>
+            {
+                foreach (var npc in sim.Zihinler.Kimlikler)
+                {
+                    var z = sim.Zihinler[npc];
+                    foreach (var onerme in z.Onermeler)
+                    {
+                        var carpim = 1m;
+                        var kokler = new SortedDictionary<string, decimal>(System.StringComparer.Ordinal);
+                        var duydu = 0;
+                        foreach (var k in z.Kanitlar(onerme))
+                        {
+                            var guc = z.KanitGucu(k, sim.SimdikiTick);
+                            if (k.Tur == Yanki.Core.Mind.KanitTuru.Duydu)
+                            {
+                                duydu++;
+                                var kok = z.EtkinKok(k);
+                                kokler[kok] = kokler.TryGetValue(kok, out var onceki) && onceki > guc ? onceki : guc;
+                            }
+                            else
+                            {
+                                carpim *= 1m - guc;
+                            }
+                        }
+
+                        foreach (var kv in kokler)
+                        {
+                            carpim *= 1m - kv.Value;
+                        }
+
+                        Assert.True(
+                            1m - carpim == z.Guven(onerme, sim.SimdikiTick),
+                            $"tick {sim.SimdikiTick} {npc} {onerme}: beklenen {1m - carpim}, gerçek {z.Guven(onerme, sim.SimdikiTick)}");
+                        kontrolEdilen++;
+                        if (duydu > kokler.Count)
+                        {
+                            ayniKokluCok++;
+                        }
+                    }
+                }
+            });
+
+            Assert.True(kontrolEdilen > 500, "değişmez yeterince önermede denetlenmedi");
+            Assert.True(ayniKokluCok > 0, "aynı kökten birden çok kaynaklı önerme yok: test anlamsız kalır");
+        }
+
+        [Fact]
+        public void Seed_42_ve_seed_7_son_hashleri_kilitli()
+        {
+            Assert.Equal("13e6ccbefed06409", Calistir(42).SonHash);
+            Assert.Equal("792ad19381df8123", Calistir(7).SonHash);
+        }
+
+        // ---- I1 (7. hafta): aile_iftirasi tek tetikleme ve tek kopya ----
+
+        /// <summary>
+        /// Plan 7: Can'da TEK <c>aileme_iftira(oyuncu)</c> modifier'ı (−22, 18 gün = 432 tick). Söylenti Can'a Ayşe, Hatice, Selim ve Kemal'den ulaşır ama kural
+        /// <c>en_fazla: 1</c> olduğundan modifier bir kez yazılır; sonraki duyuşlar <c>en_fazla</c> freni bırakır.
+        /// </summary>
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void I1_aile_iftirasi_Can_icin_tam_bir_modifier_yazar_kopya_hicbir_tickte_1i_asmaz(ulong seed)
+        {
+            var enCok = 0;
+            var sim = Calistir(seed, x =>
+            {
+                var kopya = x.Zihinler["Can"].FikirDokumu("oyuncu", x.SimdikiTick).Katkilar.Count(k => k.Kaynak.Contains("aileme_iftira"));
+                enCok = System.Math.Max(enCok, kopya);
+            });
+
+            var yazilan = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi").ToArray();
+            var modifier = Assert.Single(yazilan);
+            Assert.Equal(("Can", "aileme_iftira", "-22", "432"), (modifier.Deger("npc"), modifier.Deger("tur"), modifier.Deger("deger"), modifier.Deger("sure")));
+            Assert.Equal(1, enCok);                                                                              // aktif kopya hiçbir tick'te 1'i aşmadı
+
+            // Söylentiyi Can başka kişilerden de duydu; her duyuşta kural tetiklenmek ister ama en_fazla engeller.
+            var engellenen = sim.Frenler("en_fazla", "Can").Where(f => f.Deger("kimlik") == "aile_iftirasi").ToArray();
+            Assert.NotEmpty(engellenen);
+            Assert.All(engellenen, f => Assert.Contains(sim.Neden(f.Id), o => o.Tur == "anlatti" && o.Hedef == "Can"));
+        }
+
+        [Theory]
+        [InlineData(42UL)]
+        [InlineData(7UL)]
+        public void I1_aile_iftirasi_why_Ayse_nin_t1_anlatimindan_oyuncunun_anlatimina_iner_tick_24te_modifier_aktif_ve_etkisi_eksi_22(ulong seed)
+        {
+            var sim = Calistir(seed);
+            var modifier = sim.Gunluk.Olaylar.Single(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi");
+
+            var zincir = sim.Neden(modifier.Id);
+            Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Tick == 1 && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == Borc);
+            Assert.Contains(zincir, o => o.Tur == "anlatti" && o.Tick == 1 && o.Fail == "oyuncu" && o.Hedef == "Ayse" && o.KuralId == "player");
+
+            // 432 tick'lik modifier tick 24'te hâlâ aktif ve etkisi tam −22 (432 > 24; sönmez).
+            var dokum = sim.Zihinler["Can"].FikirDokumu("oyuncu", 24);
+            var iftira = Assert.Single(dokum.Katkilar, k => k.Kaynak.Contains("aileme_iftira"));
+            Assert.Equal(-22m, iftira.Deger);
+            Assert.Equal(-22m, sim.Zihinler["Can"].Fikir("oyuncu", 24));
+        }
+
+        [Fact]
+        public void I1_kriz_sayilari_en_fazla_ve_sure_degisikliginden_etkilenmez()
+        {
+            foreach (var seed in new[] { 42UL, 7UL })
+            {
+                var sim = Calistir(seed);
+                int Say(string tur) => sim.Gunluk.Olaylar.Count(o => o.Tur == tur && o.KuralId.StartsWith("kriz:", System.StringComparison.Ordinal));
+
+                Assert.Equal((1, 1, 1, 0), (Say("itiraf_etti"), Say("sakinlesti"), Say("patladi"), Say("kacti")));
+                Assert.Equal(2, sim.Gunluk.Olaylar.Count(o => o.Tur == "aktarim_kaydedildi" && o.Deger("yalan") == "1"));
+            }
         }
 
         // ---- I2: Hatice yalan → stres → itiraf ----

@@ -163,6 +163,9 @@ namespace Yanki.Core.Mind
         /// <summary>Kaydın eklendiği tick.</summary>
         public long Tick { get; }
 
+        // Kanonik metin satırı (H|olay|önem|tick); kayıt değişmez olduğundan bir kez hesaplanır (Z3 önbelleği, durum değildir).
+        internal string? KanonikSatir { get; set; }
+
         /// <summary>Yeni kayıt.</summary>
         public HafizaKaydi(long olayId, decimal onem, long tick)
         {
