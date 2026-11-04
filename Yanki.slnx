@@ -7,6 +7,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Yanki.Benchmarks/Yanki.Benchmarks.csproj" />
     <Project Path="tests/Yanki.Core.Tests/Yanki.Core.Tests.csproj" />
+    <Project Path="tests/Yanki.Dialogue.Tests/Yanki.Dialogue.Tests.csproj" />
     <Project Path="tests/Yanki.Scenarios.Tests/Yanki.Scenarios.Tests.csproj" />
   </Folder>
 </Solution>

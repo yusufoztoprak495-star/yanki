@@ -13,6 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- İç ayrıntıları (gramer, ekler, zaman ifadesi, yükleyici) sınamak için. -->
+    <InternalsVisibleTo Include="Yanki.Dialogue.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Yanki.Core\Yanki.Core.csproj" />
   </ItemGroup>
 
