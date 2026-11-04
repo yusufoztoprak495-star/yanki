@@ -133,6 +133,83 @@ namespace Yanki.Scenarios.Tests
         }
 
         [Fact]
+        public void Senaryo_hash_yenile_yalniz_senaryo_hash_i_yazar_son_ve_gunluk_hash_ayni_kalir()
+        {
+            Assert.Equal(0, Calistir("run", _senaryo, "--eylem", Anlat, "--tick", "3", "--kaydet", Yol("a.json")).Kod);
+            var once = File.ReadAllText(Yol("a.json"));
+            File.AppendAllText(Path.Combine(Path.GetDirectoryName(_senaryo)!, "kurallar.json"), "\n");   // davranışı değiştirmeyen düzenleme
+            Assert.Equal(6, Calistir("replay", Yol("a.json")).Kod);
+
+            // --guncelle ve --hash-ekle bu durumda senaryo_hash'i yenilemez (hash değişmedi / zaten var); yenileme için açık yol --senaryo-hash-yenile.
+            var (kod, cikti, hata) = Calistir("replay", Yol("a.json"), "--senaryo-hash-yenile");
+            Assert.True(kod == 0, hata);
+            Assert.Contains("senaryo_hash yenilendi", cikti);
+
+            var sonra = File.ReadAllText(Yol("a.json"));
+            Assert.NotEqual(once, sonra);
+            Assert.Equal(Regex.Match(once, "\"son_hash\": \"[0-9a-f]{16}\"").Value, Regex.Match(sonra, "\"son_hash\": \"[0-9a-f]{16}\"").Value);
+            Assert.Equal(Regex.Match(once, "\"gunluk_hash\": \"[0-9a-f]{16}\"").Value, Regex.Match(sonra, "\"gunluk_hash\": \"[0-9a-f]{16}\"").Value);
+            Assert.NotEqual(Regex.Match(once, "\"senaryo_hash\": \"[0-9a-f]{16}\"").Value, Regex.Match(sonra, "\"senaryo_hash\": \"[0-9a-f]{16}\"").Value);
+
+            Assert.Equal(0, Calistir("replay", Yol("a.json")).Kod);
+            Assert.Equal(0, Calistir("devam", Yol("a.json"), "--tick", "1", "--kaydet", Yol("b.json")).Kod);
+        }
+
+        [Fact]
+        public void Senaryo_hash_yenile_senaryo_hash_zaten_guncelse_dosyayi_degistirmez()
+        {
+            Assert.Equal(0, Calistir("run", _senaryo, "--tick", "2", "--kaydet", Yol("a.json")).Kod);
+            var once = File.ReadAllText(Yol("a.json"));
+
+            var (kod, cikti, _) = Calistir("replay", Yol("a.json"), "--senaryo-hash-yenile");
+
+            Assert.Equal(0, kod);
+            Assert.Contains("zaten güncel", cikti);
+            Assert.Equal(once, File.ReadAllText(Yol("a.json")));
+        }
+
+        [Theory]
+        [InlineData("son_hash", 3)]
+        [InlineData("gunluk_hash", 5)]
+        public void Senaryo_hash_yenile_davranis_degismisse_reddeder_ve_dosyaya_dokunmaz(string alan, int beklenenKod)
+        {
+            Assert.Equal(0, Calistir("run", _senaryo, "--eylem", Anlat, "--tick", "3", "--kaydet", Yol("a.json")).Kod);
+            File.AppendAllText(Path.Combine(Path.GetDirectoryName(_senaryo)!, "kurallar.json"), "\n");
+            var bozuk = Regex.Replace(File.ReadAllText(Yol("a.json")), "\"" + alan + "\": \"[0-9a-f]{16}\"", "\"" + alan + "\": \"0000000000000000\"");
+            File.WriteAllText(Yol("a.json"), bozuk);
+
+            var (kod, cikti, _) = Calistir("replay", Yol("a.json"), "--senaryo-hash-yenile");
+
+            Assert.Equal(beklenenKod, kod);
+            Assert.Contains("--guncelle", cikti);
+            Assert.Equal(bozuk, File.ReadAllText(Yol("a.json")));
+        }
+
+        [Theory]
+        [InlineData("--guncelle")]
+        [InlineData("--hash-ekle")]
+        public void Senaryo_hash_yenile_baska_yenileme_bayragiyla_birlikte_kullanilamaz(string diger)
+        {
+            Assert.Equal(0, Calistir("run", _senaryo, "--tick", "2", "--kaydet", Yol("a.json")).Kod);
+            var once = File.ReadAllText(Yol("a.json"));
+
+            Assert.Equal(KomutCalistirici.KullanimHatasi, Calistir("replay", Yol("a.json"), "--senaryo-hash-yenile", diger).Kod);
+            Assert.Equal(once, File.ReadAllText(Yol("a.json")));
+        }
+
+        [Fact]
+        public void Senaryo_hash_yenile_surum_1_kaydinda_hata_verir()
+        {
+            var kayit = Yol("v1.json");
+            File.WriteAllText(kayit, "{ \"surum\": 1, \"seed\": 42, \"senaryo\": \"senaryo/scenario.json\", \"tick_sayisi\": 2, \"eylemler\": [], \"son_hash\": \"0000000000000000\" }");
+
+            var (kod, _, hata) = Calistir("replay", kayit, "--senaryo-hash-yenile");
+
+            Assert.NotEqual(0, kod);
+            Assert.Contains("senaryo_hash yok", hata);
+        }
+
+        [Fact]
         public void Senaryo_hash_satir_sonundan_bagimsizdir_CRLF_ile_yeniden_yazilan_dosya_ayni_degeri_verir()
         {
             Assert.Equal(0, Calistir("run", _senaryo, "--tick", "2", "--kaydet", Yol("a.json")).Kod);

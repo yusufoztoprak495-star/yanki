@@ -67,7 +67,7 @@ namespace Yanki.Cli
             w.WriteLine("Kullanım:");
             w.WriteLine("  yanki run <senaryo.json> [--seed N] [--eylem tur[:hedef[:anahtar=deger,...]]] [--tick N] ... [--kaydet oturum.json] [--hepsi]");
             w.WriteLine("      oyuncu hareketi: --eylem hareket:<komsu_mekan>");
-            w.WriteLine("  yanki replay <oturum.json> [--guncelle | --hash-ekle]");
+            w.WriteLine("  yanki replay <oturum.json> [--guncelle | --hash-ekle | --senaryo-hash-yenile]");
             w.WriteLine("  yanki devam <oturum.json> [--eylem tur[:hedef[:anahtar=deger,...]]] [--tick M] ... --kaydet yeni.json   (kayıttan devam: baştan oynatır, doğrular, sürdürür)");
             w.WriteLine("  yanki query <oturum.json> <npc>      (NPC durumu ve son karar izi)");
             w.WriteLine("  yanki why <oturum.json> <olayId>     (nedensellik zinciri; karar olayında adaylar ve puan bileşenleri)");
@@ -316,6 +316,7 @@ namespace Yanki.Cli
         {
             var guncelle = false;
             var hashEkle = false;
+            var senaryoHashYenile = false;
             string? yol = null;
             for (var i = 1; i < args.Length; i++)
             {
@@ -326,6 +327,10 @@ namespace Yanki.Cli
                 else if (args[i] == "--hash-ekle")
                 {
                     hashEkle = true;
+                }
+                else if (args[i] == "--senaryo-hash-yenile")
+                {
+                    senaryoHashYenile = true;
                 }
                 else if (args[i].StartsWith("--", StringComparison.Ordinal) || yol != null)
                 {
@@ -345,14 +350,25 @@ namespace Yanki.Cli
                 return KullanimHatasi;
             }
 
-            // --guncelle ve --hash-ekle senaryo değişikliğini bilerek kabul eder (senaryo_hash yenilenir); yalnızca düz replay denetler.
-            var oturum = OturumuOynat(yol, hata, out var cikis, senaryoHashDenetle: !(guncelle || hashEkle));
+            if (senaryoHashYenile && (guncelle || hashEkle))
+            {
+                hata.WriteLine("replay: --senaryo-hash-yenile, --guncelle ya da --hash-ekle ile birlikte kullanılamaz.");
+                return KullanimHatasi;
+            }
+
+            // --guncelle, --hash-ekle ve --senaryo-hash-yenile senaryo değişikliğini bilerek kabul eder; yalnızca düz replay senaryo_hash'i denetler.
+            var oturum = OturumuOynat(yol, hata, out var cikis, senaryoHashDenetle: !(guncelle || hashEkle || senaryoHashYenile));
             if (oturum == null)
             {
                 return cikis;
             }
 
             var sonuc = oturum.Sonuc;
+            if (senaryoHashYenile)
+            {
+                return SenaryoHashYenile(yol, oturum, cikti, hata);
+            }
+
             if (guncelle && hashEkle)
             {
                 hata.WriteLine("replay: --guncelle ve --hash-ekle birlikte kullanılamaz.");
@@ -419,6 +435,51 @@ namespace Yanki.Cli
             cikti.WriteLine(guncelle
                 ? $"hash değişmedi, dosya güncellenmedi: {sonuc.GercekHash}"
                 : $"hash tutuyor: {sonuc.GercekHash}");
+            return Basarili;
+        }
+
+        // replay --senaryo-hash-yenile: senaryo dosyaları kayıttan sonra değişti ama davranış (son_hash ve gunluk_hash) aynıysa
+        // (yorum, boşluk, davranışı değiştirmeyen düzenleme) yalnızca senaryo_hash'i yazar. Davranış değiştiyse reddeder; o durum --guncelle işidir.
+        private static int SenaryoHashYenile(string yol, YuklenenOturum oturum, TextWriter cikti, TextWriter hata)
+        {
+            var kayit = oturum.Kayit;
+            var sonuc = oturum.Sonuc;
+            if (kayit.SenaryoHash == null)
+            {
+                hata.WriteLine($"{yol}: kayıtta senaryo_hash yok (sürüm 1); önce --hash-ekle kullanın.");
+                return KullanimHatasi;
+            }
+
+            if (!sonuc.HashTutuyor)
+            {
+                cikti.WriteLine("son_hash TUTMUYOR: davranış değişmiş, senaryo_hash yenilenmedi.");
+                cikti.WriteLine($"  beklenen: {sonuc.BeklenenHash}");
+                cikti.WriteLine($"  gerçek:   {sonuc.GercekHash}");
+                cikti.WriteLine("Davranış bilerek değiştiyse: yanki replay " + yol + " --guncelle (PR açıklamasına gerekçeyi yaz).");
+                return HashUyusmadi;
+            }
+
+            if (!sonuc.GunlukHashTutuyor)
+            {
+                cikti.WriteLine("günlük hash'i TUTMUYOR: davranış değişmiş, senaryo_hash yenilenmedi.");
+                cikti.WriteLine($"  beklenen: {sonuc.BeklenenGunlukHash}");
+                cikti.WriteLine($"  gerçek:   {sonuc.GercekGunlukHash}");
+                cikti.WriteLine("Davranış bilerek değiştiyse: yanki replay " + yol + " --guncelle (PR açıklamasına gerekçeyi yaz).");
+                return GunlukHashUyusmadi;
+            }
+
+            var yeniHash = SenaryoDosyasi.Hash(oturum.SenaryoYolu);
+            if (yeniHash == kayit.SenaryoHash)
+            {
+                cikti.WriteLine($"senaryo_hash zaten güncel: {yeniHash}");
+                return Basarili;
+            }
+
+            var yeni = new OturumKaydi(
+                kayit.Seed, kayit.Senaryo, kayit.TickSayisi, kayit.Eylemler, kayit.SonHash,
+                kayit.GunlukHash, yeniHash, kayit.BekleyenEylemler);
+            File.WriteAllText(yol, OturumKaydi.Yaz(yeni));
+            cikti.WriteLine($"senaryo_hash yenilendi: {kayit.SenaryoHash} → {yeniHash} (son_hash ve gunluk_hash değişmedi)");
             return Basarili;
         }
 
