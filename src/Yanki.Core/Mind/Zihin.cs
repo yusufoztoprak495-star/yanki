@@ -893,7 +893,7 @@ namespace Yanki.Core.Mind
 
         // Çelişki dizini (8. hafta, durum değildir; hash'e girmez): `Onerme.Celisir` yalnızca (a) aynı olgunun olumlusu/olumsuzu ya da (b) aynı tek değerli
         // anahtarın farklı olumlu değerleri için doğrudur. Her inanç bu iki gruba eklenir; `Inanilan` yalnızca kendi gruplarındaki adayları tarar
-        // (tüm inançları değil). Çelişen her çift aynı gruptadır, yani sonuç tam taramayla birebir aynıdır (`InanilanReferans` ile test edilir).
+        // (tüm inançları değil). Çelişen her çift aynı gruptadır, yani sonuç tam taramayla birebir aynıdır (testlerde genel API ile yazılmış naif tam-tarama referansıyla ve CsCheck ile karşılaştırılır; referans üretim kodunda yoktur).
         private readonly SortedDictionary<string, List<InancKaydi>> _celiskiGruplari = new SortedDictionary<string, List<InancKaydi>>(StringComparer.Ordinal);
 
         private static string OlgunGrubu(Onerme o) => "G|" + o.Gercek;
@@ -934,30 +934,6 @@ namespace Yanki.Core.Mind
 
             var tekDeger = TekDegerGrubu(kayit.Onerme);
             return !(tekDeger != null && _celiskiGruplari.TryGetValue(tekDeger, out var tek) && DahaGucluRakipVar(kayit, guven, tek, simdikiTick));
-        }
-
-        // Referans (tam tarama, eski gövde): yalnızca testlerden çağrılır, tıpkı `KanonikMetinTam`.
-        internal bool InanilanReferans(string onerme, long simdikiTick) =>
-            _inanclar.TryGetValue(Onerme.Ayristir(onerme).ToString(), out var kayit) && InanilanTamTarama(kayit, simdikiTick);
-
-        internal decimal InancDerecesiReferans(OnermeDeseni desen, long simdikiTick)
-        {
-            var en = 0m;
-            foreach (var kayit in _inanclar.Values)
-            {
-                if (desen.Uyar(kayit.Onerme) && InanilanTamTarama(kayit, simdikiTick))
-                {
-                    en = Math.Max(en, Guven(kayit, simdikiTick));
-                }
-            }
-
-            return en;
-        }
-
-        private bool InanilanTamTarama(InancKaydi kayit, long simdikiTick)
-        {
-            var guven = Guven(kayit, simdikiTick);
-            return guven > 0m && !DahaGucluRakipVar(kayit, guven, _inanclar.Values, simdikiTick);
         }
 
         // Adaylar arasında kayıtla çelişen, güveni pozitif ve kayıttan güçlü (eşitlikte son kanıt tick'i yeni ya da eşit) bir inanç var mı.
