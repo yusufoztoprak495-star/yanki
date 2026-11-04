@@ -722,6 +722,7 @@ namespace Yanki.Core.Mind
             {
                 kayit = new InancKaydi(onerme);
                 _inanclar.Add(anahtar, kayit);
+                CeliskiDizinineEkle(kayit);
             }
 
             kayit.Blok = null;   // B satırları önbelleği bayat (aşağıdaki yollardan biri Kanitlar'ı değiştirir)
@@ -890,6 +891,34 @@ namespace Yanki.Core.Mind
             return 1m - carpim;
         }
 
+        // Çelişki dizini (8. hafta, durum değildir; hash'e girmez): `Onerme.Celisir` yalnızca (a) aynı olgunun olumlusu/olumsuzu ya da (b) aynı tek değerli
+        // anahtarın farklı olumlu değerleri için doğrudur. Her inanç bu iki gruba eklenir; `Inanilan` yalnızca kendi gruplarındaki adayları tarar
+        // (tüm inançları değil). Çelişen her çift aynı gruptadır, yani sonuç tam taramayla birebir aynıdır (`InanilanReferans` ile test edilir).
+        private readonly SortedDictionary<string, List<InancKaydi>> _celiskiGruplari = new SortedDictionary<string, List<InancKaydi>>(StringComparer.Ordinal);
+
+        private static string OlgunGrubu(Onerme o) => "G|" + o.Gercek;
+
+        private static string? TekDegerGrubu(Onerme o) => !o.Olumsuz && o.TekDegerli ? "T|" + o.Gercek.TekDegerAnahtari : null;
+
+        private void CeliskiDizinineEkle(InancKaydi kayit)
+        {
+            foreach (var anahtar in new[] { OlgunGrubu(kayit.Onerme), TekDegerGrubu(kayit.Onerme) })
+            {
+                if (anahtar == null)
+                {
+                    continue;
+                }
+
+                if (!_celiskiGruplari.TryGetValue(anahtar, out var grup))
+                {
+                    grup = new List<InancKaydi>();
+                    _celiskiGruplari.Add(anahtar, grup);
+                }
+
+                grup.Add(kayit);
+            }
+        }
+
         private bool Inanilan(InancKaydi kayit, long simdikiTick)
         {
             var guven = Guven(kayit, simdikiTick);
@@ -898,7 +927,43 @@ namespace Yanki.Core.Mind
                 return false;
             }
 
-            foreach (var diger in _inanclar.Values)
+            if (_celiskiGruplari.TryGetValue(OlgunGrubu(kayit.Onerme), out var olgu) && DahaGucluRakipVar(kayit, guven, olgu, simdikiTick))
+            {
+                return false;
+            }
+
+            var tekDeger = TekDegerGrubu(kayit.Onerme);
+            return !(tekDeger != null && _celiskiGruplari.TryGetValue(tekDeger, out var tek) && DahaGucluRakipVar(kayit, guven, tek, simdikiTick));
+        }
+
+        // Referans (tam tarama, eski gövde): yalnızca testlerden çağrılır, tıpkı `KanonikMetinTam`.
+        internal bool InanilanReferans(string onerme, long simdikiTick) =>
+            _inanclar.TryGetValue(Onerme.Ayristir(onerme).ToString(), out var kayit) && InanilanTamTarama(kayit, simdikiTick);
+
+        internal decimal InancDerecesiReferans(OnermeDeseni desen, long simdikiTick)
+        {
+            var en = 0m;
+            foreach (var kayit in _inanclar.Values)
+            {
+                if (desen.Uyar(kayit.Onerme) && InanilanTamTarama(kayit, simdikiTick))
+                {
+                    en = Math.Max(en, Guven(kayit, simdikiTick));
+                }
+            }
+
+            return en;
+        }
+
+        private bool InanilanTamTarama(InancKaydi kayit, long simdikiTick)
+        {
+            var guven = Guven(kayit, simdikiTick);
+            return guven > 0m && !DahaGucluRakipVar(kayit, guven, _inanclar.Values, simdikiTick);
+        }
+
+        // Adaylar arasında kayıtla çelişen, güveni pozitif ve kayıttan güçlü (eşitlikte son kanıt tick'i yeni ya da eşit) bir inanç var mı.
+        private bool DahaGucluRakipVar(InancKaydi kayit, decimal guven, IEnumerable<InancKaydi> adaylar, long simdikiTick)
+        {
+            foreach (var diger in adaylar)
             {
                 if (ReferenceEquals(diger, kayit) || !Onerme.Celisir(kayit.Onerme, diger.Onerme))
                 {
@@ -919,11 +984,11 @@ namespace Yanki.Core.Mind
 
                 if (c <= 0)
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         private static long SonKanitTicki(InancKaydi kayit)
