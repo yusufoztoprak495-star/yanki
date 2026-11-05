@@ -96,6 +96,8 @@ Kurulum süresi ayrıdır (≈ 2 ms). 10. haftadaki geri sarma bu maliyeti öder
 ## Gerekçe (Yusuf)
 
 > **Devir notu:** Bu bölümü Claude Code, Yusuf'un 8. hafta görev metnindeki devriyle ("ADR-015'e de aynı kural uygulanır") yazdı. Gerekçe Yusuf'un görev metnindeki kararından ve planın 3. ve 10. bölümlerinden derlenmiştir; Yusuf'un yazmadığı bir gerekçe uydurulmamıştır. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+>
+> **Karar kaynağı:** A, E, F ve 5 ms kararları, Yusuf'un devriyle claude.ai'da Claude tarafından verildi; Yusuf bunları kabul edip görev metnine aldı.
 
 Yusuf'un görev metninde yazdığı gerekçe: 50 NPC gerçekçi fikstür hedefin ≈ 140 katıydı ve kapanacak bir fark değildi; demo 8 NPC'dir; asıl risk 8 NPC ve 10. haftadaki geri sarmadır; WASM kabul sınırı 10. haftada ölçümle belirlenir; bu karar 12. haftaya bırakılmaz. Plan bölüm 10 demo senaryosunu 8 NPC (en fazla 10) olarak tanımlar.
 Yusuf kriterin silinmemesini, 50 NPC için ölçülen değerlerin açıkça yayımlanmasını, plan PDF'inin değişmemesini ve kriterin başka bir onay olmadan yeniden gevşetilmemesini, tutmazsa sayı değiştirilmeyip kalan farkın yazılmasını istedi. Optimizasyonda 7. haftanın kuralı (%30'dan az kazanç geri alınır, olay biçimini değiştiren her şeyde durulur) korundu.

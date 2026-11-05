@@ -17,7 +17,7 @@ Bu ADR'nin "Gerekçe (Yusuf)" bölümü görev metninde Claude Code'a devredilmi
 ## Karar
 
 1. **Niyet çekirdekten değil, OLAYDAN türer** (plandan sapma: plan karar modülüne bağlıyordu). `Yanki.Dialogue`, `Simulasyon.OlayYayinlandi` abonesidir; çekirdeğe yalnızca hash'e girmeyen, salt okunur
-   `Simulasyon.SorguCozucusu()` eklenmiştir. Niyet yalnızca olay türünden, fail/hedefinden, `onerme` yükünden ve konuşanın zihnindeki fikir bandı ile baskın duygudan türer; `KuralId`, `kok`, `NedenOlaylar` ve karar izi
+   `Simulasyon.SorguCozucusu()` ve `Simulasyon.TickTamamlandi` (tick sonu bildirimi, 8. hafta PR #13 düzeltme turu) eklenmiştir. Niyet yalnızca olay türünden, fail/hedefinden, `onerme` yükünden ve konuşanın zihnindeki fikir bandı ile baskın duygudan türer; `KuralId`, `kok`, `NedenOlaylar` ve karar izi
    niyete GİRMEZ (yalan gizliliği; doğru ve yalan anlatım alan alan aynı niyettir).
 2. **Şablonlar senaryodan ayrı bir dosyadır** (`sablonlar.json`). `senaryo_hash`'e girmez; kendi `sablon_hash`'i vardır (metin düzeltmesi eski kayıtları yüklenemez yapmaz). Diyalog hash'i (`diyalog_hash`) yalnızca
    varsayılan renderer'ın çıktısından hesaplanır; `yanki diyalog-replay` ayrı bir golden biçimi kullanır (dört mevcut golden'a alan eklenmez).
@@ -26,12 +26,12 @@ Bu ADR'nin "Gerekçe (Yusuf)" bölümü görev metninde Claude Code'a devredilmi
    RNG akışına dokunmaz.
 4. **Şablon bağlamında reddedilen sorgular:** `olay_rolu`, `olay_konusu`, `konu_puani`, `gercek`, `yalan_soyledi` (her bağlamda: aktarım kaydını okur, yalancının sözünü ayırt ettirir); anlatıcı konuşanın olduğu
    niyetlerde (NPC'nin kendi anlatımı) ek olarak `inanc`, `kaynak`, `hafiza_var` ve `hafiza` alanı. Oyuncunun anlatımına cevap veren NPC'de (konuşan anlatıcı değil) `inanc/kaynak/hafiza` serbesttir. `stres()` serbesttir.
-5. **Eşleme olay türü + kaynak (oyuncu | npc) ile yapılır;** dinleyensiz niyet (`kacti`, `sakinlesti`) satıra mekân taşır, dinleyeni gören demo süzer; dinleyensiz niyette `dinleyen` rolü, `#dinleyen#` yuvası ve
+5. **Eşleme olay türü + kaynak (oyuncu | npc) ile yapılır;** her satır olayın mekânını taşır; dinleyensiz niyetin (`kacti`, `sakinlesti`) satırını kimin gördüğünü demo bu mekâna göre süzer; dinleyensiz niyette `dinleyen` rolü, `#dinleyen#` yuvası ve
    followup hedefi `dinleyen` doğrulayıcı hatasıdır.
 6. **Tekrar:** `tekrar_bekleme` (tick − son ≥ N), `bir_kez` (konuşan başına), `tekrarsiz` grupları (tükenince döngü); durum satır dizisinden türetilir, kayıttan yükleme yeniden oynatır. **Hafıza göndermesi:** konuşanın
    `Zihin.Hafiza(tick)` kaydından (en yeni, eşitlikte en düşük id; tetikleyen olay hariç), `son_n_tick` dâhil pencere. Zaman ifadesi `tick/24` gün farkıyla (bugün, dün, evvelsi gün, yazıyla "üç gün önce", geçen hafta,
    uzun zaman önce).
-7. **Followup tek seviyedir:** NPC kaynaklı olayın cevabı bir sonraki tick yayınında üretilir (bekleyen liste diyalog durumundadır, kayıttan yüklemede yeniden kurulur); oyuncu kaynaklı olayın cevabı hemen. Hedef ve
+7. **Followup tek seviyedir:** NPC kaynaklı olayın cevabı tam bir sonraki tick sonunda (`TickTamamlandi`; o tickte olay olmasa da) üretilir (bekleyen liste diyalog durumundadır, kayıttan yüklemede yeniden kurulur); oyuncu kaynaklı olayın cevabı hemen. Hedef ve
    aynı-mekân denetimi üretim anında yapılır.
 8. **Mini gramer:** `#kural#` ve `#olgu.ek#` yuvaları, en fazla 3 iç içe seviye, döngü hatadır. Türkçe ek motoru elle tablodur ve kültürden bağımsızdır: `yonelme, belirtme, bulunma, ayrilma, iyelik` (3. tekil kişi),
    `tamlayan`, `baslik`. Yumuşak l adları (`ince`), p/ç/t/k ile biten cins isimde yazarın verdiği yumuşak gövde (zorunlu; özel adda yumuşama yok), kişi zamirleri (bana/sana, beni/seni …; özne konumunda elle yazılmış
@@ -74,6 +74,8 @@ Her metin düzeltmesi `senaryo_hash`'i ve dolayısıyla tüm kayıtları bozard�
 
 > **Devir notu:** Bu bölümü Claude Code, Yusuf'un 8. hafta görev metnindeki devriyle yazdı. Plandan (bölüm 5.12, 8. hafta) ve Yusuf'un görev ile DURAK 1 / DURAK 2 onay mesajlarındaki kararlarından derlenmiştir;
 > Yusuf'un yazmadığı bir gerekçe uydurulmamıştır. Yusuf onaylayana kadar ADR "Önerildi" kalır.
+>
+> **Karar kaynağı:** A, E, F ve 5 ms kararları, Yusuf'un devriyle claude.ai'da Claude tarafından verildi; Yusuf bunları kabul edip görev metnine aldı.
 
 Plan, motorun her sonucun nedenini kanıtlamasını ve LLM'in karar vermemesini ister; bu yüzden niyet kural ve olaydan türer, metin seçimi aynı kriter diliyle yapılır, LLM yalnızca opsiyonel bir renderer olabilir.
 Yusuf'un DURAK 1 düzeltmeleri: anlatma gerekçesi yalnızca fikir bandı ve baskın duygudur (hafıza olayı ve kaynak yalanı ele verirdi); "ağırlıklı kısmi eşleşme" yazılmaz; `yalan_soyledi` hiçbir şablon bağlamında kullanılmaz;

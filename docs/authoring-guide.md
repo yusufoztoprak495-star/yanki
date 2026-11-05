@@ -192,3 +192,17 @@ Hatalar birlikte, `dosya:satir: sablon "id": mesaj` biçiminde gelir.
 - **Kişi zamirleri:** konuşan "ben", dinleyen "sen" olarak geçer (bana/sana, beni/seni, benim/senin). Önermeyi öznesi konuşan ya da dinleyen olabiliyorsa `onerme_metinleri` kaydına `ozne: [0]` ve elle yazılmış
   `ben`/`sen` varyantları (`"ben": { "0": { "metin": "ben {1.yonelme} {2} lira borçluyum", "olumsuz": "..." } }`) eklenir; eksikse yükleme hatası verir. İki kişinin birlikte özne olduğu kombinasyon yazılmaz (hata).
 - Satırın ilk harfi otomatik büyür (i → İ, ı → I). Denemek için: `yanki diyalog oturum.json --sablon sablonlar.json --neden 3`.
+- **`konu_deseni` ne zaman gerekir:** şablon BELİRLİ bir önermeye bağlıysa. Şablonun kriteri `inanc(kardes(Mehmet, Can))` ya da `kaynak(...)` gibi belirli bir önermeyi okuyorsa ya da metni o konuya özgüyse
+  (ör. "Mehmet'in akrabaları çoktur"), `"konu_deseni": "kardes(Mehmet,Can)"` yazın; yoksa şablon her konuda aday olur ve başka bir konuya cevap olarak çıkar. Doğrulayıcı bu durumda **uyarı** verir
+  (anlatma ve anlatim_cevabi niyetlerinde belirli önerme okuyan `inanc`/`kaynak` kriteri var, `konu_deseni` yok); uyarı yükleme hatası değildir, `yanki diyalog` bunu `uyarı:` satırıyla yazar. Genel şablon
+  `konu_deseni` taşıyamaz. Her konuda geçerli şablon için (`kisilik(...)` gibi önerme okumayan kriterler) `konu_deseni` gerekmez.
+- **Dinleyen önermede geçiyorsa `sen` varyantı:** konu önermesinde dinleyen de yer alabilir ("Selim Hatice'ye borçlu" cümlesini Selim'e söylerken). Bu durum için `onerme_metinleri` kaydına elle yazılmış bir
+  `sen` varyantı gerekir. Dinleyene dönük sert bir iddia yerine **söylenti dilini** kullanın: `"sen": { "0": { "metin": "senin {1.yonelme} {2} lira borçlu olduğun söyleniyor", "olumsuz": "senin {1.yonelme} {2} lira borçlu olmadığın söyleniyor" } }`.
+  İki kişili önermede diğer kişiyi başa alın: `"sen": { "0": { "metin": "{1} ile senin kardeş olduğunuz söyleniyor" }, "1": { "metin": "{0} ile senin kardeş olduğunuz söyleniyor" } }`
+  (olumsuzlarda "olmadığın / olmadığınız"). Motor fiil çekimi yapmaz: kişi ve zaman eki elle yazılır ("olduğun", "olduğunuz"). Konuşanın kendisi özneyse `ben` varyantı yazılır ve değişmez.
+- **Sonraki metinde "de/da" ek uyumu:** `#hafiza.zaman#` gibi yuvadan çıkan sözcüğün ardına gelen ayrı yazılan "de/da" bağlacı yalnızca ünlü uyumuna uyar (son ünlü a, ı, o, u → "da"; e, i, ö, ü → "de"; "te/ta" olmaz) ve motor
+  bunu seçmez. Varsayılan etiketlerin çoğu "de" ister (bugün de, dün de, evvelsi gün de, üç gün önce de, uzun zaman önce de) ama **"geçen hafta da"** "da" ister; `#hafiza.zaman# de` yazarsanız "geçen hafta de" çıkar.
+  Çözüm: etiketi "de/da"sız kurun ("..., #hafiza.zaman# söylemiştim"), ya da `son_n_tick` penceresini en fazla 48'de tutup (yalnızca bugün/dün/evvelsi gün gelir; HanGerilim 48 kullanır) yalnızca "de" yazın. Etiketleri ayarlardan
+  değiştirirseniz bu denetim yeniden gerekir.
+- **Aynı NPC aynı tick'te aynı metni söylemesin:** aynı tick'te birden çok anlatıma cevap veren NPC için sabit metinli (`#konu#` içermeyen) şablonlara `"tekrar": { "tekrar_bekleme": 1 }` verin; ikinci kez seçilemez ve
+  genel şablon devreye girer. Genel şablon tekrar sınırı taşıyamaz; metni aynı tick'te tekrar etmesin diye `#konu#` gibi değişen bir yuva içermesi gerekir.

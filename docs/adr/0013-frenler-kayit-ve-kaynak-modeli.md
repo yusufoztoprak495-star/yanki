@@ -1,9 +1,9 @@
 # ADR-0013: Frenler, korumalar, yay değişkenleri, kayıt sürüm 2 ve kaynak modeli
 
-**Durum:** Önerildi
+**Durum:** Kabul edildi
 **Tarih:** 2026-11-04
-**Kabul eden:** —
-**Kabul tarihi:** —
+**Kabul eden:** Yusuf
+**Kabul tarihi:** 2026-11-05
 
 ## Bağlam
 
@@ -116,4 +116,4 @@ Yay değişkenlerinin ve fren olaylarının zihin olayı sayılmaması (algılan
 2. [ ] Gerçekçi fikstürde fren makinesi maliyetinin profili ve kural frenleri için tekilleştirme kararı (11. hafta).
 3. [ ] Z4: kanıt + hafıza birleştirme / önem eşiği / silik hafıza (11. hafta adayı, olay biçimini değiştirir, Yusuf'un kararı).
 4. [ ] Blazor WASM'de tick süresi ve yükleme ölçümü (10. hafta). [x] 5 ms kriteri kararı 8. haftada verildi (ADR-015); BenchmarkDotNet tablosu 11. hafta.
-5. [ ] Yusuf gerekçeyi onaylayınca durum "Kabul edildi" yapılır.
+5. [x] Yusuf onayladı: durum "Kabul edildi" (kabul eden Yusuf, 2026-11-05; PR #13 düzeltme turu görev metnindeki açık talimatla).

@@ -5,18 +5,19 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-05
-- **PR:** [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta: frenler ve sağlamlık), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi. Bu belge güncellemesi `docs/hafta-08-girdisi` dalında (yalnızca "Hafta 8 başlangıç işleri" bölümü eklendi), Yusuf'un incelemesini bekliyor.
+- **PR:** [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) (8. hafta: diyalog katmanı ve düzeltme turu), `hafta-08` dalı, **açık**; merge'i Yusuf yapar. [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
 
-## Hafta 8: performans kararı ve diyalog (`hafta-08` dalı, PR açılacak)
+## Hafta 8: performans kararı ve diyalog (`hafta-08` dalı, [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) açık, düzeltme turu bitti)
 
 - **Bitti:** `Yanki.Dialogue` (olaydan niyet, kriterle şablon seçimi, tekrar, hafıza göndermesi, Türkçe mini gramer, tek seviye followup, `IDialogueRenderer`), `yanki diyalog` / `diyalog-replay`, ayrı şablon dosyası, ADR-014 (Önerildi), ADR-015 (Önerildi), 3 diyalog golden'ı + CI adımı (dört ana golden değişmedi), sıra etkisi diyalog testleri, CsCheck değişmezleri (5 tohum × 200: 5/5 yeşil).
 - **Ölçüm:** 8 NPC gerçekçi, dönüşümlü 20'şer süreç: diyalog kapalı 2.78 ms/tick, açık 3.06 ms (≤ 5 ms tutar); replay 514 vs 541 ms (ADR-015).
-- **Yusuf'a kalanlar:** ADR-013/014/015 onayı; HanGerilim ve SiraEtkisiSoylenti şablonları taslaktır, gözden geçir; `docs/notes/diyalog.md` kendi cümlelerinle; ton eşikleri ve zaman etiketleri 11. hafta denge turunda.
+- **PR #13 düzeltme turu (bitti):** renderer hatası (özel renderer'ın hiçbir hatası seçimi/hash'i/tick'i etkilemez; varsayılan metin + not), `Simulasyon.TickTamamlandi` (hash'e girmeyen salt okunur tick sonu bildirimi: NPC kaynaklı followup tam bir sonraki tick sonunda, olaysız tickte de), dinleyenli ve followup satırlarında `olay.Mekan`, şablon doğrulayıcısına `konu_deseni` uyarısı, HanGerilim: `cevap_anlatim_inanan` `konu_deseni`, anlatım cevaplarına tick içi tekrar kuralı, `sen` varyantları söylenti dilinde; `SablonYukleyici` yalan gizliliği ve zorunlu kriter dalları hata testli; üç diyalog golden'ı güncellendi (`diyalog_hash` değişti: `Mekan` hash girdisidir; dört ana golden değişmedi).
+- **Yusuf'a kalanlar:** ADR-014/015 onayı (ADR-013 2026-11-05'te kabul edildi; ADR-014/015'teki A, E, F ve 5 ms kararları Yusuf'un devriyle claude.ai'da Claude tarafından verildi, Yusuf kabul edip görev metnine aldı: `docs/ai-usage.md`); HanGerilim ve SiraEtkisiSoylenti şablonları taslaktır, gözden geçir; `docs/notes/diyalog.md` kendi cümlelerinle; ton eşikleri ve zaman etiketleri 11. hafta denge turunda.
 - **9. haftaya devir:** Kasaba Hanı şablon kümesi ve diyalog maliyetinin gerçek senaryoda yeniden ölçümü; bütçe varyantı 5.8–8 ms açık riski (ADR-015).
 
-## Hafta 8 başlangıç işleri
+## Hafta 8 başlangıç işleri (KAPANDI)
 
-Hafta 8 bu işlerle başladı (durum her maddenin başında; bölüm hafta sonunda kapatılır):
+Hafta 8 bu işlerle başladı; hepsi kapandı (bölüm tarihçe olarak kalır):
 
 1. **[YAPILDI]** Performans ifadesini düzelt: v0.1 kriteri 8 NPC ortalama ≤ 5 ms, 50 NPC v0.2 hedefi, değerler yayımlanır (ADR-015; belgeler tek ifadeye indirildi).
    (Eski metin: 5 ms hedefi yalnızca 8 NPC stres fikstüründe tutuyordu, gerçekçi fikstürde tutmuyordu: 5.80 ve 6.58 ms.)
@@ -24,7 +25,7 @@ Hafta 8 bu işlerle başladı (durum her maddenin başında; bölüm hafta sonun
    _Geçmiş madde:_ açıkla.
 3. **[YAPILDI]** Karar Yusuf'undu: optimizasyon (çelişki dizini, 8 NPC gerçekçi 11.16 → 2.88 ms) + yeniden tanım (ADR-015).
 4. **[YAPILDI]** `Korumalilik.cs` kapsanmayan dallar kapandı: dosya satır kapsamı (iki test projesi birleşik) %83.6 → %100. `Rol.Oyuncu` dalı yükleyiciden ulaşılamazdı ama elle kurulan nesnede korumayı sessizce kapatıyordu; açık hata fırlatır (silmek yerine, `konusan`/`dinleyen` de aynı sessiz yola düşüyordu). Codecov "patch" oranı PR diff'ine bağlıdır, yerelde birebir üretilemez.
-5. **ADR-013 onayını Yusuf'tan al** (durum hâlâ "Önerildi").
+5. **[YAPILDI]** ADR-013 onayı: Yusuf onayladı, durum "Kabul edildi" (2026-11-05).
 
 ## Biten haftalar
 
@@ -116,7 +117,7 @@ Hafta 8 bu işlerle başladı (durum her maddenin başında; bölüm hafta sonun
 ## Ertelenenler (Yusuf'un işi)
 
 - [ ] **ADR-011 ve ADR-012 "Gerekçe (Yusuf)" onayı:** gerekçeleri Yusuf'un 6. hafta görev metnindeki devriyle Claude Code yazdı. Yusuf onaylayınca durumlar "Kabul edildi" yapılır (kararlar o zamana kadar da bağlayıcıdır).
-- [ ] **ADR-013 "Gerekçe (Yusuf)" onayı:** gerekçeyi Yusuf'un 7. hafta görev metnindeki devriyle Claude Code plandan ve Yusuf'un kararlarından derledi (bölüm başında not var). Durum "Önerildi" kalır; Yusuf onaylayınca "Kabul edildi" yapılır (kararlar o zamana kadar da bağlayıcıdır).
+- [x] **ADR-013 "Gerekçe (Yusuf)" onayı (KAPANDI, 2026-11-05):** Yusuf onayladı; durum "Kabul edildi", kabul eden Yusuf (PR #13 düzeltme turu görev metnindeki açık talimatla; CLAUDE.md'deki "durumları sen değiştirmezsin" kuralına yalnızca bu ADR için istisna).
 - [ ] **ADR-001..010 "Gerekçe (Yusuf)" onayı:** gerekçeleri Yusuf'un isteğiyle Claude Code yazdı. Yusuf onaylayınca durumlar "Kabul edildi" yapılır.
 - [x] **`docs/notes/` notları:** yedisi Yusuf'un isteğiyle Claude Code tarafından yeniden yazıldı. Açık kalan ve onaylanmamış kararlar notlarda ayrı bölümde.
 - [x] **Devlog #1:** `docs/devlog/01-ilk-dikey-dilim.md` (Claude Code yazdı, çıktılar golden oturumdan).
@@ -187,4 +188,5 @@ Hafta 8 bu işlerle başladı (durum her maddenin başında; bölüm hafta sonun
 ## Sıradaki hafta
 
 - **7. hafta:** tamamlandı, [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) merge edildi. Z4 11. hafta adayıdır; gossip maliyeti 8. haftada çelişki dizini ile giderildi (ADR-015).
-- **8. hafta:** görev metni Yusuf'tan gelecek (kapsam için plan bölüm 12); önce yukarıdaki "Hafta 8 başlangıç işleri" bölümüne bak.
+- **8. hafta:** tamamlandı; [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) Yusuf'un merge'ini bekliyor.
+- **9. hafta:** görev metni Yusuf'tan gelecek (kapsam için plan bölüm 12). Devredenler: Kasaba Hanı şablon kümesi ve diyalog maliyetinin gerçek senaryoda yeniden ölçümü (ADR-015), `yanki validate` tam sürümünün şablon doğrulayıcısını (`SablonYukleyici`, uyarılar dahil) kullanması.
