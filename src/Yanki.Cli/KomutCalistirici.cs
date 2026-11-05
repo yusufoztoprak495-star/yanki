@@ -778,6 +778,11 @@ namespace Yanki.Cli
                 return DosyaHatasi;
             }
 
+            foreach (var u in yukleme.Uyarilar)
+            {
+                hata.WriteLine("uyarı: " + u);
+            }
+
             DiyalogMotoru? motor = null;
             var oturum = OturumuOynat(args[1], hata, out var cikis, true, sim => motor = DiyalogMotoru.Baglan(sim, yukleme.Dosya!));
             if (oturum == null || motor == null)
@@ -886,6 +891,11 @@ namespace Yanki.Cli
                 }
 
                 return DosyaHatasi;
+            }
+
+            foreach (var u in yukleme.Uyarilar)
+            {
+                hata.WriteLine("uyarı: " + u);
             }
 
             DiyalogMotoru? motor = null;

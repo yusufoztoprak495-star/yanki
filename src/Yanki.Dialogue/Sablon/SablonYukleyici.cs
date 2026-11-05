@@ -11,10 +11,11 @@ namespace Yanki.Dialogue
     /// <summary>Şablon dosyası yükleme sonucu: ya <see cref="Dosya"/> ya da dosya:satir biçimli, bütün hatalar birlikte listelenmiş <see cref="Hatalar"/>.</summary>
     public sealed class SablonYuklemeSonucu
     {
-        internal SablonYuklemeSonucu(SablonDosyasi? dosya, IReadOnlyList<string> hatalar)
+        internal SablonYuklemeSonucu(SablonDosyasi? dosya, IReadOnlyList<string> hatalar, IReadOnlyList<string>? uyarilar = null)
         {
             Dosya = dosya;
             Hatalar = hatalar;
+            Uyarilar = uyarilar ?? new string[0];
         }
 
         /// <summary>Hata yoksa yüklenen dosya.</summary>
@@ -22,6 +23,12 @@ namespace Yanki.Dialogue
 
         /// <summary><c>dosya:satir: sablon "id": mesaj</c> biçiminde hatalar; boşsa yükleme başarılıdır.</summary>
         public IReadOnlyList<string> Hatalar { get; }
+
+        /// <summary>
+        /// <c>dosya:satir: sablon "id": mesaj</c> biçiminde uyarılar (yükleme yine başarılı olabilir). Şu an tek uyarı: anlatma/anlatim_cevabi şablonunda belirli bir önermeyi okuyan
+        /// <c>inanc</c>/<c>kaynak</c> kriteri var ama <c>konu_deseni</c> yok (şablon her konuda aday olur, metni yanlış konuya çıkabilir).
+        /// </summary>
+        public IReadOnlyList<string> Uyarilar { get; }
 
         /// <summary>Hata yoksa doğru.</summary>
         public bool Basarili => Hatalar.Count == 0 && Dosya != null;
@@ -59,8 +66,14 @@ namespace Yanki.Dialogue
             var hatalar = new List<string>();
             var hash = HashHesapla(json);
 
-            void Hata(int satir, string tur, string kimlik, string mesaj) =>
-                hatalar.Add($"{dosyaAdi}:{satir}: " + (tur.Length == 0 ? string.Empty : tur + (kimlik.Length == 0 ? string.Empty : " \"" + kimlik + "\"") + ": ") + mesaj);
+            var uyarilar = new List<string>();
+
+            string Bicim(int satir, string tur, string kimlik, string mesaj) =>
+                $"{dosyaAdi}:{satir}: " + (tur.Length == 0 ? string.Empty : tur + (kimlik.Length == 0 ? string.Empty : " \"" + kimlik + "\"") + ": ") + mesaj;
+
+            void Hata(int satir, string tur, string kimlik, string mesaj) => hatalar.Add(Bicim(satir, tur, kimlik, mesaj));
+
+            void Uyari(int satir, string tur, string kimlik, string mesaj) => uyarilar.Add(Bicim(satir, tur, kimlik, mesaj));
 
             JsonDegeri kok;
             try
@@ -92,7 +105,7 @@ namespace Yanki.Dialogue
             var onermeMetinleri = OnermeMetinleriniOku(kok.Al("onerme_metinleri"), dil, Hata);
             var esleme = EslemeyiOku(kok.Al("esleme"), Hata);
             var gramer = GramerOku(kok.Al("gramer"), Hata, out var gramerSatirlari);
-            var sablonlar = SablonlariOku(kok.Al("sablonlar"), Hata, dil, gramer, onermeMetinleri, esleme);
+            var sablonlar = SablonlariOku(kok.Al("sablonlar"), Hata, Uyari, dil, gramer, onermeMetinleri, esleme);
 
             GramerAnalizi(gramer, gramerSatirlari, dil, Hata);
             CaprazDenetimler(sablonlar, esleme, Hata);
@@ -102,7 +115,7 @@ namespace Yanki.Dialogue
                 return new SablonYuklemeSonucu(null, hatalar);
             }
 
-            return new SablonYuklemeSonucu(new SablonDosyasi(dosyaAdi, dil, hash, adlar, onermeMetinleri, esleme, gramer, sablonlar), hatalar);
+            return new SablonYuklemeSonucu(new SablonDosyasi(dosyaAdi, dil, hash, adlar, onermeMetinleri, esleme, gramer, sablonlar), hatalar, uyarilar);
         }
 
         internal static string HashHesapla(string json) =>
@@ -723,8 +736,8 @@ namespace Yanki.Dialogue
         }
 
         private static List<Sablon> SablonlariOku(
-            JsonDegeri? d, Action<int, string, string, string> hata, string dil, GramerTablosu gramer, SortedDictionary<string, OnermeMetniKaydi> onermeMetinleri,
-            EslemeTablosu esleme)
+            JsonDegeri? d, Action<int, string, string, string> hata, Action<int, string, string, string> uyari, string dil, GramerTablosu gramer,
+            SortedDictionary<string, OnermeMetniKaydi> onermeMetinleri, EslemeTablosu esleme)
         {
             var sonuc = new List<Sablon>();
             if (d == null)
@@ -741,8 +754,14 @@ namespace Yanki.Dialogue
 
             // anlatti'ya eşlenen concept'ler (yalan gizliliği kuralları bunlara uygulanır) ve followup hedef concept'leri.
             var anlattiConceptleri = new SortedSet<string>(StringComparer.Ordinal);
+            var anlattiTumConceptler = new SortedSet<string>(StringComparer.Ordinal);   // kaynağı ne olursa olsun anlatti'ya eşlenenler (konu_deseni uyarısı)
             foreach (var e in esleme.Hepsi)
             {
+                if (e.OlayTuru == "anlatti")
+                {
+                    anlattiTumConceptler.Add(e.Niyet);
+                }
+
                 if (e.OlayTuru == "anlatti" && e.Kaynak != "oyuncu" && e.KonusanFail)
                 {
                     anlattiConceptleri.Add(e.Niyet);
@@ -753,7 +772,7 @@ namespace Yanki.Dialogue
             var idler = new SortedSet<string>(StringComparer.Ordinal);
             foreach (var s in d.Elemanlar)
             {
-                var sablon = SablonOku(s, hata, dil, gramer, onermeMetinleri, anlattiConceptleri, olgular, idler);
+                var sablon = SablonOku(s, hata, uyari, dil, gramer, onermeMetinleri, anlattiConceptleri, anlattiTumConceptler, olgular, idler);
                 if (sablon != null)
                 {
                     sonuc.Add(sablon);
@@ -764,8 +783,8 @@ namespace Yanki.Dialogue
         }
 
         private static Sablon? SablonOku(
-            JsonDegeri s, Action<int, string, string, string> hata, string dil, GramerTablosu gramer, SortedDictionary<string, OnermeMetniKaydi> onermeMetinleri,
-            SortedSet<string> anlattiConceptleri, List<string> olgular, SortedSet<string> idler)
+            JsonDegeri s, Action<int, string, string, string> hata, Action<int, string, string, string> uyari, string dil, GramerTablosu gramer,
+            SortedDictionary<string, OnermeMetniKaydi> onermeMetinleri, SortedSet<string> anlattiConceptleri, SortedSet<string> anlattiTumConceptler, List<string> olgular, SortedSet<string> idler)
         {
             if (s.Tur != JsonTuru.Nesne)
             {
@@ -974,7 +993,34 @@ namespace Yanki.Dialogue
                 return null;
             }
 
+            // Uyarı: belirli bir önermeyi okuyan inanc/kaynak kriteri konu_deseni olmadan her konuda aday olur (cevap metni yanlış konuya çıkabilir).
+            if (konuDeseni == null && anlattiTumConceptler.Contains(concept) && BelirliOnermeOkuyanKriter(kriterler))
+            {
+                uyari(s.Satir, "sablon", id, "belirli bir önermeyi okuyan inanc/kaynak kriteri var ama konu_deseni yok: şablon her konuda aday olur ve metni yanlış konuya çıkabilir (konu_deseni ekleyin)");
+            }
+
             return new Sablon(id, concept, genel, kriterler, metin, konuDeseni, grup, tekrar, sonra, hafiza, s.Satir);
+        }
+
+        private static bool BelirliOnermeOkuyanKriter(List<Kriter> kriterler)
+        {
+            foreach (var k in kriterler)
+            {
+                if (k.Alan.Ad != "inanc" && k.Alan.Ad != "kaynak")
+                {
+                    continue;
+                }
+
+                foreach (var a in k.Alan.Argumanlar)
+                {
+                    if (a is OnermeArgumani)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static string YuklemAdi(string desen)
