@@ -176,3 +176,19 @@ Eylem/kural: `"ihlal_bayraklari": [{ "bayrak": "calinamaz", "varlik": "kese" }]`
 **Yay değişkenleri.** Senaryoda `yay_degiskenleri: { "kasaba_gerginligi": { "baslangic": 0, "min": 0, "max": 5 } }`. Etki `{ "tur": "yay", "degisken": "kasaba_gerginligi", "delta": 2 }` (kural ve eylem); değer aralığa kırpılır, kırpılırsa `yay_siniri` freni yazılır. Kriterde `yay(kasaba_gerginligi)` (kural ve eylem; kriz satırında yasak). `yay_degisti` algılanmaz ve kural tetiklemez.
 
 **Frenleri okuma.** `yanki query <oturum> <npc>` "frenler" bölümünü gösterir, `yanki why <oturum> <fren olayı>` engellenen tetikleyiciye iner (kural frenleri); aday frenlerinin (korumalı, cooldown) zinciri eylemin son tetiklemesine iner ya da boştur (kök senaryodaki koruma bildirimidir). Fren türleri: `cooldown`, `en_fazla`, `tick_siniri`, `genel_sinir`, `zincir`, `korumali`, `tanimsiz_rol`, `kisi_olmayan_hedef`, `yay_siniri`.
+
+## Diyalog şablonları (8. hafta)
+
+Şablonlar **senaryodan ayrı** bir dosyadadır (`sablonlar.json`; örnekler: `samples/HanGerilim`, `samples/SiraEtkisiSoylenti`, Kasaba Hanı değildir). Bölümler: `dil` (`tr`), `adlar`, `onerme_metinleri`, `esleme`, `gramer`, `sablonlar`.
+Hatalar birlikte, `dosya:satir: sablon "id": mesaj` biçiminde gelir.
+
+- **Eşleme:** `[{ "olay_turu": "anlatti", "kaynak": "npc", "niyet": "anlatma", "konusan": "fail" }, { "olay_turu": "anlatti", "kaynak": "oyuncu", "niyet": "anlatim_cevabi", "konusan": "hedef" }]`. Nesne biçimi
+  (olay türü → niyet) de çalışır ve kaynaktan bağımsızdır. `dinleyensiz: true` olan niyet (ör. `kacti`) satıra mekân taşır; o niyette `dinleyen` rolü, `#dinleyen#` ve followup hedefi `dinleyen` hatadır.
+- **Şablon:** her niyet için bir `genel: true` şablon zorunlu (kriter taşımaz); öteki şablonlar en az bir `zorunlu` kriter taşır; kriter diliyle konuşanın zihni (`ben`) üzerinden değerlendirilir. `olay_rolu`, `olay_konusu`,
+  `konu_puani`, `gercek`, `yalan_soyledi` şablonda yasaktır; konuşanın anlatıcı olduğu niyetlerde ayrıca `inanc`, `kaynak`, `hafiza_var` ve `hafiza` yasaktır (yalan gizliliği). `stres()` serbesttir.
+- **Tekrar:** `"tekrar": "tekrarsiz" | "bir_kez" | { "tekrar_bekleme": N }`, isteğe bağlı `grup`. **Hafıza:** `"hafiza": { "tur", "fail", "son_n_tick" }` ve `#hafiza.zaman#`.
+- **Ekler:** `#dinleyen.yonelme#` (Can'a), `.belirtme`, `.bulunma`, `.ayrilma`, `.iyelik` (3. tekil), `.tamlayan` (Can'ın), `.baslik` (ilk harf büyük; en sonda, en fazla bir). p/ç/t/k ile biten **cins** isimde
+  `adlar` kaydında `"yumusak": "borc"` zorunlu; yumuşak l adlarında (Kemal) `"ince": true`. Hitap için ek kullanmayın: `Dinle #dinleyen#:` (Dinle Can).
+- **Kişi zamirleri:** konuşan "ben", dinleyen "sen" olarak geçer (bana/sana, beni/seni, benim/senin). Önermeyi öznesi konuşan ya da dinleyen olabiliyorsa `onerme_metinleri` kaydına `ozne: [0]` ve elle yazılmış
+  `ben`/`sen` varyantları (`"ben": { "0": { "metin": "ben {1.yonelme} {2} lira borçluyum", "olumsuz": "..." } }`) eklenir; eksikse yükleme hatası verir. İki kişinin birlikte özne olduğu kombinasyon yazılmaz (hata).
+- Satırın ilk harfi otomatik büyür (i → İ, ı → I). Denemek için: `yanki diyalog oturum.json --sablon sablonlar.json --neden 3`.

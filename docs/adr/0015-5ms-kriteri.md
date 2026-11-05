@@ -113,3 +113,16 @@ Yusuf kriterin silinmemesini, 50 NPC için ölçülen değerlerin açıkça yay�
 3. [ ] 10. hafta: Blazor WASM tick süresi ve yükleme ölçümü; kabul sınırı.
 4. [ ] 11. hafta: BenchmarkDotNet tablosu (10 / 50 / 200 NPC).
 5. [ ] Yusuf gerekçeyi onaylayınca durum "Kabul edildi" yapılır.
+
+## Diyalog maliyeti (8. hafta sonu, dönüşümlü ölçüm)
+
+8 NPC gerçekçi fikstür, `tools/olcum --gercekci --npc 8 [--diyalog]`, aynı derleme, kapalı/açık dönüşümlü 20'şer süreç (her süreçte hem `--oynat` hem `--ozet`), aynı koşullar (AC, Dengeli güç planı, arka planda editör açık).
+
+| Ölçü (süreç ortancası) | Diyalog kapalı: ortanca (en düşük–en yüksek; p10–p90) | Diyalog açık |
+| --- | --- | --- |
+| `OturumOynatici` ile 168 tick baştan oynatma (ms) | 514 (443–618; 454–575) | 541 (457–749; 488–607) |
+| tick başına ortalama (ms) | 2.78 (2.57–3.53; 2.64–3.23) | 3.06 (2.57–3.91; 2.64–3.53) |
+
+- Fark replay'de ≈ +5 %, tick başında ≈ +10 %; iki kolda da dağılımlar büyük ölçüde örtüşür. Aynı düzenekle ve dönüşümlü ölçülünce replay ve tick ölçümleri **çelişmiyor**; diyalog 8 NPC'de ≤ 5 ms kriterini bozmaz (3.06 ms).
+- Önceki "+%24 replay (0.54 s'ye karşı 0.43 s)" farkı, kolların ayrı zamanlarda ardışık koşulmasından (süreç çift modu, bkz. yukarısı) geliyordu; 0.68 s ve 0.43 s gibi tek koşular aynı dağılımın iki ucudur (kapalı kolda da 0.44–0.62 s görüldü). Kök neden: ölçüm düzeneğinin dönüşümlü olmaması, diyalog değil. Süreç çift modunun kendisi hâlâ açıklanmış değildir.
+- Diyalog fikstürü sahte içeriktir (hacim ölçümü); gerçek Kasaba Hanı hacmi 9. haftada yeniden ölçülür. 50 NPC v0.2 hedefidir.
