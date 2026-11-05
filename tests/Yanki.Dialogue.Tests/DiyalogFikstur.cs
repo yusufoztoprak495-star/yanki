@@ -29,7 +29,7 @@ namespace Yanki.Dialogue.Tests
   { ""id"": ""yardim_minneti"", ""ne_zaman"": ""yardim_etti"", ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""minnet"", ""deger"": 15, ""sure"": 1000 } ] }
 ] }";
 
-        public static Simulasyon Sim(string? eylemlerJson = null, ulong seed = 42)
+        public static Simulasyon Sim(string? eylemlerJson = null, ulong seed = 42, Yanki.Core.Mind.ZihinAyarlari? zihin = null)
         {
             var senaryo = SenaryoYukleyici.Yukle(SenaryoJson, "senaryo.json");
             Assert.True(senaryo.Basarili, string.Join("\n", senaryo.Hatalar));
@@ -43,7 +43,7 @@ namespace Yanki.Dialogue.Tests
                 eylemler = e.Eylemler;
             }
 
-            return Simulasyon.Olustur(senaryo.Senaryo!, kurallar.Kurallar, seed, eylemler: eylemler);
+            return Simulasyon.Olustur(senaryo.Senaryo!, kurallar.Kurallar, seed, zihinAyarlari: zihin, eylemler: eylemler);
         }
 
         public static SablonDosyasi Sablon(string jsonTekTirnak)
