@@ -25,6 +25,7 @@ namespace Yanki.Cli
         public const int IzUyusmadi = 4;
         public const int GunlukHashUyusmadi = 5;
         public const int SenaryoDegisti = 6;
+        public const int SablonHashUyusmadi = 7;
 
         private const ulong VarsayilanSeed = 42;
 
@@ -55,6 +56,8 @@ namespace Yanki.Cli
                     return Why(args, cikti, hata);
                 case "diyalog":
                     return Diyalog(args, cikti, hata);
+                case "diyalog-replay":
+                    return DiyalogReplay(args, cikti, hata);
                 default:
                     hata.WriteLine($"Bilinmeyen komut: {args[0]}");
                     KullanimYaz(hata);
@@ -75,6 +78,7 @@ namespace Yanki.Cli
             w.WriteLine("  yanki query <oturum.json> <npc>      (NPC durumu ve son karar izi)");
             w.WriteLine("  yanki why <oturum.json> <olayId>     (nedensellik zinciri; karar olayında adaylar ve puan bileşenleri)");
             w.WriteLine("  yanki diyalog <oturum.json> --sablon <sablon.json> [--neden <satir_no>]   (kayıttan diyalog satırları; --neden seçilen şablonu, kriterleri ve olayın why zincirini gösterir)");
+            w.WriteLine("  yanki diyalog-replay <golden.json> [--guncelle]   (tests/golden/diyalog/: kayit, sablon, diyalog_hash, sablon_hash; çıkış kodu 3 diyalog_hash, 7 sablon_hash)");
             w.WriteLine("  yanki --version");
         }
 
@@ -823,6 +827,122 @@ namespace Yanki.Cli
                     cikti.WriteLine(SatirMetni(s));
                 }
 
+                return Basarili;
+            }
+        }
+
+        // yanki diyalog-replay <golden.json> [--guncelle]: diyalog golden'ı AYRI biçimdedir (mevcut dört golden dosyasına alan eklenmez). Kayıt ve şablon yolları golden dosyasına göre göreli.
+        private static int DiyalogReplay(string[] args, TextWriter cikti, TextWriter hata)
+        {
+            var guncelle = args.Length == 3 && args[2] == "--guncelle";
+            if (args.Length < 2 || args[1].StartsWith("--", StringComparison.Ordinal) || args.Length > 3 || (args.Length == 3 && !guncelle))
+            {
+                hata.WriteLine("diyalog-replay: golden dosyası gerekli (isteğe bağlı --guncelle).");
+                KullanimYaz(hata);
+                return KullanimHatasi;
+            }
+
+            var goldenYolu = args[1];
+            if (!File.Exists(goldenYolu))
+            {
+                hata.WriteLine($"Dosya bulunamadı: {goldenYolu}");
+                return DosyaHatasi;
+            }
+
+            Yanki.Core.Json.JsonDegeri kok;
+            try
+            {
+                kok = Yanki.Core.Json.JsonAyristirici.Ayristir(File.ReadAllText(goldenYolu));
+            }
+            catch (Yanki.Core.Json.JsonHatasi e)
+            {
+                hata.WriteLine($"{goldenYolu}:{e.Satir.ToString(CultureInfo.InvariantCulture)}: JSON okunamadı: {e.Message}");
+                return DosyaHatasi;
+            }
+
+            var kayitAdi = kok.Tur == Yanki.Core.Json.JsonTuru.Nesne ? kok.Al("kayit") : null;
+            var sablonAdi = kok.Tur == Yanki.Core.Json.JsonTuru.Nesne ? kok.Al("sablon") : null;
+            if (kayitAdi == null || sablonAdi == null || kayitAdi.Tur != Yanki.Core.Json.JsonTuru.Metin || sablonAdi.Tur != Yanki.Core.Json.JsonTuru.Metin)
+            {
+                hata.WriteLine($"{goldenYolu}: \"kayit\" ve \"sablon\" (golden dosyasına göre göreli yollar) gerekli.");
+                return DosyaHatasi;
+            }
+
+            var dizin = Path.GetDirectoryName(Path.GetFullPath(goldenYolu))!;
+            var kayitYolu = Path.Combine(dizin, kayitAdi.MetinDeger);
+            var sablonYolu = Path.Combine(dizin, sablonAdi.MetinDeger);
+            if (!File.Exists(sablonYolu))
+            {
+                hata.WriteLine($"Dosya bulunamadı: {sablonYolu}");
+                return DosyaHatasi;
+            }
+
+            var yukleme = SablonYukleyici.Yukle(File.ReadAllText(sablonYolu), sablonYolu);
+            if (!yukleme.Basarili)
+            {
+                foreach (var h in yukleme.Hatalar)
+                {
+                    hata.WriteLine(h);
+                }
+
+                return DosyaHatasi;
+            }
+
+            DiyalogMotoru? motor = null;
+            var oturum = OturumuOynat(kayitYolu, hata, out var cikis, true, sim => motor = DiyalogMotoru.Baglan(sim, yukleme.Dosya!));
+            if (oturum == null || motor == null)
+            {
+                return oturum == null ? cikis : DosyaHatasi;
+            }
+
+            using (motor)
+            {
+                if (!oturum.Sonuc.HashTutuyor)
+                {
+                    hata.WriteLine($"{kayitYolu}: son_hash tutmuyor (beklenen {oturum.Sonuc.BeklenenHash}, gerçek {oturum.Sonuc.GercekHash}).");
+                    return HashUyusmadi;
+                }
+
+                if (!oturum.Sonuc.GunlukHashTutuyor)
+                {
+                    hata.WriteLine($"{kayitYolu}: gunluk_hash tutmuyor.");
+                    return GunlukHashUyusmadi;
+                }
+
+                var diyalogHash = motor.DiyalogHash();
+                var sablonHash = yukleme.Dosya!.SablonHash;
+                if (guncelle)
+                {
+                    File.WriteAllText(
+                        goldenYolu,
+                        "{\n  \"surum\": 1,\n  \"kayit\": " + Yanki.Core.Json.JsonYazici.YazKisa(Yanki.Core.Json.JsonDegeri.Metin(kayitAdi.MetinDeger))
+                        + ",\n  \"sablon\": " + Yanki.Core.Json.JsonYazici.YazKisa(Yanki.Core.Json.JsonDegeri.Metin(sablonAdi.MetinDeger))
+                        + ",\n  \"diyalog_hash\": \"" + diyalogHash + "\",\n  \"sablon_hash\": \"" + sablonHash + "\"\n}\n");
+                    cikti.WriteLine($"diyalog golden güncellendi: diyalog_hash {diyalogHash}, sablon_hash {sablonHash}");
+                    return Basarili;
+                }
+
+                var beklenenDiyalog = kok.Al("diyalog_hash");
+                var beklenenSablon = kok.Al("sablon_hash");
+                if (beklenenDiyalog == null || beklenenSablon == null || beklenenDiyalog.Tur != Yanki.Core.Json.JsonTuru.Metin || beklenenSablon.Tur != Yanki.Core.Json.JsonTuru.Metin)
+                {
+                    hata.WriteLine($"{goldenYolu}: \"diyalog_hash\" ve \"sablon_hash\" yok (yazmak için --guncelle).");
+                    return DosyaHatasi;
+                }
+
+                if (!string.Equals(beklenenSablon.MetinDeger, sablonHash, StringComparison.Ordinal))
+                {
+                    hata.WriteLine($"{goldenYolu}: sablon_hash tutmuyor (beklenen {beklenenSablon.MetinDeger}, gerçek {sablonHash}); şablon dosyası değişmiş.");
+                    return SablonHashUyusmadi;
+                }
+
+                if (!string.Equals(beklenenDiyalog.MetinDeger, diyalogHash, StringComparison.Ordinal))
+                {
+                    hata.WriteLine($"{goldenYolu}: diyalog_hash tutmuyor (beklenen {beklenenDiyalog.MetinDeger}, gerçek {diyalogHash}).");
+                    return HashUyusmadi;
+                }
+
+                cikti.WriteLine($"diyalog hash tutuyor: {diyalogHash} (sablon_hash {sablonHash})");
                 return Basarili;
             }
         }

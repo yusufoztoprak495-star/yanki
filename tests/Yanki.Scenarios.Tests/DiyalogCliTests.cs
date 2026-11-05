@@ -156,6 +156,52 @@ namespace Yanki.Scenarios.Tests
             Assert.Contains(satirlar, s => s.Contains("bozuk.json:5: sablon \"b\": ", StringComparison.Ordinal));
         }
 
+        // ---- diyalog golden (tests/golden/diyalog/, AYRI biçim: kayit, sablon, diyalog_hash, sablon_hash) ----
+
+        private string GoldenYaz(string ad = "golden.json")
+        {
+            var yol = Yol(ad);
+            File.WriteAllText(yol, "{ \"surum\": 1, \"kayit\": \"oturum.json\", \"sablon\": \"sablon.json\" }");
+            return yol;
+        }
+
+        [Fact]
+        public void Diyalog_replay_guncelle_hash_yazar_sonra_dogrular_sablon_veya_satir_degisince_kirilir()
+        {
+            Oturum();
+            SablonYaz();
+            var golden = GoldenYaz();
+
+            var yaz = Calistir("diyalog-replay", golden, "--guncelle");
+            Assert.True(yaz.Kod == 0, yaz.Hata);
+            var icerik = File.ReadAllText(golden);
+            Assert.Contains("\"diyalog_hash\"", icerik, StringComparison.Ordinal);
+            Assert.Contains("\"sablon_hash\"", icerik, StringComparison.Ordinal);
+            Assert.Contains("\"kayit\": \"oturum.json\"", icerik, StringComparison.Ordinal);
+
+            Assert.Equal(0, Calistir("diyalog-replay", golden).Kod);
+
+            // Şablon metni değişirse sablon_hash kırılır (çıkış kodu 7).
+            SablonYaz(Sablon.Replace("söyleyeceğim", "anlatacağım"));
+            var sablonKirik = Calistir("diyalog-replay", golden);
+            Assert.Equal(7, sablonKirik.Kod);
+            Assert.Contains("sablon_hash", sablonKirik.Hata, StringComparison.Ordinal);
+
+            // sablon_hash güncellenince satırlar değiştiği için diyalog_hash'i bozulmuş bir golden çıkış kodu 3 verir.
+            Assert.Equal(0, Calistir("diyalog-replay", golden, "--guncelle").Kod);
+            File.WriteAllText(golden, File.ReadAllText(golden).Replace("\"diyalog_hash\": \"", "\"diyalog_hash\": \"0"));
+            Assert.Equal(3, Calistir("diyalog-replay", golden).Kod);
+        }
+
+        [Fact]
+        public void Diyalog_replay_eksik_alan_ve_dosya_icin_hata_kodu_verir()
+        {
+            Assert.Equal(1, Calistir("diyalog-replay").Kod);
+            Assert.Equal(2, Calistir("diyalog-replay", Yol("yok.json")).Kod);
+            File.WriteAllText(Yol("g.json"), "{ \"surum\": 1 }");
+            Assert.Equal(2, Calistir("diyalog-replay", Yol("g.json")).Kod);
+        }
+
         // 8. hafta kontrol noktası: diyalog açıkken dört golden'ın son_hash ve gunluk_hash değerleri birebir tutar (replay + diyalog aboneliği; çıkış kodları 3 ve 5 yok).
         [Theory]
         [InlineData("mini-han-1")]
