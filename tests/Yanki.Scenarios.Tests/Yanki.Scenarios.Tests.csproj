@@ -7,6 +7,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- tr-TR kültüründe aynı diyalog_hash testi gerçek kültür verisi ister (Directory.Build.props InvariantGlobalization=true). -->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Yanki.Core\Yanki.Core.csproj" />
     <ProjectReference Include="..\..\src\Yanki.Cli\Yanki.Cli.csproj" />
+    <ProjectReference Include="..\..\src\Yanki.Dialogue\Yanki.Dialogue.csproj" />
   </ItemGroup>
 
 </Project>
