@@ -1,0 +1,294 @@
+{
+  "dil": "tr",
+  "adlar": {
+    "Ayse": "Ayşe",
+    "Can": "Can",
+    "Hatice": "Hatice",
+    "Kemal": "Kemal",
+    "Mehmet": "Mehmet",
+    "Selim": "Selim",
+    "oyuncu": { "ad": "yabancı", "cins": true }
+  },
+  "onerme_metinleri": {
+    "borclu": {
+      "metin": "{0} {1.yonelme} {2} lira borçlu",
+      "olumsuz": "{0} {1.yonelme} {2} lira borçlu değil",
+      "sayilar": [2],
+      "ozne": [0],
+      "ben": {
+        "0": {
+          "metin": "ben {1.yonelme} {2} lira borçluyum",
+          "olumsuz": "ben {1.yonelme} {2} lira borçlu değilim"
+        }
+      },
+      "sen": {
+        "0": {
+          "metin": "sen {1.yonelme} {2} lira borçlusun",
+          "olumsuz": "sen {1.yonelme} {2} lira borçlu değilsin"
+        }
+      }
+    },
+    "kardes": {
+      "metin": "{0} ile {1} kardeş",
+      "olumsuz": "{0} ile {1} kardeş değil",
+      "ozne": [0, 1],
+      "ben": {
+        "0": {
+          "metin": "ben ile {1} kardeşiz",
+          "olumsuz": "ben ile {1} kardeş değiliz"
+        },
+        "1": {
+          "metin": "{0} ile ben kardeşiz",
+          "olumsuz": "{0} ile ben kardeş değiliz"
+        }
+      },
+      "sen": {
+        "0": {
+          "metin": "sen ile {1} kardeşsiniz",
+          "olumsuz": "sen ile {1} kardeş değilsiniz"
+        },
+        "1": {
+          "metin": "{0} ile sen kardeşsiniz",
+          "olumsuz": "{0} ile sen kardeş değilsiniz"
+        }
+      }
+    },
+    "sir_sakliyor": {
+      "metin": "{0} {1.ayrilma} bir şey saklıyor",
+      "olumsuz": "{0} {1.ayrilma} bir şey saklamıyor",
+      "ozne": [0],
+      "ben": {
+        "0": {
+          "metin": "ben {1.ayrilma} bir şey saklıyorum",
+          "olumsuz": "ben {1.ayrilma} bir şey saklamıyorum"
+        }
+      },
+      "sen": {
+        "0": {
+          "metin": "sen {1.ayrilma} bir şey saklıyorsun",
+          "olumsuz": "sen {1.ayrilma} bir şey saklamıyorsun"
+        }
+      }
+    }
+  },
+  "esleme": [
+    {
+      "olay_turu": "anlatti",
+      "kaynak": "npc",
+      "niyet": "anlatma",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "anlatti",
+      "kaynak": "oyuncu",
+      "niyet": "anlatim_cevabi",
+      "konusan": "hedef"
+    },
+    { "olay_turu": "tehdit_etti", "niyet": "tehdit", "konusan": "fail" },
+    { "olay_turu": "itiraf_etti", "niyet": "itiraf", "konusan": "fail" },
+    { "olay_turu": "patladi", "niyet": "patlama", "konusan": "fail" },
+    {
+      "olay_turu": "kacti",
+      "niyet": "kacis",
+      "konusan": "fail",
+      "dinleyensiz": true
+    },
+    {
+      "olay_turu": "sakinlesti",
+      "niyet": "sakinlik",
+      "konusan": "fail",
+      "dinleyensiz": true
+    }
+  ],
+  "gramer": {
+    "giris": ["Dinle", "Bak", "Şunu duydum"],
+    "sir": ["Kimseye söyleme", "Aramızda kalsın"]
+  },
+  "sablonlar": [
+    {
+      "id": "anlat_genel",
+      "concept": "anlatma",
+      "genel": true,
+      "metin": "#giris# #dinleyen#: #konu#."
+    },
+    {
+      "id": "anlat_gergin",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "stres()",
+          "op": ">=",
+          "deger": 15,
+          "zorunlu": true,
+          "agirlik": 3
+        }
+      ],
+      "metin": "#sir# #dinleyen#, ama #konu#."
+    },
+    {
+      "id": "anlat_dost",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "fikir_bandi(dinleyen)",
+          "op": "==",
+          "deger": "dost",
+          "zorunlu": true,
+          "agirlik": 2
+        }
+      ],
+      "tekrar": { "tekrar_bekleme": 6 },
+      "metin": "Sana güveniyorum #dinleyen#, #konu#."
+    },
+    {
+      "id": "anlat_dedikoducu",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.8,
+          "zorunlu": true,
+          "agirlik": 2
+        }
+      ],
+      "metin": "Duymadın mı #dinleyen#? #konu.baslik#."
+    },
+    {
+      "id": "cevap_anlatim_genel",
+      "concept": "anlatim_cevabi",
+      "genel": true,
+      "metin": "Öyle mi? #konu#, demek."
+    },
+    {
+      "id": "cevap_anlatim_inanan",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "inanc(kardes(Mehmet, Can))",
+          "op": ">",
+          "deger": 0.5,
+          "zorunlu": true,
+          "agirlik": 2
+        }
+      ],
+      "metin": "Ben de öyle duymuştum. Mehmet'in akrabaları çoktur."
+    },
+    {
+      "id": "cevap_anlatim_supheli",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.7,
+          "zorunlu": true,
+          "agirlik": 1
+        }
+      ],
+      "metin": "Bunu kimden duydun yabancı? İnanması zor."
+    },
+    {
+      "id": "tehdit_genel",
+      "concept": "tehdit",
+      "genel": true,
+      "sonra": { "hedef": "dinleyen", "concept": "cevap" },
+      "metin": "Sana son kez söylüyorum, #dinleyen#."
+    },
+    {
+      "id": "tehdit_gecmis",
+      "concept": "tehdit",
+      "kriterler": [
+        {
+          "alan": "hafiza_var(tehdit_etti, ben, 48)",
+          "op": "==",
+          "deger": true,
+          "zorunlu": true
+        }
+      ],
+      "hafiza": { "tur": "tehdit_etti", "fail": "ben", "son_n_tick": 48 },
+      "sonra": { "hedef": "dinleyen", "concept": "cevap" },
+      "metin": "#hafiza.zaman# de uyarmıştım seni, #dinleyen#. Bu son."
+    },
+    {
+      "id": "cevap_genel",
+      "concept": "cevap",
+      "genel": true,
+      "metin": "Sakin ol, konuşalım."
+    },
+    {
+      "id": "cevap_kinli",
+      "concept": "cevap",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bunu unutmam."
+    },
+    {
+      "id": "itiraf_genel",
+      "concept": "itiraf",
+      "genel": true,
+      "metin": "Yalan söyledim #dinleyen.yonelme#. Özür dilerim."
+    },
+    {
+      "id": "itiraf_utangac",
+      "concept": "itiraf",
+      "kriterler": [
+        { "alan": "kisilik(cesaret)", "op": "<", "deger": 0.5, "zorunlu": true }
+      ],
+      "metin": "Sana söylemem gerek #dinleyen#... Yalan söyledim, affet."
+    },
+    {
+      "id": "patlama_genel",
+      "concept": "patlama",
+      "genel": true,
+      "metin": "Yeter artık!"
+    },
+    {
+      "id": "patlama_ofkeli",
+      "concept": "patlama",
+      "kriterler": [
+        { "alan": "duygu(ofke)", "op": ">=", "deger": 0.6, "zorunlu": true }
+      ],
+      "metin": "Bir kelime daha edersen, #dinleyen#, pişman olursun!"
+    },
+    {
+      "id": "kacis_genel",
+      "concept": "kacis",
+      "genel": true,
+      "metin": "Burada daha fazla duramam."
+    },
+    {
+      "id": "kacis_korkak",
+      "concept": "kacis",
+      "kriterler": [
+        { "alan": "duygu(korku)", "op": ">=", "deger": 0.2, "zorunlu": true }
+      ],
+      "metin": "Gitmeliyim. Burası güvenli değil."
+    },
+    {
+      "id": "sakinlik_genel",
+      "concept": "sakinlik",
+      "genel": true,
+      "metin": "Neyse, bırakalım artık."
+    },
+    {
+      "id": "sakinlik_merhametli",
+      "concept": "sakinlik",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.7,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Boşuna kızmışız, gönül koymayalım."
+    }
+  ]
+}

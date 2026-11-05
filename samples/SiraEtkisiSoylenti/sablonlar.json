@@ -1,0 +1,60 @@
+{
+  "dil": "tr",
+  "adlar": {
+    "Ayse": "Ayşe",
+    "Can": "Can",
+    "Kemal": "Kemal",
+    "Mehmet": "Mehmet",
+    "oyuncu": { "ad": "yabancı", "cins": true }
+  },
+  "onerme_metinleri": {
+    "borclu": {
+      "metin": "{0} {1.yonelme} {2} lira borçlu",
+      "olumsuz": "{0} {1.yonelme} {2} lira borçlu değil",
+      "sayilar": [2],
+      "ozne": [0],
+      "ben": { "0": { "metin": "ben {1.yonelme} {2} lira borçluyum", "olumsuz": "ben {1.yonelme} {2} lira borçlu değilim" } },
+      "sen": { "0": { "metin": "sen {1.yonelme} {2} lira borçlusun", "olumsuz": "sen {1.yonelme} {2} lira borçlu değilsin" } }
+    },
+    "kardes": {
+      "metin": "{0} ile {1} kardeş",
+      "olumsuz": "{0} ile {1} kardeş değil",
+      "ozne": [0, 1],
+      "ben": {
+        "0": { "metin": "ben ile {1} kardeşiz", "olumsuz": "ben ile {1} kardeş değiliz" },
+        "1": { "metin": "{0} ile ben kardeşiz", "olumsuz": "{0} ile ben kardeş değiliz" }
+      },
+      "sen": {
+        "0": { "metin": "sen ile {1} kardeşsiniz", "olumsuz": "sen ile {1} kardeş değilsiniz" },
+        "1": { "metin": "{0} ile sen kardeşsiniz", "olumsuz": "{0} ile sen kardeş değilsiniz" }
+      }
+    }
+  },
+  "esleme": [
+    { "olay_turu": "yardim_etti", "niyet": "tesekkur", "konusan": "hedef" },
+    { "olay_turu": "anlatti", "kaynak": "npc", "niyet": "anlatma", "konusan": "fail" }
+  ],
+  "gramer": { "giris": ["Dinle", "Bak", "Şunu duydum"] },
+  "sablonlar": [
+    { "id": "tesekkur_genel", "concept": "tesekkur", "genel": true, "metin": "Sağ ol, yardımın için." },
+    {
+      "id": "tesekkur_minnet",
+      "concept": "tesekkur",
+      "kriterler": [{ "alan": "modifier_var(dinleyen, minnet)", "op": "==", "deger": true, "zorunlu": true }],
+      "metin": "Bunu unutmam, #dinleyen#."
+    },
+    {
+      "id": "tesekkur_supheli",
+      "concept": "tesekkur",
+      "kriterler": [{ "alan": "modifier_var(dinleyen, supheli)", "op": "==", "deger": true, "zorunlu": true, "agirlik": 2 }],
+      "metin": "Yardımın için sağ ol, ama bir şey duydum."
+    },
+    {
+      "id": "tesekkur_iftira",
+      "concept": "tesekkur",
+      "kriterler": [{ "alan": "modifier_var(dinleyen, aileme_iftira)", "op": "==", "deger": true, "zorunlu": true, "agirlik": 3 }],
+      "metin": "Kardeşim hakkında söylediklerini duydum. Yardımına güvenemem."
+    },
+    { "id": "anlat_genel", "concept": "anlatma", "genel": true, "metin": "#giris# #dinleyen#: #konu#." }
+  ]
+}

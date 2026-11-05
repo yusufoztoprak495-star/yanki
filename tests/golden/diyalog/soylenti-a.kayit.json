@@ -1,0 +1,33 @@
+{
+  "surum": 2,
+  "seed": 42,
+  "senaryo": "../../../samples/SiraEtkisiSoylenti/scenario.json",
+  "tick_sayisi": 14,
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "yardim_etti",
+      "hedef": "Can"
+    },
+    {
+      "tick": 4,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "borclu(Mehmet,Ayse,500)"
+      }
+    },
+    {
+      "tick": 4,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "kardes(Mehmet,Can)"
+      }
+    }
+  ],
+  "son_hash": "d6f5925b150170e5",
+  "gunluk_hash": "40eaa071cbad1009",
+  "senaryo_hash": "6de2379870cb0a12",
+  "bekleyen_eylemler": []
+}

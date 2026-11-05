@@ -948,6 +948,6 @@ namespace Yanki.Cli
         }
 
         private static string SatirMetni(DiyalogSatiri s) =>
-            $"#{s.No.ToString(CultureInfo.InvariantCulture)} [t{s.Tick.ToString(CultureInfo.InvariantCulture)}] {s.Konusan} → {s.Dinleyen}: {s.Metin}" + (s.Followup ? "  (cevap)" : string.Empty);
+            $"#{s.No.ToString(CultureInfo.InvariantCulture)} [t{s.Tick.ToString(CultureInfo.InvariantCulture)}] {s.Konusan} → {(s.Dinleyen.Length == 0 ? "(" + s.Mekan + ")" : s.Dinleyen)}: {s.Metin}" + (s.Followup ? "  (cevap)" : string.Empty);
     }
 }
