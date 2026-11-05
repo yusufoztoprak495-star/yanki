@@ -32,6 +32,19 @@ namespace Yanki.Dialogue
         /// <summary>Uzun süre eşiğinden sonra.</summary>
         public string UzunSureIfadesi { get; set; } = "çok önce";
 
+        /// <summary>
+        /// Baskın duygu → ton eşlemesi (B kararı: ton baskın duygudan türer; stres() ton tablosunda kullanılmaz). YER TUTUCU: tablo ve ton adları Yusuf'un alanıdır (DURAK 2).
+        /// Anahtar duygu türü (ör. ofke), değer ton adı (ASCII). Tabloda olmayan duygu ve duygu yokluğu için <see cref="VarsayilanTon"/> kullanılır.
+        /// </summary>
+        public System.Collections.Generic.SortedDictionary<string, string> TonTablosu { get; } = new System.Collections.Generic.SortedDictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["ofke"] = "gergin",
+            ["korku"] = "urkek",
+        };
+
+        /// <summary>Tabloda karşılığı olmayan duygu ve duygusuzluk için ton.</summary>
+        public string VarsayilanTon { get; set; } = "notr";
+
         /// <summary>Değerlerin tutarlılığını denetler.</summary>
         /// <exception cref="ArgumentException">Bir eşik ya da gün uzunluğu geçersizse.</exception>
         public void Dogrula()
