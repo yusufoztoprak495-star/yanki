@@ -112,6 +112,12 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public event Action<Olay>? OlayYayinlandi;
 
+        /// <summary>
+        /// Her tick TAMAMEN bitince (o tick'in olayları <see cref="OlayYayinlandi"/> ile bildirildikten sonra, olay olmasa da) tick numarasıyla bildirilir. Durum hash'ine girmez, hiçbir şey yazmaz;
+        /// diyalog katmanı gibi salt okunur aboneler içindir (8. hafta). Abone simülasyona yazmamalıdır.
+        /// </summary>
+        public event Action<long>? TickTamamlandi;
+
         private Simulasyon(
             SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, IActionSelector secici, ulong seed, AlgiAyarlari algi,
             DedikoduAyarlari dedikodu, StresAyarlari stres, IReadOnlyList<KrizSatiri> krizler, FrenAyarlari frenAyarlari)
@@ -1343,15 +1349,15 @@ namespace Yanki.Core.Simulation
         {
             SonHash = DurumHash();
             var yayinlayici = OlayYayinlandi;
-            if (yayinlayici == null)
+            if (yayinlayici != null)
             {
-                return;
+                for (var i = baslangic; i < Gunluk.Sayi; i++)
+                {
+                    yayinlayici(Gunluk.Olaylar[i]);
+                }
             }
 
-            for (var i = baslangic; i < Gunluk.Sayi; i++)
-            {
-                yayinlayici(Gunluk.Olaylar[i]);
-            }
+            TickTamamlandi?.Invoke(_tick);
         }
 
         // ---- Kurulum ----

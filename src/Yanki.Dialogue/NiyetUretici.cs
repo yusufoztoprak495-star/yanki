@@ -39,11 +39,11 @@ namespace Yanki.Dialogue
             }
 
             var konu = olay.Tur == YerlesikTurler.Anlatti ? olay.Deger("onerme") : string.Empty;
-            return Olustur(sim, ayar, konusan, dinleyen, kural.Niyet, konu, olay.Id, olay.Tick, false, string.Empty);
+            return Olustur(sim, ayar, konusan, dinleyen, kural.Niyet, konu, olay.Id, olay.Tick, false, olay.Mekan);
         }
 
         public static Niyet Followup(Niyet ana, string konusan, string concept, Simulasyon sim, DiyalogAyarlari ayar) =>
-            Olustur(sim, ayar, konusan, ana.Konusan, concept, ana.Konu, ana.OlayId, ana.Tick, true, string.Empty);
+            Olustur(sim, ayar, konusan, ana.Konusan, concept, ana.Konu, ana.OlayId, ana.Tick, true, ana.Mekan);
 
         public static bool KisiMi(Simulasyon sim, string kimlik)
         {

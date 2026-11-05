@@ -28,7 +28,7 @@ namespace Yanki.Dialogue
             _neden = neden;
         }
 
-        /// <summary>Dinleyensiz satırın mekanı (dinleyenli satırda boş); kimin gördüğünü demo süzer.</summary>
+        /// <summary>Satırın geçtiği mekan (olayın mekanı; dinleyenli, dinleyensiz ve followup satırlarda). Dinleyensiz satırı kimin gördüğünü demo bu mekâna göre süzer.</summary>
         public string Mekan { get; }
 
         /// <summary>Satır numarası (1'den, üretim sırasıyla; <c>--neden</c> bunu kullanır).</summary>

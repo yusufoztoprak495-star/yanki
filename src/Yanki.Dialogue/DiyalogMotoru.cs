@@ -26,6 +26,7 @@ namespace Yanki.Dialogue
         private readonly List<DiyalogSatiri> _satirlar = new List<DiyalogSatiri>();
         private readonly List<Bekleyen> _bekleyenler = new List<Bekleyen>();
         private readonly Action<Olay> _isleyici;
+        private readonly Action<long> _tickSonu;
         private bool _bagli;
 
         private sealed class Bekleyen
@@ -55,6 +56,7 @@ namespace Yanki.Dialogue
             _varsayilan = new SablonRenderer(dosya, sim.Seed);
             _renderer = renderer;
             _isleyici = Isle;
+            _tickSonu = BekleyenleriBosalt;
         }
 
         /// <summary>
@@ -77,6 +79,7 @@ namespace Yanki.Dialogue
             a.Dogrula();
             var motor = new DiyalogMotoru(sim, dosya, a, renderer) { _bagli = true };
             sim.OlayYayinlandi += motor._isleyici;
+            sim.TickTamamlandi += motor._tickSonu;
             return motor;
         }
 
@@ -95,6 +98,7 @@ namespace Yanki.Dialogue
             if (_bagli)
             {
                 _sim.OlayYayinlandi -= _isleyici;
+                _sim.TickTamamlandi -= _tickSonu;
                 _bagli = false;
             }
         }
@@ -105,8 +109,6 @@ namespace Yanki.Dialogue
 
         private void Isle(Olay olay)
         {
-            BekleyenleriBosalt(olay.Tick);
-
             var niyet = NiyetUretici.Uret(olay, _sim, _dosya, _ayar);
             if (niyet == null)
             {
@@ -122,7 +124,7 @@ namespace Yanki.Dialogue
             if (_sim.Zihinler.Var(olay.Fail))
             {
                 // NPC kaynaklı olayın kuralları sıradaki tick'te çalışır: cevap satırı bir sonraki tick sonunda üretilir (G kararı, seçenek b).
-                _bekleyenler.Add(new Bekleyen(olay.Tick + 1, niyet, satir, sablon.Sonra));
+                _bekleyenler.Add(new Bekleyen(olay.Tick + 1, niyet, satir, sablon.Sonra));   // vade: sonraki tick'in TickTamamlandi bildirimi (olay gelmese de)
             }
             else
             {
@@ -288,13 +290,34 @@ namespace Yanki.Dialogue
                 try
                 {
                     varsayilanMetin = _varsayilan.Render(girdi);
-                    metin = _renderer == null ? varsayilanMetin : _renderer.Render(girdi);
                 }
                 catch (InvalidOperationException e)
                 {
                     notlar.Add($"şablon {aday.Id}: elendi (yuva bağlanamadı: {e.Message})");
                     adaylar.Remove(aday);
                     continue;
+                }
+
+                // Özel renderer bir EKLENTİdir (H kararı): hatası şablonu elemez, seçimi/tekrarı/hash'i/tick'i etkilemez; satır varsayılan metinle üretilir ve nota yazılır.
+                metin = varsayilanMetin;
+                if (_renderer != null)
+                {
+                    try
+                    {
+                        var ozel = _renderer.Render(girdi);
+                        if (ozel == null)
+                        {
+                            notlar.Add($"renderer null döndürdü: varsayılan metin kullanıldı (şablon {aday.Id})");
+                        }
+                        else
+                        {
+                            metin = ozel;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        notlar.Add($"renderer hata verdi ({e.GetType().Name}: {e.Message}): varsayılan metin kullanıldı (şablon {aday.Id})");
+                    }
                 }
 
                 secilen = aday.Deger;

@@ -228,6 +228,17 @@ namespace Yanki.Dialogue.Tests
         private static string SonraliGenel(string hedef) =>
             "{ 'id': 'genel', 'concept': 'tesekkur', 'genel': true, 'metin': 'Sağ ol.', 'sonra': { 'hedef': '" + hedef + "', 'concept': 'cevap' } }";
 
+
+        // Düzeltme (mekan): dinleyenli ve followup satırları da olayın mekanını taşır.
+        [Fact]
+        public void Dinleyenli_ve_followup_satirlari_da_olay_mekanini_tasir()
+        {
+            var (_, motor) = Oyna(Dosya(SonraliGenel("Veli") + "," + CevapKinli + "," + CevapGenel), 1, Tickler("Ali", 1));
+
+            Assert.Equal(2, motor.Satirlar.Count);
+            Assert.All(motor.Satirlar, s => Assert.Equal("han", s.Mekan));
+        }
+
         [Fact]
         public void Oyuncu_kaynakli_olayda_followup_ayni_anda_uretilir_hedef_kendi_zihniyle_secer()
         {
@@ -263,6 +274,30 @@ namespace Yanki.Dialogue.Tests
         }
 
         private const string SelamEylemi = "{ \"eylemler\": [ { \"id\": \"selam\", \"olay_turu\": \"selam_oldu\", \"hedef\": \"npc\", \"taban\": 1, \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.5 } ] } ] }";
+
+
+        private const string SelamBirKez = "{ \"eylemler\": [ { \"id\": \"selam\", \"olay_turu\": \"selam_oldu\", \"hedef\": \"npc\", \"taban\": 1, \"on_kosullar\": [ { \"alan\": \"hafiza_var(selam_oldu, ben, 24)\", \"op\": \"==\", \"deger\": false } ], \"etkiler\": [ { \"tur\": \"hafiza\", \"onem\": 0.5 } ] } ] }";
+
+        // Düzeltme (followup zamanı) — ön koşul ikinci selamı (fren olayı üretmeden) eler, 2. tick tamamen olaysız kalır: bekleyen followup olay gelmesine bağlı OLMAMALI; olaysız tick'te de tam bir sonraki tick sonunda üretilir.
+        [Fact]
+        public void NPC_kaynakli_followup_olaysiz_tickte_bile_tam_bir_sonraki_tick_sonunda_uretilir()
+        {
+            const string esleme = "'selam_oldu': { 'niyet': 'selam', 'konusan': 'fail' }";
+            const string ana = "{ 'id': 'selam_genel', 'concept': 'selam', 'genel': true, 'metin': 'Selam.', 'sonra': { 'hedef': 'dinleyen', 'concept': 'cevap' } }";
+            var sim = DiyalogFikstur.Sim(SelamBirKez);
+            var motor = DiyalogMotoru.Baglan(sim, DiyalogFikstur.Sablon(Dosya(ana + "," + CevapGenel, esleme)));
+
+            sim.Tick(1);
+            var bekleyen = motor.BekleyenFollowupSayisi;
+            sim.Tick(1);
+
+            Assert.True(bekleyen >= 1);
+            Assert.True(!sim.Gunluk.Olaylar.Any(o => o.Tick == 2), string.Join(",", sim.Gunluk.Olaylar.Where(o => o.Tick == 2).Select(o => o.Tur + ":" + o.Fail)));            // 2. tick olaysız
+            Assert.Equal(0, motor.BekleyenFollowupSayisi);
+            var cevaplar = motor.Satirlar.Where(s => s.Followup).ToList();
+            Assert.Equal(bekleyen, cevaplar.Count);
+            Assert.All(cevaplar, c => Assert.Equal(2, c.Tick));
+        }
 
         [Fact]
         public void NPC_kaynakli_olayda_followup_bir_sonraki_tick_sonunda_uretilir_ana_satir_gecikmez()

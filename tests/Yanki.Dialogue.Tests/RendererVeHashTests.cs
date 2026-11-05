@@ -151,6 +151,67 @@ namespace Yanki.Dialogue.Tests
             Assert.Equal(varsayilan.Satirlar.Select(s => s.SablonId), ozel.Satirlar.Select(s => s.SablonId));   // seçim renderer'dan etkilenmez
         }
 
+        private sealed class AtanRenderer : IDialogueRenderer
+        {
+            private readonly Func<Exception?> _at;
+
+            public AtanRenderer(Func<Exception?> at) => _at = at;
+
+            public string Render(RenderGirdisi girdi) => throw _at()!;
+        }
+
+        private sealed class NullDonenRenderer : IDialogueRenderer
+        {
+#pragma warning disable CS8603
+            public string Render(RenderGirdisi girdi) => null;
+#pragma warning restore CS8603
+        }
+
+        // H kararı (düzeltme): özel renderer'ın HİÇBİR hatası seçimi, tekrar durumunu, diyalog_hash'i ya da Tick'i etkilemez; satır varsayılan metinle üretilir ve nota yazılır.
+        [Theory]
+        [InlineData("InvalidOperationException")]
+        [InlineData("ArgumentException")]
+        [InlineData("NullReferenceException")]
+        [InlineData("ApplicationException")]
+        [InlineData("null")]
+        public void Ozel_renderer_hatasi_secimi_tekrari_hashi_ve_ticki_etkilemez_satir_varsayilan_metinle_uretilir(string tur)
+        {
+            IDialogueRenderer ozel = tur switch
+            {
+                "InvalidOperationException" => new AtanRenderer(() => new InvalidOperationException("yuva bağlanamadı (eklenti)")),
+                "ArgumentException" => new AtanRenderer(() => new ArgumentException("eklenti")),
+                "NullReferenceException" => new AtanRenderer(() => new NullReferenceException()),
+                "ApplicationException" => new AtanRenderer(() => new ApplicationException("eklenti")),
+                _ => new NullDonenRenderer(),
+            };
+            var (simV, varsayilan) = Oyna(42, Girdi);
+
+            var (simO, motor) = Oyna(42, Girdi, renderer: ozel);
+
+            Assert.Equal(varsayilan.DiyalogHash(), motor.DiyalogHash());
+            Assert.Equal(varsayilan.Satirlar.Select(s => s.SablonId), motor.Satirlar.Select(s => s.SablonId));
+            Assert.Equal(varsayilan.Satirlar.Select(s => (s.Tick, s.Konusan, s.Dinleyen)), motor.Satirlar.Select(s => (s.Tick, s.Konusan, s.Dinleyen)));
+            Assert.Equal(varsayilan.Satirlar.Select(s => s.Metin), motor.Satirlar.Select(s => s.Metin));   // varsayılan metin
+            Assert.All(motor.Satirlar, s => Assert.Contains(s.NedenSatirlari, n => n.Contains("renderer", StringComparison.Ordinal) && n.Contains("varsayılan metin", StringComparison.Ordinal)));
+            Assert.Equal(simV.SimdikiTick, simO.SimdikiTick);
+            Assert.Equal(simV.DurumHash(), simO.DurumHash());
+        }
+
+        [Fact]
+        public void Varsayilan_renderer_yuva_hatasi_hala_sablonu_eler()
+        {
+            // yuva bağlanamayan şablon aday olamaz (genel şablon kalır); özel renderer hatası ise elemez (yukarıdaki test).
+            var dosya = DiyalogFikstur.Sablon(@"{ 'dil': 'tr', 'esleme': { 'yardim_etti': { 'niyet': 'tesekkur', 'konusan': 'hedef' } },
+ 'sablonlar': [ { 'id': 'genel', 'concept': 'tesekkur', 'genel': true, 'metin': 'Sağ ol.' },
+  { 'id': 'konulu', 'concept': 'tesekkur', 'kriterler': [ { 'alan': 'kisilik(sosyallik)', 'op': '>=', 'deger': 0, 'zorunlu': true, 'agirlik': 5 } ], 'metin': 'Sağ ol, #konu#.' } ] }");
+            var sim = DiyalogFikstur.Sim(null, 42);
+            var motor = DiyalogMotoru.Baglan(sim, dosya);
+            sim.Submit(new PlayerAction("yardim_etti", "Ali"));
+            sim.Tick(1);
+
+            Assert.Equal("genel", Assert.Single(motor.Satirlar).SablonId);
+        }
+
         // ---- I: diyalog hash'i ----
 
         [Fact]

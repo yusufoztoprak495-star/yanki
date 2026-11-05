@@ -43,7 +43,7 @@ namespace Yanki.Dialogue
             Followup = followup;
         }
 
-        /// <summary>Dinleyensiz niyetin geçtiği mekan (dinleyenli niyette boş). Kimin gördüğünü demo süzer.</summary>
+        /// <summary>Niyeti doğuran olayın mekanı (dinleyenli, dinleyensiz ve followup niyetlerde). Dinleyensiz satırda kimin gördüğünü demo bu mekâna göre süzer.</summary>
         public string Mekan { get; }
 
         /// <summary>Konuşan NPC.</summary>
