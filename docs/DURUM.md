@@ -4,8 +4,15 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 
 ## Son güncelleme
 
-- **Tarih:** 2026-11-04
+- **Tarih:** 2026-11-05
 - **PR:** [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta: frenler ve sağlamlık), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi. Bu belge güncellemesi `docs/hafta-08-girdisi` dalında (yalnızca "Hafta 8 başlangıç işleri" bölümü eklendi), Yusuf'un incelemesini bekliyor.
+
+## Hafta 8: performans kararı ve diyalog (`hafta-08` dalı, PR açılacak)
+
+- **Bitti:** `Yanki.Dialogue` (olaydan niyet, kriterle şablon seçimi, tekrar, hafıza göndermesi, Türkçe mini gramer, tek seviye followup, `IDialogueRenderer`), `yanki diyalog` / `diyalog-replay`, ayrı şablon dosyası, ADR-014 (Önerildi), ADR-015 (Önerildi), 3 diyalog golden'ı + CI adımı (dört ana golden değişmedi), sıra etkisi diyalog testleri, CsCheck değişmezleri (5 tohum × 200: 5/5 yeşil).
+- **Ölçüm:** 8 NPC gerçekçi, dönüşümlü 20'şer süreç: diyalog kapalı 2.78 ms/tick, açık 3.06 ms (≤ 5 ms tutar); replay 514 vs 541 ms (ADR-015).
+- **Yusuf'a kalanlar:** ADR-013/014/015 onayı; HanGerilim ve SiraEtkisiSoylenti şablonları taslaktır, gözden geçir; `docs/notes/diyalog.md` kendi cümlelerinle; ton eşikleri ve zaman etiketleri 11. hafta denge turunda.
+- **9. haftaya devir:** Kasaba Hanı şablon kümesi ve diyalog maliyetinin gerçek senaryoda yeniden ölçümü; bütçe varyantı 5.8–8 ms açık riski (ADR-015).
 
 ## Hafta 8 başlangıç işleri
 
