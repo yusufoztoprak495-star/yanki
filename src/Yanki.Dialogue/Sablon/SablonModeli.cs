@@ -51,15 +51,19 @@ namespace Yanki.Dialogue
 
     internal sealed class AdKaydi
     {
-        public AdKaydi(string ad, bool ozelAd)
+        public AdKaydi(string ad, bool ozelAd, bool ince)
         {
             Ad = ad;
             OzelAd = ozelAd;
+            Ince = ince;
         }
 
         public string Ad { get; }
 
         public bool OzelAd { get; }
+
+        /// <summary>Yumuşak l (Kemal): yazar belirtir; ince ünlü eki alır.</summary>
+        public bool Ince { get; }
     }
 
     internal sealed class OnermeParcasi

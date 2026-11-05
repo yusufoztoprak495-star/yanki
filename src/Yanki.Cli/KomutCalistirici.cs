@@ -7,6 +7,7 @@ using Yanki.Core;
 using Yanki.Core.Decision;
 using Yanki.Core.Events;
 using Yanki.Core.Simulation;
+using Yanki.Dialogue;
 
 namespace Yanki.Cli
 {
@@ -52,6 +53,8 @@ namespace Yanki.Cli
                     return Query(args, cikti, hata);
                 case "why":
                     return Why(args, cikti, hata);
+                case "diyalog":
+                    return Diyalog(args, cikti, hata);
                 default:
                     hata.WriteLine($"Bilinmeyen komut: {args[0]}");
                     KullanimYaz(hata);
@@ -71,6 +74,7 @@ namespace Yanki.Cli
             w.WriteLine("  yanki devam <oturum.json> [--eylem tur[:hedef[:anahtar=deger,...]]] [--tick M] ... --kaydet yeni.json   (kayıttan devam: baştan oynatır, doğrular, sürdürür)");
             w.WriteLine("  yanki query <oturum.json> <npc>      (NPC durumu ve son karar izi)");
             w.WriteLine("  yanki why <oturum.json> <olayId>     (nedensellik zinciri; karar olayında adaylar ve puan bileşenleri)");
+            w.WriteLine("  yanki diyalog <oturum.json> --sablon <sablon.json> [--neden <satir_no>]   (kayıttan diyalog satırları; --neden seçilen şablonu, kriterleri ve olayın why zincirini gösterir)");
             w.WriteLine("  yanki --version");
         }
 
@@ -265,7 +269,8 @@ namespace Yanki.Cli
             public OynatmaSonucu Sonuc { get; }
         }
 
-        private static YuklenenOturum? OturumuOynat(string yol, TextWriter hata, out int cikis, bool senaryoHashDenetle = true)
+        // simHazir: simülasyon kurulduktan ve baştan oynatmadan ÖNCE çağrılır (diyalog motoru olayları kaçırmasın diye abone olur).
+        private static YuklenenOturum? OturumuOynat(string yol, TextWriter hata, out int cikis, bool senaryoHashDenetle = true, Action<Simulasyon>? simHazir = null)
         {
             cikis = DosyaHatasi;
             if (!File.Exists(yol))
@@ -293,6 +298,7 @@ namespace Yanki.Cli
                 return null;
             }
 
+            simHazir?.Invoke(sim);
             try
             {
                 return new YuklenenOturum(yol, senaryoYolu, kayit, sim, OturumOynatici.Oynat(sim, kayit, senaryoHashDenetle ? SenaryoDosyasi.Hash(senaryoYolu) : null));
@@ -643,6 +649,12 @@ namespace Yanki.Cli
                 return cikis;
             }
 
+            return NedenZinciriYaz(oturum, olayId, cikti, hata);
+        }
+
+        // `why` ile `diyalog --neden` ortak zincir yazıcısı (aynı dili konuşurlar).
+        private static int NedenZinciriYaz(YuklenenOturum oturum, long olayId, TextWriter cikti, TextWriter hata)
+        {
             if (!oturum.Sim.Gunluk.Var(olayId))
             {
                 hata.WriteLine($"Günlükte #{olayId.ToString(CultureInfo.InvariantCulture)} kimlikli olay yok (olay sayısı: {oturum.Sim.Gunluk.Sayi.ToString(CultureInfo.InvariantCulture)}).");
@@ -691,5 +703,131 @@ namespace Yanki.Cli
 
             return Basarili;
         }
+
+        // ---- diyalog (8. hafta) ----
+
+        // yanki diyalog <oturum.json> --sablon <sablon.json> [--neden <satir_no>]
+        // Şablon dosyasını CLI okur (çekirdek ve Yanki.Dialogue dosya sistemine dokunmaz). Oturum baştan oynatılırken diyalog motoru olay yayınına abone olur; satırlar
+        // tick sonu durumundan üretilir. Normal satır çıktısı KuralId vermez; --neden çıktısı olayın why zincirini de içerir (geliştirici bilgisi, ADR-012 istisnası).
+        private static int Diyalog(string[] args, TextWriter cikti, TextWriter hata)
+        {
+            if (args.Length < 2 || args[1].StartsWith("--", StringComparison.Ordinal))
+            {
+                hata.WriteLine("diyalog: oturum dosyası gerekli.");
+                KullanimYaz(hata);
+                return KullanimHatasi;
+            }
+
+            string? sablonYolu = null;
+            int? nedenNo = null;
+            for (var i = 2; i < args.Length; i++)
+            {
+                switch (args[i])
+                {
+                    case "--sablon":
+                        if (i + 1 >= args.Length)
+                        {
+                            hata.WriteLine("--sablon bir dosya yolu ister.");
+                            return KullanimHatasi;
+                        }
+
+                        sablonYolu = args[++i];
+                        break;
+                    case "--neden":
+                        if (i + 1 >= args.Length || !int.TryParse(args[i + 1].TrimStart('#'), NumberStyles.None, CultureInfo.InvariantCulture, out var no) || no < 1)
+                        {
+                            hata.WriteLine("--neden 1'den başlayan bir satır numarası ister.");
+                            return KullanimHatasi;
+                        }
+
+                        nedenNo = no;
+                        i++;
+                        break;
+                    default:
+                        hata.WriteLine($"Bilinmeyen seçenek: {args[i]}");
+                        KullanimYaz(hata);
+                        return KullanimHatasi;
+                }
+            }
+
+            if (sablonYolu == null)
+            {
+                hata.WriteLine("diyalog: --sablon <dosya> gerekli.");
+                KullanimYaz(hata);
+                return KullanimHatasi;
+            }
+
+            if (!File.Exists(sablonYolu))
+            {
+                hata.WriteLine($"Dosya bulunamadı: {sablonYolu}");
+                return DosyaHatasi;
+            }
+
+            var yukleme = SablonYukleyici.Yukle(File.ReadAllText(sablonYolu), sablonYolu);
+            if (!yukleme.Basarili)
+            {
+                foreach (var h in yukleme.Hatalar)
+                {
+                    hata.WriteLine(h);
+                }
+
+                return DosyaHatasi;
+            }
+
+            DiyalogMotoru? motor = null;
+            var oturum = OturumuOynat(args[1], hata, out var cikis, true, sim => motor = DiyalogMotoru.Baglan(sim, yukleme.Dosya!));
+            if (oturum == null || motor == null)
+            {
+                return oturum == null ? cikis : DosyaHatasi;
+            }
+
+            using (motor)
+            {
+                if (!oturum.Sonuc.HashTutuyor)
+                {
+                    hata.WriteLine($"{args[1]}: son_hash tutmuyor (beklenen {oturum.Sonuc.BeklenenHash}, gerçek {oturum.Sonuc.GercekHash}); diyalog satırları güvenilir değil.");
+                    return HashUyusmadi;
+                }
+
+                if (!oturum.Sonuc.GunlukHashTutuyor)
+                {
+                    hata.WriteLine($"{args[1]}: gunluk_hash tutmuyor (beklenen {oturum.Sonuc.BeklenenGunlukHash}, gerçek {oturum.Sonuc.GercekGunlukHash}); diyalog satırları güvenilir değil.");
+                    return GunlukHashUyusmadi;
+                }
+
+                if (nedenNo.HasValue)
+                {
+                    if (nedenNo.Value > motor.Satirlar.Count)
+                    {
+                        hata.WriteLine($"Satır #{nedenNo.Value.ToString(CultureInfo.InvariantCulture)} yok (satır sayısı: {motor.Satirlar.Count.ToString(CultureInfo.InvariantCulture)}).");
+                        return DosyaHatasi;
+                    }
+
+                    var satir = motor.Satirlar[nedenNo.Value - 1];
+                    cikti.WriteLine(SatirMetni(satir));
+                    cikti.WriteLine("-- neden (diyalog) --");
+                    foreach (var n in satir.NedenSatirlari)
+                    {
+                        cikti.WriteLine("  " + n);
+                    }
+
+                    cikti.WriteLine($"-- olayın why zinciri (yanki why {args[1]} {satir.OlayId.ToString(CultureInfo.InvariantCulture)}) --");
+                    return NedenZinciriYaz(oturum, satir.OlayId, cikti, hata);
+                }
+
+                cikti.WriteLine($"sablon_hash: {yukleme.Dosya!.SablonHash}");
+                cikti.WriteLine($"diyalog_hash: {motor.DiyalogHash()}");
+                cikti.WriteLine($"satir: {motor.Satirlar.Count.ToString(CultureInfo.InvariantCulture)}" + (motor.BekleyenFollowupSayisi > 0 ? $" (bekleyen followup: {motor.BekleyenFollowupSayisi.ToString(CultureInfo.InvariantCulture)})" : string.Empty));
+                foreach (var s in motor.Satirlar)
+                {
+                    cikti.WriteLine(SatirMetni(s));
+                }
+
+                return Basarili;
+            }
+        }
+
+        private static string SatirMetni(DiyalogSatiri s) =>
+            $"#{s.No.ToString(CultureInfo.InvariantCulture)} [t{s.Tick.ToString(CultureInfo.InvariantCulture)}] {s.Konusan} → {s.Dinleyen}: {s.Metin}" + (s.Followup ? "  (cevap)" : string.Empty);
     }
 }

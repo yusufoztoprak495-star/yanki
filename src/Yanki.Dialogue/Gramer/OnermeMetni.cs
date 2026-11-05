@@ -34,7 +34,7 @@ namespace Yanki.Dialogue.Gramer
                 }
 
                 var ham = o.Argumanlar[parca.Indeks];
-                var gorunen = dosya.Adlar.TryGetValue(ham, out var ad) ? ad : new AdKaydi(ham, true);
+                var gorunen = dosya.Adlar.TryGetValue(ham, out var ad) ? ad : new AdKaydi(ham, true, false);
                 if (parca.Ek == null)
                 {
                     sb.Append(gorunen.Ad);
@@ -43,7 +43,7 @@ namespace Yanki.Dialogue.Gramer
                 {
                     try
                     {
-                        sb.Append(TurkceEkler.Uygula(gorunen.Ad, gorunen.OzelAd, parca.Ek));
+                        sb.Append(TurkceEkler.Uygula(gorunen.Ad, gorunen.OzelAd, parca.Ek, gorunen.Ince));
                     }
                     catch (ArgumentException e)
                     {
@@ -57,7 +57,7 @@ namespace Yanki.Dialogue.Gramer
 
         /// <summary>Görünen ad kaydı: tabloda varsa o, yoksa kimliğin kendisi (özel ad varsayılır).</summary>
         public static AdKaydi GorunenAd(string kimlik, SablonDosyasi dosya) =>
-            dosya.Adlar.TryGetValue(kimlik, out var ad) ? ad : new AdKaydi(kimlik, true);
+            dosya.Adlar.TryGetValue(kimlik, out var ad) ? ad : new AdKaydi(kimlik, true, false);
 
     }
 }

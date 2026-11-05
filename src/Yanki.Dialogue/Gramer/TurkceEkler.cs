@@ -37,7 +37,7 @@ namespace Yanki.Dialogue.Gramer
             return true;
         }
 
-        public static string Uygula(string ad, bool ozelAd, string ek)
+        public static string Uygula(string ad, bool ozelAd, string ek, bool ince = false)
         {
             if (ad == null)
             {
@@ -71,7 +71,9 @@ namespace Yanki.Dialogue.Gramer
 
             var sonHarf = sozcuk[sozcuk.Length - 1];
             var unluyleBitiyor = Unlu(sonHarf);
-            var on = Ince(sonUnlu);
+            // Yumuşak (damaksıl) l: Arapça kökenli adlar (Kemal, Cemal ...) arka ünlüyle yazılsa da ince ünlü eki alır (Kemal'e). Yazar `ince` ile belirtir; küçük yerleşik tablo en yaygın adları kapsar.
+            var yumusakL = ince || (ozelAd && YumusakLAdi(sozcuk));
+            var on = Ince(sonUnlu) || yumusakL;
             string sonek;
             switch (ek)
             {
@@ -79,7 +81,7 @@ namespace Yanki.Dialogue.Gramer
                     sonek = (unluyleBitiyor ? "y" : string.Empty) + (on ? "e" : "a");
                     break;
                 case "belirtme":
-                    sonek = (unluyleBitiyor ? "y" : string.Empty) + Dortlu(sonUnlu);
+                    sonek = (unluyleBitiyor ? "y" : string.Empty) + Dortlu(sonUnlu, yumusakL);
                     break;
                 case "bulunma":
                     sonek = (Sert(sonHarf) ? "t" : "d") + (on ? "e" : "a");
@@ -88,13 +90,27 @@ namespace Yanki.Dialogue.Gramer
                     sonek = (Sert(sonHarf) ? "t" : "d") + (on ? "e" : "a") + "n";
                     break;
                 case "iyelik":
-                    sonek = (unluyleBitiyor ? "s" : string.Empty) + Dortlu(sonUnlu);
+                    sonek = (unluyleBitiyor ? "s" : string.Empty) + Dortlu(sonUnlu, yumusakL);
                     break;
                 default:
                     throw new ArgumentException($"Bilinmeyen ek \"{ek}\" (yonelme, belirtme, bulunma, ayrilma, iyelik).", nameof(ek));
             }
 
             return sozcuk + (ozelAd ? "'" : string.Empty) + sonek;
+        }
+
+        // Yumuşak l ile biten, ince ünlü eki alan yaygın özel adlar (i/İ/ı/I ayrımı yapılmadan karşılaştırılır).
+        private static readonly string[] YumusakLAdlari = { "kemal", "cemal", "celal", "bilal", "nihal", "resul" };
+
+        private static bool YumusakLAdi(string sozcuk)
+        {
+            var katla = new System.Text.StringBuilder(sozcuk.Length);
+            foreach (var c in sozcuk)
+            {
+                katla.Append(c >= 'A' && c <= 'Z' && c != 'I' ? (char)(c + 32) : (c == 'I' || c == 'İ' || c == 'ı' ? 'i' : c));
+            }
+
+            return Array.IndexOf(YumusakLAdlari, katla.ToString()) >= 0;
         }
 
         // Kültürden bağımsız harf sınıfları. Büyük I (noktasız) arka, büyük İ (noktalı) ince ünlüdür.
@@ -135,8 +151,19 @@ namespace Yanki.Dialogue.Gramer
             }
         }
 
-        private static string Dortlu(char unlu)
+        private static string Dortlu(char unlu, bool yumusakL)
         {
+            if (yumusakL)
+            {
+                switch (unlu)
+                {
+                    case 'a': case 'ı': case 'A': case 'I': case 'â': case 'Â':
+                        return "i";
+                    case 'o': case 'u': case 'O': case 'U': case 'û': case 'Û':
+                        return "ü";
+                }
+            }
+
             switch (unlu)
             {
                 case 'a': case 'ı': case 'A': case 'I': case 'â': case 'Â':

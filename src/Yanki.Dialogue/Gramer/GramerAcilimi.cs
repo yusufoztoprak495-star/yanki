@@ -7,11 +7,12 @@ namespace Yanki.Dialogue.Gramer
     /// <summary>Metin açılımında bağlanan bir olgu: ya bir ad (ek alabilir) ya da düz metin (ek almaz).</summary>
     internal sealed class MetinOlgusu
     {
-        private MetinOlgusu(string deger, bool ad, bool ozelAd)
+        private MetinOlgusu(string deger, bool ad, bool ozelAd, bool ince)
         {
             Deger = deger;
             AdMi = ad;
             OzelAd = ozelAd;
+            Ince = ince;
         }
 
         public string Deger { get; }
@@ -22,9 +23,12 @@ namespace Yanki.Dialogue.Gramer
         /// <summary>Özel ad ise ekten önce kesme işareti konur (Ayşe'ye); cins isimde konmaz (hancıya).</summary>
         public bool OzelAd { get; }
 
-        public static MetinOlgusu Ad(string deger, bool ozelAd) => new MetinOlgusu(deger, true, ozelAd);
+        /// <summary>Yumuşak l: arka ünlüyle yazılsa da ince ünlü eki alır (Kemal'e).</summary>
+        public bool Ince { get; }
 
-        public static MetinOlgusu Metin(string deger) => new MetinOlgusu(deger, false, false);
+        public static MetinOlgusu Ad(string deger, bool ozelAd, bool ince = false) => new MetinOlgusu(deger, true, ozelAd, ince);
+
+        public static MetinOlgusu Metin(string deger) => new MetinOlgusu(deger, false, false, false);
     }
 
     /// <summary>Gramer kuralları: kural adı → seçenek metinleri (her biri kural ve olgu etiketleri içerebilir). Kural adlarında nokta yoktur.</summary>
@@ -296,7 +300,7 @@ namespace Yanki.Dialogue.Gramer
 
             try
             {
-                return TurkceEkler.Uygula(olgu.Deger, olgu.OzelAd, ekler[0]);
+                return TurkceEkler.Uygula(olgu.Deger, olgu.OzelAd, ekler[0], olgu.Ince);
             }
             catch (ArgumentException e)
             {

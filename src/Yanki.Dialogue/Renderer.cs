@@ -11,12 +11,13 @@ namespace Yanki.Dialogue
     /// </summary>
     public sealed class SecilmisGercek
     {
-        internal SecilmisGercek(string ad, string deger, bool adMi, bool ozelAd)
+        internal SecilmisGercek(string ad, string deger, bool adMi, bool ozelAd, bool ince = false)
         {
             Ad = ad;
             Deger = deger;
             AdMi = adMi;
             OzelAd = ozelAd;
+            Ince = ince;
         }
 
         /// <summary>Yuva adı (konusan, dinleyen, oyuncu, konu, hafiza.zaman, hafiza.fail).</summary>
@@ -30,6 +31,9 @@ namespace Yanki.Dialogue
 
         /// <summary>Özel ad ise ekten önce kesme işareti gelir.</summary>
         public bool OzelAd { get; }
+
+        /// <summary>Yumuşak l (Kemal): arka ünlüyle yazılsa da ince ünlü eki alır.</summary>
+        public bool Ince { get; }
     }
 
     /// <summary>
@@ -98,7 +102,7 @@ namespace Yanki.Dialogue
             var olgular = new SortedDictionary<string, MetinOlgusu>(StringComparer.Ordinal);
             foreach (var g in girdi.SecilmisGercekler)
             {
-                olgular[g.Ad] = g.AdMi ? MetinOlgusu.Ad(g.Deger, g.OzelAd) : MetinOlgusu.Metin(g.Deger);
+                olgular[g.Ad] = g.AdMi ? MetinOlgusu.Ad(g.Deger, g.OzelAd, g.Ince) : MetinOlgusu.Metin(g.Deger);
             }
 
             var rng = AnahtarliRng.Icin(_seed, girdi.Niyet.Tick, girdi.Niyet.Konusan, DiyalogMotoru.RngAlani(girdi.Niyet) + ":metin");

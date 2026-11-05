@@ -64,6 +64,19 @@ namespace Yanki.Dialogue.Tests.Gramer
             new object[] { "Nuş", true, "ayrilma", "Nuş'tan" },
             new object[] { "Selçuk", true, "ayrilma", "Selçuk'tan" },
             new object[] { "Tarık", true, "bulunma", "Tarık'ta" },
+            // yumuşak (damaksıl) l: Arapça kökenli adlar ince ünlü eki alır (Kemal'e, Kemal'i); yerleşik küçük istisna tablosu
+            new object[] { "Kemal", true, "yonelme", "Kemal'e" },
+            new object[] { "Kemal", true, "belirtme", "Kemal'i" },
+            new object[] { "Kemal", true, "bulunma", "Kemal'de" },
+            new object[] { "Kemal", true, "ayrilma", "Kemal'den" },
+            new object[] { "Kemal", true, "iyelik", "Kemal'i" },
+            new object[] { "Cemal", true, "yonelme", "Cemal'e" },
+            new object[] { "Celal", true, "belirtme", "Celal'i" },
+            new object[] { "Bilal", true, "yonelme", "Bilal'e" },
+            new object[] { "Nihal", true, "yonelme", "Nihal'e" },
+            new object[] { "Resul", true, "belirtme", "Resul'ü" },
+            new object[] { "KEMAL", true, "yonelme", "KEMAL'e" },
+            new object[] { "Kamil", true, "yonelme", "Kamil'e" },
             // büyük İ ve I (kültürden bağımsız harf eşlemesi)
             new object[] { "Işık", true, "yonelme", "Işık'a" },
             new object[] { "İpek", true, "yonelme", "İpek'e" },
@@ -97,6 +110,15 @@ namespace Yanki.Dialogue.Tests.Gramer
             {
                 CultureInfo.CurrentCulture = onceki;
             }
+        }
+
+        [Fact]
+        public void Yazar_ince_isaretiyle_yerlesik_tabloda_olmayan_yumusak_l_adini_belirtir()
+        {
+            Assert.Equal("Rasul'a", TurkceEkler.Uygula("Rasul", true, "yonelme"));                    // tabloda yok: varsayılan arka ünlü uyumu
+            Assert.Equal("Rasul'e", TurkceEkler.Uygula("Rasul", true, "yonelme", ince: true));         // yazar belirtir
+            Assert.Equal("Rasul'ü", TurkceEkler.Uygula("Rasul", true, "belirtme", ince: true));
+            Assert.Equal("Ali'ye", TurkceEkler.Uygula("Ali", true, "yonelme", ince: true));            // zaten ince ünlü: değişmez
         }
 
         [Fact]

@@ -354,7 +354,7 @@ namespace Yanki.Dialogue
             void AdEkle(string yuva, string kimlik)
             {
                 var ad = OnermeMetni.GorunenAd(kimlik, _dosya);
-                gercekler.Add(new SecilmisGercek(yuva, ad.Ad, true, ad.OzelAd));
+                gercekler.Add(new SecilmisGercek(yuva, ad.Ad, true, ad.OzelAd, ad.Ince));
             }
 
             AdEkle("konusan", niyet.Konusan);

@@ -177,17 +177,18 @@ namespace Yanki.Dialogue
                         continue;
                     }
 
-                    sonuc[kv.Key] = new AdKaydi(v.MetinDeger, true);
+                    sonuc[kv.Key] = new AdKaydi(v.MetinDeger, true, false);
                 }
                 else if (v.Tur == JsonTuru.Nesne)
                 {
                     var ad = v.Al("ad");
                     var cins = v.Al("cins");
+                    var ince = v.Al("ince");
                     foreach (var o in v.Ozellikler)
                     {
-                        if (o.Key != "ad" && o.Key != "cins")
+                        if (o.Key != "ad" && o.Key != "cins" && o.Key != "ince")
                         {
-                            hata(o.Value.Satir, "adlar", kv.Key, $"bilinmeyen alan \"{o.Key}\" (ad, cins)");
+                            hata(o.Value.Satir, "adlar", kv.Key, $"bilinmeyen alan \"{o.Key}\" (ad, cins, ince)");
                         }
                     }
 
@@ -203,7 +204,13 @@ namespace Yanki.Dialogue
                         continue;
                     }
 
-                    sonuc[kv.Key] = new AdKaydi(ad.MetinDeger, !(cins != null && cins.MantiksalDeger));
+                    if (ince != null && ince.Tur != JsonTuru.Mantiksal)
+                    {
+                        hata(ince.Satir, "adlar", kv.Key, "\"ince\" true ya da false olmalı (yumuşak l: Kemal gibi adlar ince ünlü eki alır)");
+                        continue;
+                    }
+
+                    sonuc[kv.Key] = new AdKaydi(ad.MetinDeger, !(cins != null && cins.MantiksalDeger), ince != null && ince.MantiksalDeger);
                 }
                 else
                 {

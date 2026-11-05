@@ -273,6 +273,13 @@ namespace Yanki.Dialogue.Tests.Sablon
         }
 
         [Fact]
+        public void Adlar_ince_alani_yazar_isaretidir_bool_olmali()
+        {
+            Assert.True(Yukle(Degistir("'Ayse': 'Ayşe'", "'Rasul': { 'ad': 'Rasul', 'ince': true }")).Basarili);
+            Assert.Contains(Hatalar(Degistir("'Ayse': 'Ayşe'", "'Rasul': { 'ad': 'Rasul', 'ince': 'evet' }")), h => h.Contains("\"ince\" true ya da false", StringComparison.Ordinal));
+        }
+
+        [Fact]
         public void Adlar_kimligi_ASCII_olmali_gorunen_ad_Turkce_olabilir()
         {
             var hatalar = Hatalar(Degistir("'Ayse': 'Ayşe'", "'Ayşe': 'Ayşe'"));
