@@ -133,7 +133,24 @@ namespace Yanki.Olcum
             return sb.ToString();
         }
 
+        // 8. hafta (DURAK 3): --diyalog ile her yeni simülasyona, ilk tick'ten önce, test fikstürü şablonuyla diyalog motoru bağlanır.
+        private static bool _diyalog;
+        private static Yanki.Dialogue.DiyalogMotoru? _motor;
+        private static Yanki.Dialogue.SablonDosyasi? _sablon;
+
         private static Simulasyon Kur(int npcSayisi, ulong seed, bool dedikodu = false)
+        {
+            var sim = KurAsil(npcSayisi, seed, dedikodu);
+            if (_diyalog)
+            {
+                _sablon ??= DiyalogFiksturu.Uret(npcSayisi);
+                _motor = Yanki.Dialogue.DiyalogMotoru.Baglan(sim, _sablon);
+            }
+
+            return sim;
+        }
+
+        private static Simulasyon KurAsil(int npcSayisi, ulong seed, bool dedikodu = false)
         {
             if (_gercekci)
             {
@@ -356,12 +373,14 @@ namespace Yanki.Olcum
 
             var kosuToplamlari = new List<double>();
             var cpuSirasi = new List<string>();
+            long sonAyrilan = 0;
             var tumTickler = new List<double>();
             for (var r = 0; r < tekrar; r++)
             {
                 var sim = Kur(npcSayisi, 42, dedikodu);
                 var toplam = 0.0;
                 var cpu0 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+                var ayrilan0 = GC.GetAllocatedBytesForCurrentThread();
                 for (var t = 1; t <= TickSayisi; t++)
                 {
                     var t0 = Stopwatch.GetTimestamp();
@@ -372,6 +391,7 @@ namespace Yanki.Olcum
                     tumTickler.Add(ms);
                 }
 
+                sonAyrilan = GC.GetAllocatedBytesForCurrentThread() - ayrilan0;
                 kosuToplamlari.Add(toplam);
                 cpuSirasi.Add(((System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime - cpu0).TotalMilliseconds / TickSayisi).ToString("F2", CultureInfo.InvariantCulture));
             }
@@ -391,7 +411,8 @@ namespace Yanki.Olcum
                 (kosuToplamlari[kosuToplamlari.Count - 1] / TickSayisi).ToString("F4", ic),
                 p95.ToString("F4", ic),
                 tumTickler[tumTickler.Count - 1].ToString("F4", ic),
-                kosuSirasi + "|cpu:" + string.Join(",", cpuSirasi)));
+                kosuSirasi + "|cpu:" + string.Join(",", cpuSirasi) + "|satir:" + (_motor == null ? 0 : _motor.Satirlar.Count).ToString(CultureInfo.InvariantCulture)
+                + "|ayrilan_mb:" + (sonAyrilan / 1048576.0).ToString("F1", CultureInfo.InvariantCulture)));
         }
 
         // 8. hafta (DURAK 1 onayı): 168 tick baştan oynatmanın GERÇEK süresi. Kayıt çalışmış simülasyondan üretilir; yeni kurulmuş simülasyonda
@@ -440,6 +461,10 @@ namespace Yanki.Olcum
                 else if (args[i] == "--oynat")
                 {
                     oynat = true;
+                }
+                else if (args[i] == "--diyalog")
+                {
+                    _diyalog = true;
                 }
                 else if (args[i] == "--npc" && i + 1 < args.Length)
                 {

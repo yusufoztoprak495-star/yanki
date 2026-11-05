@@ -9,6 +9,7 @@ Karar ölçüm düzeneği (5. hafta, 8. haftada genişletildi). NPC kararların�
   - **STRES** (varsayılan, `--dedikodu` ile dedikodulu): sahte içerik, 5 eylem, 3 kural; hedefsiz `dinlen` her zaman aday olduğu için her NPC her tick bir eylem seçer.
   - **GERÇEKÇİ** (`--gercekci`): 8 mekan, 9 eylem, 12 kural, dedikodu açık, NPC'ler çoğu tick boşta.
   - **BÜTÇE** (`--butce`): gerçekçi fikstür + toplam 15 eylem ve 30 kural (plan bütçesine yakın hacim; içerik sahte, Kasaba Hanı değil).
+- **`--diyalog` (8. hafta):** her simülasyona test fikstürü şablonuyla (`DiyalogFiksturu.cs`, sahte içerik, yalnızca HACİM) diyalog motoru bağlar; `--ozet` çıktısına `satir:` ve `ayrilan_mb:` (168 tick boyunca ayrılan bellek) eklenir. Diyalog açık/kapalı A/A ölçümü için aynı derlemeyi bayraklı/bayraksız dönüşümlü koşun.
 - **Zaman dökümü yok:** aşama aşama süre ölçümü için gereken geçici kod repoya alınmaz; yerelde yapılır ve commit edilmez ya da `dotnet-trace` kullanılır (repoya paket girmez).
 - **Tek sayı yeterli değildir:** süreçler arasında çift mod görüldü (bazı süreçler 5–6 ms, çoğu 10–14 ms; ADR-015). Karar vermek için dönüşümlü sırayla en az 20'şer ayrı süreç ve bir A/A kolu kullanın; ortanca, en düşük, en yüksek ve p10–p90 yazın. Güç modu, şarj durumu ve açık uygulamaları kaydedin.
 
