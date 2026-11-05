@@ -23,8 +23,8 @@
       },
       "sen": {
         "0": {
-          "metin": "sen {1.yonelme} {2} lira borçlusun",
-          "olumsuz": "sen {1.yonelme} {2} lira borçlu değilsin"
+          "metin": "senin {1.yonelme} {2} lira borçlu olduğun söyleniyor",
+          "olumsuz": "senin {1.yonelme} {2} lira borçlu olmadığın söyleniyor"
         }
       }
     },
@@ -44,12 +44,12 @@
       },
       "sen": {
         "0": {
-          "metin": "sen ile {1} kardeşsiniz",
-          "olumsuz": "sen ile {1} kardeş değilsiniz"
+          "metin": "{1} ile senin kardeş olduğunuz söyleniyor",
+          "olumsuz": "{1} ile senin kardeş olmadığınız söyleniyor"
         },
         "1": {
-          "metin": "{0} ile sen kardeşsiniz",
-          "olumsuz": "{0} ile sen kardeş değilsiniz"
+          "metin": "{0} ile senin kardeş olduğunuz söyleniyor",
+          "olumsuz": "{0} ile senin kardeş olmadığınız söyleniyor"
         }
       }
     },
@@ -65,8 +65,8 @@
       },
       "sen": {
         "0": {
-          "metin": "sen {1.ayrilma} bir şey saklıyorsun",
-          "olumsuz": "sen {1.ayrilma} bir şey saklamıyorsun"
+          "metin": "senin {1.ayrilma} bir şey sakladığın söyleniyor",
+          "olumsuz": "senin {1.ayrilma} bir şey saklamadığın söyleniyor"
         }
       }
     }
@@ -172,6 +172,8 @@
           "agirlik": 2
         }
       ],
+      "konu_deseni": "kardes(Mehmet,Can)",
+      "tekrar": { "tekrar_bekleme": 1 },
       "metin": "Ben de öyle duymuştum. Mehmet'in akrabaları çoktur."
     },
     {
@@ -186,6 +188,7 @@
           "agirlik": 1
         }
       ],
+      "tekrar": { "tekrar_bekleme": 1 },
       "metin": "Bunu kimden duydun yabancı? İnanması zor."
     },
     {
