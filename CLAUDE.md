@@ -42,7 +42,7 @@ dotnet run --project src/Yanki.Cli -- --version
 - **Her PR'da `docs/DURUM.md` güncellenir. PR bunsuz açılmaz.**
 - **Karar değişirse yeni ADR** yaz (`docs/adr/`, şablon: `0000-sablon.md`). Eski ADR'yi silme, durumunu "Yerini aldı" yap.
   ADR'lerdeki "Gerekçe (Yusuf)" bölümünü Yusuf yazar; sen doldurma. İstisna: Yusuf bir görev metninde gerekçe yazımını açıkça sana devrettiyse
-  (6. hafta: ADR-011 ve ADR-012; 7. hafta: ADR-013) devredilen ADR'lerin gerekçesini plandan ve Yusuf'un kararlarından derlersin, bölümün başına bunu belirten bir not düşersin ve
+  (6. hafta: ADR-011 ve ADR-012; 7. hafta: ADR-013; 8. hafta: ADR-014 ve ADR-015) devredilen ADR'lerin gerekçesini plandan ve Yusuf'un kararlarından derlersin, bölümün başına bunu belirten bir not düşersin ve
   kararları Yusuf'un yazmadığı bir gerekçe uydurmazsın. Devir yalnızca o görev metni içindir, sonraki ADR'lere uzanmaz.
   ADR'ler Yusuf onaylayana kadar "Önerildi" kalır (devredilenler dahil); durumları sen değiştirmezsin; kararlar yine de bağlayıcıdır.
 - **`docs/prompts/` altına yalnızca Yusuf'un verdiği görev metinleri birebir kaydedilir. Claude Code görev metni yazmaz veya tamamlamaz. Yeni bir haftanın görev metni verildiğinde onu `docs/prompts/hafta-NN.md` olarak kaydet.**

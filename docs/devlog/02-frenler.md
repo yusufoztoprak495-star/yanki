@@ -46,3 +46,7 @@ Dürüst bölüm. Zihin kanonik metin önbelleği (Z3) 50 NPC dedikodulu tick'in
 
 - Her engellemeyi olay yapmak ucuz değil: fren olayları (kural ve aday frenleri birlikte) gerçekçi fikstürde olayların %4-10'u. Aday frenlerini tekilleştirdik, kural frenlerini henüz değil (ADR-013'te ödünleşim olarak yazılı).
 - "Ölçülmedi" ile "ölçüldü ve yok" farklı cümleler; Blazor WASM hızı ikincisi değil, birincisi.
+
+---
+
+**Düzeltme notu (2026-11-05, 8. hafta; yukarıdaki metin geçmiş kayıt olarak olduğu gibi kaldı):** "Hız: 5 ms hedefi tutmadı" bölümündeki üç ifade sonradan düzeltildi. (1) Kararın "12. haftada" verileceği yazıyordu; karar 8. haftada verildi (v0.1 kriteri 8 NPC ≤ 5 ms, 50 NPC v0.2 hedefi, ADR-015); BenchmarkDotNet tablosu plana göre 11. haftadadır. (2) 5.80 ile 6.58 ms arasındaki farkın "makine gürültüsü" olduğu kanıtlanmamıştı; sonra ölçüldü: kod kaynaklı değil, süreçlerde çift mod var (bazı süreçler 5–6 ms, çoğu 10–14 ms), nedeni bilinmiyor. (3) "Kümelenme algı hacmini büyütüyor" bir hipotezdi ve çürütüldü; asıl neden `Zihin.Inanilan` taramasıydı ve çelişki dizini ile giderildi (8 NPC gerçekçi 11.16 → 2.88 ms). Ayrıntı: `docs/notes/frenler.md` (8. hafta bölümü) ve `docs/adr/0015-5ms-kriteri.md`.

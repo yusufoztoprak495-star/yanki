@@ -216,5 +216,92 @@ namespace Yanki.Core.Tests.Brakes
 
             Assert.Throws<ArgumentException>(() => Kur(new string[0], null, "\"gercekler\": [], \"korumali\": { \"kese\": [\"oldurulemez\"] },"));
         }
+
+        // ---- 8. hafta, Minor 8: korumali anahtarlarındaki yazım hataları (mevcut durum doğrulandı, davranış kilitlendi) ----
+
+        [Theory]
+        [InlineData("oldurulemez")]
+        [InlineData("mekandan_ayrilamaz")]
+        public void Olustur_npc_bayrakli_korumali_anahtardaki_yazim_hatasini_reddeder(string bayrak)
+        {
+            var hata = Assert.Throws<ArgumentException>(() => Kur(new string[0], null, "\"gercekler\": [], \"korumali\": { \"Alii\": [\"" + bayrak + "\"] },"));
+            Assert.Contains("Alii", hata.Message);
+        }
+
+        [Fact]
+        public void Calinamaz_esya_anahtari_yazim_hatasi_eylemin_sabit_kimligiyle_uyusmazsa_reddedilir()
+        {
+            // Eşya anahtarı dünyada bir varlık değildir (yalnızca korumali'de bildirilir); yazım hatası, onu kullanan ihlal_bayraklari ile uyuşmadığında yakalanır.
+            var eylem = KararFikstur.Eylem("c", "yok", KeseCal);   // "kese" kullanıyor
+            var hata = Assert.Throws<ArgumentException>(() => Kur(new[] { eylem }, null, "\"gercekler\": [], \"korumali\": { \"kesee\": [\"calinamaz\"] },"));
+            Assert.Contains("kese", hata.Message);
+        }
+
+        // ---- 8. hafta, Minor 5: kural ve eylem kimliği çakışması ----
+
+        [Fact]
+        public void Olustur_kural_ve_eylem_ayni_kimligi_tasiyorsa_reddeder()
+        {
+            // Fren tekilleştirme anahtarı (tür|kimlik|npc|hedef) kural ve eylemi ayırmaz; çakışırsa eylemin aday freni kuralın freni yüzünden bastırılabilir.
+            var kural = @"{ ""kurallar"": [ { ""id"": ""x"", ""ne_zaman"": ""tehdit_etti"", ""cooldown"": 10,
+  ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""korku"", ""deger"": 1, ""sure"": 100 } ] } ] }";
+            var eylem = KararFikstur.Eylem("x", "yok", "\"cooldown\": 10");
+
+            var hata = Assert.Throws<ArgumentException>(() => Kur(new[] { eylem }, kural));
+            Assert.Contains("\"x\"", hata.Message);
+            Assert.Contains("kural", hata.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("eylem", hata.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void Farkli_kural_ve_eylem_kimlikleri_cakismaz()
+        {
+            var kural = @"{ ""kurallar"": [ { ""id"": ""x"", ""ne_zaman"": ""tehdit_etti"", ""cooldown"": 10,
+  ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""korku"", ""deger"": 1, ""sure"": 100 } ] } ] }";
+
+            Assert.NotNull(Kur(new[] { KararFikstur.Eylem("y", "yok", "\"cooldown\": 10") }, kural));
+        }
+
+        // ---- 8. hafta, Minor 4: eylem korumalı varlığın konum! gerçeğini yazıyorsa aday aşamasında TAMAMEN düşer ----
+
+        private static string TasiEylemi(string etkiler = "[ { \"tur\": \"gercek\", \"islem\": \"ekle\", \"gercek\": \"konum!({eylem.hedef},pazar)\" }, { \"tur\": \"hafiza\", \"onem\": 0.5 } ]") =>
+            KararFikstur.Eylem("tasi", "npc", string.Empty, 1m, etkiler);
+
+        [Fact]
+        public void Eylem_korumali_varligin_konumunu_yaziyorsa_aday_olmaz_elenme_nedeni_ve_fren_yazilir()
+        {
+            var s = Kur(new[] { TasiEylemi() });
+            var uretim = AdayUretici.Uret(Baglam(s, "Veli"), s.Eylemler);
+
+            Assert.DoesNotContain(uretim.Adaylar, a => a.Hedef == "Ali");
+            var elenen = Assert.Single(uretim.Elenenler, e => e.Hedef == "Ali");
+            Assert.Contains("korumali", elenen.Neden);
+            Assert.Contains("Ali", elenen.Neden);
+            Assert.Contains("mekandan_ayrilamaz", elenen.Neden);
+            var fren = Assert.Single(uretim.Frenler);
+            Assert.Equal((FrenTurleri.Korumali, "tasi", "Veli", "Ali"), (fren.Tur, fren.Kimlik, fren.Npc, fren.Hedef));
+        }
+
+        [Fact]
+        public void Eylem_korumali_varligin_konumunu_yaziyorsa_eylem_hic_gerceklesmez_diger_etkiler_de_uygulanmaz()
+        {
+            var s = Kur(new[] { TasiEylemi(), KararFikstur.Eylem("dinlen", "yok", string.Empty, 0.1m) });
+            s.Tick(4);
+
+            Assert.DoesNotContain(s.Gunluk.Olaylar, o => o.Tur == "tasi_oldu" && o.Hedef == "Ali");      // eylem olayı yok
+            Assert.Equal("han", s.Dunya.TekDeger("konum!", "Ali"));
+            Assert.DoesNotContain(s.Zihinler["Veli"].Hafiza(s.SimdikiTick), h => s.Gunluk[h.OlayId].Tur == "tasi_oldu" && s.Gunluk[h.OlayId].Hedef == "Ali");   // hafiza etkisi de yok
+            Assert.Contains(s.Frenler("korumali", "Veli"), f => f.Deger("kimlik") == "tasi" && f.Deger("hedef") == "Ali");
+        }
+
+        [Fact]
+        public void Korumasiz_hedefe_konum_yazan_eylem_aday_kalir()
+        {
+            var s = Kur(new[] { TasiEylemi() });
+            var uretim = AdayUretici.Uret(Baglam(s, "Ali"), s.Eylemler);   // Ali, Veli'yi taşıyabilir (Veli korumasız)
+
+            Assert.Contains(uretim.Adaylar, a => a.Hedef == "Veli");
+            Assert.Empty(uretim.Frenler);
+        }
     }
 }

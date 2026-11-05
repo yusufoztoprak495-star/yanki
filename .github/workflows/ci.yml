@@ -57,6 +57,19 @@ jobs:
           done
           test "$count" -ge 1
 
+      # Diyalog golden (8. hafta): tests/golden/diyalog/*.golden.json ayrı biçimdedir; diyalog_hash (çıkış kodu 3) ve sablon_hash (7) birebir tutmalı.
+      # Bilerek değiştiyse: dotnet run --project src/Yanki.Cli -- diyalog-replay <dosya> --guncelle (gerekçe PR açıklamasında).
+      - name: Diyalog golden replay
+        shell: bash
+        run: |
+          set -o pipefail
+          count=0
+          for f in tests/golden/diyalog/*.golden.json; do
+            dotnet src/Yanki.Cli/bin/Release/net10.0/yanki.dll diyalog-replay "$f"
+            count=$((count + 1))
+          done
+          test "$count" -ge 3
+
       # Test kırılırsa hatanın özetini Actions ekranında annotation olarak göster.
       - name: Test hatasını özetle
         if: failure()

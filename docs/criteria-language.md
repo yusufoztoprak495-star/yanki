@@ -112,3 +112,8 @@ Ayrıntı: `docs/notes/dedikodu.md`, `docs/notes/stres.md`.
 ## Yay değişkenleri (7. hafta)
 
 Senaryoda `"yay_degiskenleri": { "kasaba_gerginligi": { "baslangic": 0, "min": 0, "max": 10 } }` ile tanımlanır. Etki (kural ve eylem): `{ "tur": "yay", "degisken": "kasaba_gerginligi", "delta": 1 }`; değer aralığa kırpılır, kırpılırsa `yay_siniri` freni yazılır. `yay_degisti` olayı algılanmaz ve kural tetiklemez (`ne_zaman: yay_degisti` reddedilir); `KuralId` ve `NedenOlaylar` taşır, `why` zincire iner. Kriterler değişkeni kuralların aynı adımda tuttuğu **tek görüntüden** okur; aynı adımdaki birden çok delta sabit sırayla toplanır. Anlatısal "sonuç bandı" kapısı yoktur: aralık için `aralik` operatörünü kullanın.
+
+## Diyalog şablonu bağlamı (8. hafta)
+
+Şablon kriterleri aynı dili kullanır; roller `ben` (konuşan), `konusan`, `dinleyen`, `oyuncu`. Reddedilen fonksiyonlar: `olay_rolu`, `olay_konusu`, `konu_puani`, `gercek`, `yalan_soyledi`; konuşanın anlatıcı olduğu
+niyetlerde `inanc`, `kaynak`, `hafiza_var` da reddedilir (yalan gizliliği). Ayrıntı: [authoring-guide](authoring-guide.md#diyalog-şablonları-8-hafta), [ADR-014](adr/0014-diyalog-katmani.md).

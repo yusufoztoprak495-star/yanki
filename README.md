@@ -9,7 +9,9 @@
 
 **Anlatı oyunları için deterministik, tekrar oynatılabilir NPC hafızası ve sonuç sistemi; Unity, Godot ve sunucuda çalışan açık bir C# kütüphanesi.**
 
-> 🚧 **Erken geliştirme aşamasında.** 12 haftalık planın 7. haftası: olay kaydı, zihin ve doğrudan algı, sonuç kuralları, tick döngüsü, utility AI ile NPC'lerin kendi eylemleri ve hareketi, karar izi, **dedikodu (`duydu` kanıtı aktarımı, konu sınırı), yalan, stres ve kişiliğe uygun kriz** (`yanki why` söylentiyi ilk anlatana, krizi eyleme kadar indirir), CLI (`run`, `query`, `why`, `replay`, `devam`), **frenler (cooldown, tetiklenme ve zincir sınırları, korumalı bayraklar, yay değişkenleri; her fren günlükte iz bırakır ve "bu neden olmadı?" cevaplanır)**, kayıt/yükleme (sürüm 2; `replay --guncelle | --hash-ekle | --senaryo-hash-yenile`) ve dört golden replay.
+> 🚧 **Erken geliştirme aşamasında.** 12 haftalık planın 8. haftası: olay kaydı, zihin ve doğrudan algı, sonuç kuralları, tick döngüsü, utility AI ile NPC'lerin kendi eylemleri ve hareketi, karar izi, **dedikodu (`duydu` kanıtı aktarımı, konu sınırı), yalan, stres ve kişiliğe uygun kriz** (`yanki why` söylentiyi ilk anlatana, krizi eyleme kadar indirir), CLI (`run`, `query`, `why`, `replay`, `devam`), **frenler (cooldown, tetiklenme ve zincir sınırları, korumalı bayraklar, yay değişkenleri; her fren günlükte iz bırakır ve "bu neden olmadı?" cevaplanır)**, kayıt/yükleme (sürüm 2; `replay --guncelle | --hash-ekle | --senaryo-hash-yenile`) ve dört golden replay.
+
+**Hız (v0.1 kriteri, `tools/olcum`, benchmark değil):** 8 NPC'lik senaryoda tick başına ortalama ≤ 5 ms. Gerçekçi fikstürde ölçülen: **2.9 ms** (8 NPC); sahte plan-bütçesi varyantında (15 eylem, 30 kural) 5.8–8.0 ms, yani gerçek Kasaba Hanı ile 9. haftada yeniden ölçülecek bir **risk**. **50 NPC v0.2 hedefidir**; bugünkü ölçülen değer ≈ 330 ms/tick (gerçekçi fikstür). 168 tick baştan oynatma: 8 NPC 0.7 sn, 50 NPC ≈ 59 sn. Koşullar ve dağılım: [ADR-015](docs/adr/0015-5ms-kriteri.md). BenchmarkDotNet tablosu 11. haftada.
 
 ## 1. Rozetler
 

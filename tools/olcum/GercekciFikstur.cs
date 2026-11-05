@@ -88,6 +88,45 @@ namespace Yanki.Olcum
     ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.2 } ] }
 ] }";
 
+        // --butce (8. hafta): plan bütçesine yakın HACIM varyantı (≈ 15 eylem, 30 kural); içerik sahte, Kasaba Hanı değil. Yalnızca eylem/kural sayısı büyür.
+        public static bool Butce { get; set; }
+
+        private const string ButceEylemleri = @",
+  { ""id"": ""hediye"", ""olay_turu"": ""hediye_verildi"", ""hedef"": ""npc"", ""taban"": 0.7, ""cooldown"": 20, ""kapsam"": ""hedef"",
+    ""on_kosullar"": [ { ""alan"": ""fikir(eylem.hedef)"", ""op"": "">="", ""deger"": 0 } ],
+    ""olcutler"": [ { ""alan"": ""kisilik(merhamet)"" } ], ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""eylem.hedef"", ""eksen"": ""sevgi"", ""delta"": 2 } ] },
+  { ""id"": ""pazarlik"", ""olay_turu"": ""pazarlik_edildi"", ""hedef"": ""npc"", ""taban"": 0.6, ""cooldown"": 12, ""kapsam"": ""hedef"",
+    ""olcutler"": [ { ""alan"": ""kisilik(acgozluluk)"" } ], ""kisilik_carpani"": { ""ozellikler"": [ { ""ozellik"": ""acgozluluk"" } ] },
+    ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""eylem.hedef"", ""eksen"": ""guven"", ""delta"": -1 } ] },
+  { ""id"": ""dua_et"", ""olay_turu"": ""dua_edildi"", ""hedef"": ""yok"", ""taban"": 0.3, ""cooldown"": 30, ""kapsam"": ""npc"", ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.2 } ] },
+  { ""id"": ""uyar"", ""olay_turu"": ""uyarildi"", ""hedef"": ""npc"", ""taban"": 0.5, ""cooldown"": 16, ""kapsam"": ""hedef"",
+    ""olcutler"": [ { ""alan"": ""kisilik(cesaret)"" } ], ""etkiler"": [ { ""tur"": ""duygu"", ""duygu"": ""korku"", ""siddet"": 0.2, ""hedef"": ""eylem.hedef"" } ] },
+  { ""id"": ""oyun_oyna"", ""olay_turu"": ""oyun_oynandi"", ""hedef"": ""npc"", ""taban"": 0.4, ""cooldown"": 14, ""kapsam"": ""hedef"",
+    ""olcutler"": [ { ""alan"": ""kisilik(sosyallik)"" } ], ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""eylem.hedef"", ""eksen"": ""sevgi"", ""delta"": 1 } ] },
+  { ""id"": ""gozle"", ""olay_turu"": ""gozlendi"", ""hedef"": ""yok"", ""taban"": 0.3, ""cooldown"": 18, ""kapsam"": ""npc"", ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.3 } ] }
+";
+
+        private const string ButceKurallari = @",
+  { ""id"": ""hediye_hedef"", ""ne_zaman"": ""hediye_verildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true } ], ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""hediye_aldim"", ""deger"": 6, ""sure"": 168 } ] },
+  { ""id"": ""hediye_tanik"", ""ne_zaman"": ""hediye_verildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""comertlik"", ""deger"": 2, ""sure"": 72 } ] },
+  { ""id"": ""pazarlik_hedef"", ""ne_zaman"": ""pazarlik_edildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true } ], ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""pazarlik_ettim"", ""deger"": -3, ""sure"": 72 } ] },
+  { ""id"": ""pazarlik_tanik"", ""ne_zaman"": ""pazarlik_edildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.2 } ] },
+  { ""id"": ""dua_tanigi"", ""ne_zaman"": ""dua_edildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 48, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""dindar"", ""deger"": 1, ""sure"": 168 } ] },
+  { ""id"": ""dua_hafizasi"", ""ne_zaman"": ""dua_edildi"", ""kriterler"": [ { ""alan"": ""kisilik(sosyallik)"", ""op"": "">"", ""deger"": 0.5 }, { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 48, ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.1 } ] },
+  { ""id"": ""uyari_hedef"", ""ne_zaman"": ""uyarildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true } ], ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""olay.fail"", ""eksen"": ""korku"", ""delta"": 2 } ] },
+  { ""id"": ""uyari_tanik"", ""ne_zaman"": ""uyarildi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""uyarici"", ""deger"": -1, ""sure"": 48 } ] },
+  { ""id"": ""oyun_hedef"", ""ne_zaman"": ""oyun_oynandi"", ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true } ], ""etkiler"": [ { ""tur"": ""eksen"", ""hedef"": ""olay.fail"", ""eksen"": ""sevgi"", ""delta"": 1 } ] },
+  { ""id"": ""oyun_tanik"", ""ne_zaman"": ""oyun_oynandi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.1 } ] },
+  { ""id"": ""gozle_tanigi"", ""ne_zaman"": ""gozlendi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 48, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""gozetliyor"", ""deger"": -2, ""sure"": 72 } ] },
+  { ""id"": ""gozle_hafizasi"", ""ne_zaman"": ""gozlendi"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true }, { ""alan"": ""kisilik(cesaret)"", ""op"": ""<"", ""deger"": 0.5 } ], ""cooldown"": 48, ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.3 } ] },
+  { ""id"": ""tehdit_edildim"", ""ne_zaman"": ""tehdit_oldu"", ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true }, { ""alan"": ""kisilik(cesaret)"", ""op"": ""<"", ""deger"": 0.6 } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""tehdit_edildim"", ""deger"": -8, ""sure"": 168 } ] },
+  { ""id"": ""iyilik_gorulur"", ""ne_zaman"": ""yardim_oldu"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""iyilik_gordum"", ""deger"": 3, ""sure"": 72 } ] },
+  { ""id"": ""soylenti_tanigi"", ""ne_zaman"": ""anlatti"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 12, ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.1 } ] },
+  { ""id"": ""sohbet_tanigi"", ""ne_zaman"": ""sohbet_oldu"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""sohbet_gordum"", ""deger"": 1, ""sure"": 24 } ] },
+  { ""id"": ""selam_hedef"", ""ne_zaman"": ""selam_oldu"", ""kriterler"": [ { ""alan"": ""olay_rolu(hedef)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 12, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""selam_aldim"", ""deger"": 2, ""sure"": 24 } ] },
+  { ""id"": ""itiraf_gorulur"", ""ne_zaman"": ""itiraf_etti"", ""kriterler"": [ { ""alan"": ""olay_rolu(tanik)"", ""op"": ""=="", ""deger"": true } ], ""cooldown"": 24, ""etkiler"": [ { ""tur"": ""modifier"", ""hedef"": ""olay.fail"", ""modifier"": ""itiraf_gordum"", ""deger"": -3, ""sure"": 168 } ] }
+";
+
         private const string Krizler = @"{ ""krizler"": [
   { ""id"": ""itiraf"", ""seviye"": 1, ""olay_turu"": ""itiraf_etti"", ""hedef"": ""yalan_kurbani"",
     ""kriterler"": [ { ""alan"": ""kisilik(durustluk)"", ""op"": "">="", ""deger"": 0.6 } ] },
@@ -136,7 +175,7 @@ namespace Yanki.Olcum
                 throw new InvalidOperationException(string.Join("\n", senaryo.Hatalar));
             }
 
-            var eylemler = EylemYukleyici.Yukle(Eylemler, "eylemler.json");
+            var eylemler = EylemYukleyici.Yukle(Butce ? Eylemler.Substring(0, Eylemler.LastIndexOf(']')) + ButceEylemleri + "] }" : Eylemler, "eylemler.json");
             if (!eylemler.Basarili)
             {
                 throw new InvalidOperationException(string.Join("\n", eylemler.Hatalar));
@@ -155,7 +194,7 @@ namespace Yanki.Olcum
                 turler.Add(k.OlayTuru);
             }
 
-            var kurallar = KuralYukleyici.Yukle(Kurallar, "kurallar.json", turler);
+            var kurallar = KuralYukleyici.Yukle(Butce ? Kurallar.Substring(0, Kurallar.LastIndexOf(']')) + ButceKurallari + "] }" : Kurallar, "kurallar.json", turler);
             if (!kurallar.Basarili)
             {
                 throw new InvalidOperationException(string.Join("\n", kurallar.Hatalar));

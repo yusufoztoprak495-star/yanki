@@ -133,7 +133,24 @@ namespace Yanki.Olcum
             return sb.ToString();
         }
 
+        // 8. hafta (DURAK 3): --diyalog ile her yeni simülasyona, ilk tick'ten önce, test fikstürü şablonuyla diyalog motoru bağlanır.
+        private static bool _diyalog;
+        private static Yanki.Dialogue.DiyalogMotoru? _motor;
+        private static Yanki.Dialogue.SablonDosyasi? _sablon;
+
         private static Simulasyon Kur(int npcSayisi, ulong seed, bool dedikodu = false)
+        {
+            var sim = KurAsil(npcSayisi, seed, dedikodu);
+            if (_diyalog)
+            {
+                _sablon ??= DiyalogFiksturu.Uret(npcSayisi);
+                _motor = Yanki.Dialogue.DiyalogMotoru.Baglan(sim, _sablon);
+            }
+
+            return sim;
+        }
+
+        private static Simulasyon KurAsil(int npcSayisi, ulong seed, bool dedikodu = false)
         {
             if (_gercekci)
             {
@@ -248,7 +265,7 @@ namespace Yanki.Olcum
             var ic = CultureInfo.InvariantCulture;
 
             Console.WriteLine(_gercekci
-                ? $"### {npcSayisi} NPC, {TickSayisi} tick (GERÇEKÇİ fikstür: 8 mekan, 9 eylem, 12 kural, dedikodu açık, NPC'ler çoğu tick boşta)"
+                ? $"### {npcSayisi} NPC, {TickSayisi} tick ({(GercekciFikstur.Butce ? "BÜTÇE varyantı: 8 mekan, 15 eylem, 30 kural (plan bütçesine yakın hacim, sahte içerik)" : "GERÇEKÇİ fikstür: 8 mekan, 9 eylem, 12 kural")}, dedikodu açık, NPC'ler çoğu tick boşta)"
                 : $"### {npcSayisi} NPC, {TickSayisi} tick ({(dedikodu ? "dedikodulu" : "dedikodusuz")} stres fikstürü: her NPC her tick eylem seçer)");
             Console.WriteLine();
             Console.WriteLine("| ölçü | değer |");
@@ -347,19 +364,120 @@ namespace Yanki.Olcum
             Console.WriteLine();
         }
 
+        // 8. hafta (Bölüm 1, adım 1): süreçler arası dağılım için tek satırlık özet. Her süreç ısınır, `tekrar` kez 168 tick koşar;
+        // tick başına süre (Girdi + Tick(1)) tek tek ölçülür. Çıktı: OZET;npc;tekrar;ortanca_ms_tick;en_dusuk;en_yuksek;p95_tick_ms;en_yavas_tick_ms
+        // (ortanca_ms_tick = koşuların toplamlarının ortancası / 168, yani Olc'taki "tick başına ortalama süre" ile aynı ölçü).
+        private static void Ozet(int npcSayisi, int tekrar, bool dedikodu)
+        {
+            Kur(npcSayisi, 1, dedikodu).Tick(10); // ısınma: Olc ile aynı
+
+            var kosuToplamlari = new List<double>();
+            var cpuSirasi = new List<string>();
+            long sonAyrilan = 0;
+            var tumTickler = new List<double>();
+            for (var r = 0; r < tekrar; r++)
+            {
+                var sim = Kur(npcSayisi, 42, dedikodu);
+                var toplam = 0.0;
+                var cpu0 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+                var ayrilan0 = GC.GetAllocatedBytesForCurrentThread();
+                for (var t = 1; t <= TickSayisi; t++)
+                {
+                    var t0 = Stopwatch.GetTimestamp();
+                    Girdi(sim, t);
+                    sim.Tick(1);
+                    var ms = (Stopwatch.GetTimestamp() - t0) * 1000.0 / Stopwatch.Frequency;
+                    toplam += ms;
+                    tumTickler.Add(ms);
+                }
+
+                sonAyrilan = GC.GetAllocatedBytesForCurrentThread() - ayrilan0;
+                kosuToplamlari.Add(toplam);
+                cpuSirasi.Add(((System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime - cpu0).TotalMilliseconds / TickSayisi).ToString("F2", CultureInfo.InvariantCulture));
+            }
+
+            var kosuSirasi = string.Join(",", kosuToplamlari.ConvertAll(x => (x / TickSayisi).ToString("F2", CultureInfo.InvariantCulture)));
+            kosuToplamlari.Sort();
+            tumTickler.Sort();
+            var p95 = tumTickler[(int)Math.Ceiling(0.95 * tumTickler.Count) - 1];
+            var ic = CultureInfo.InvariantCulture;
+            Console.WriteLine(string.Join(
+                ";",
+                "OZET",
+                npcSayisi.ToString(ic),
+                tekrar.ToString(ic),
+                (kosuToplamlari[kosuToplamlari.Count / 2] / TickSayisi).ToString("F4", ic),
+                (kosuToplamlari[0] / TickSayisi).ToString("F4", ic),
+                (kosuToplamlari[kosuToplamlari.Count - 1] / TickSayisi).ToString("F4", ic),
+                p95.ToString("F4", ic),
+                tumTickler[tumTickler.Count - 1].ToString("F4", ic),
+                kosuSirasi + "|cpu:" + string.Join(",", cpuSirasi) + "|satir:" + (_motor == null ? 0 : _motor.Satirlar.Count).ToString(CultureInfo.InvariantCulture)
+                + "|ayrilan_mb:" + (sonAyrilan / 1048576.0).ToString("F1", CultureInfo.InvariantCulture)));
+        }
+
+        // 8. hafta (DURAK 1 onayı): 168 tick baştan oynatmanın GERÇEK süresi. Kayıt çalışmış simülasyondan üretilir; yeni kurulmuş simülasyonda
+        // `OturumOynatici.Oynat` zamanlanır (kurulum ayrı satır). Çıktı: OYNAT;npc;tekrar;oynat_ortanca_ms;oynat_en_dusuk_ms;oynat_en_yuksek_ms;kurulum_ortanca_ms;son_hash_tutuyor;gunluk_hash_tutuyor
+        private static void Oynat(int npcSayisi, int tekrar, bool dedikodu)
+        {
+            var kaynak = Kur(npcSayisi, 42, dedikodu);
+            Kos(kaynak, TickSayisi);
+            var kayit = OturumKaydi.Uret(kaynak, "olcum.json");
+            Kur(npcSayisi, 42, dedikodu); // ısınma
+            var oynat = new List<double>();
+            var kurulum = new List<double>();
+            var tutuyor = true;
+            var gunlukTutuyor = true;
+            for (var i = 0; i < tekrar; i++)
+            {
+                var k0 = Stopwatch.GetTimestamp();
+                var sim = Kur(npcSayisi, 42, dedikodu);
+                kurulum.Add((Stopwatch.GetTimestamp() - k0) * 1000.0 / Stopwatch.Frequency);
+                var t0 = Stopwatch.GetTimestamp();
+                var sonuc = OturumOynatici.Oynat(sim, kayit);
+                oynat.Add((Stopwatch.GetTimestamp() - t0) * 1000.0 / Stopwatch.Frequency);
+                tutuyor &= sonuc.HashTutuyor;
+                gunlukTutuyor &= sonuc.GunlukHashTutuyor;
+            }
+
+            oynat.Sort();
+            kurulum.Sort();
+            var ic = CultureInfo.InvariantCulture;
+            Console.WriteLine(string.Join(";", "OYNAT", npcSayisi.ToString(ic), tekrar.ToString(ic), oynat[oynat.Count / 2].ToString("F1", ic), oynat[0].ToString("F1", ic), oynat[oynat.Count - 1].ToString("F1", ic), kurulum[kurulum.Count / 2].ToString("F1", ic), tutuyor ? "evet" : "HAYIR", gunlukTutuyor ? "evet" : "HAYIR"));
+        }
+
         public static int Main(string[] args)
         {
             var npcler = new[] { 3, 10, 50 };
             int? tekrar = null;
             var dedikodu = false;
+            var ozet = false;
+            var oynat = false;
             for (var i = 0; i < args.Length; i++)
             {
-                if (args[i] == "--npc" && i + 1 < args.Length)
+                if (args[i] == "--ozet")
+                {
+                    ozet = true;
+                }
+                else if (args[i] == "--oynat")
+                {
+                    oynat = true;
+                }
+                else if (args[i] == "--diyalog")
+                {
+                    _diyalog = true;
+                }
+                else if (args[i] == "--npc" && i + 1 < args.Length)
                 {
                     npcler = args[++i].Split(',').Select(s => int.Parse(s, CultureInfo.InvariantCulture)).ToArray();
                 }
                 else if (args[i] == "--dedikodu")
                 {
+                    dedikodu = true;
+                }
+                else if (args[i] == "--butce")
+                {
+                    _gercekci = true;
+                    GercekciFikstur.Butce = true;
                     dedikodu = true;
                 }
                 else if (args[i] == "--gercekci")
@@ -373,9 +491,30 @@ namespace Yanki.Olcum
                 }
                 else
                 {
-                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci]");
+                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci | --butce] [--ozet | --oynat]");
                     return 1;
                 }
+            }
+
+            if (oynat)
+            {
+                foreach (var n in npcler)
+                {
+                    Oynat(n, tekrar ?? 3, dedikodu);
+                }
+
+                return 0;
+            }
+
+            if (ozet)
+            {
+                // Süreç başına tek satır (başlık yok): çoklu süreç A/A ve A/B ölçümleri için.
+                foreach (var n in npcler)
+                {
+                    Ozet(n, tekrar ?? (n >= 50 ? 1 : 5), dedikodu);
+                }
+
+                return 0;
             }
 
             Console.WriteLine($".NET {Environment.Version}, işlemci sayısı {Environment.ProcessorCount}");

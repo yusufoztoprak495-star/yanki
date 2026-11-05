@@ -93,8 +93,10 @@ namespace Yanki.Core.Brakes
                 case Rol.EylemHedef: return eylemHedef;
                 case Rol.OlayFail: return olayFail;
                 case Rol.OlayHedef: return olayHedef;
-                case Rol.Oyuncu: return string.Empty;
-                default: return Varlik;
+                case null: return Varlik;   // sabit kimlik
+                default:
+                    // Hiçbir yükleyici bu rollere (oyuncu, konusan, dinleyen) izin vermez; elle kurulan nesnede boş kimlik dönmek korumayı SESSİZCE kapatırdı.
+                    throw new InvalidOperationException($"ihlal_bayraklari varlığı \"{Varlik}\" bu bağlamda çözülemeyen bir rol (geçerli roller: ben, eylem.hedef, olay.fail, olay.hedef).");
             }
         }
 

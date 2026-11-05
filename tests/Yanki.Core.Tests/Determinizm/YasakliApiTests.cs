@@ -56,14 +56,26 @@ namespace Yanki.Core.Tests.Determinizm
         {
         };
 
-        internal static IReadOnlyList<(int Satir, string KuralAdi)> Tara(string kaynak)
+        // 8. hafta: Yanki.Dialogue için EK kurallar (Core'a uygulanmaz). Metin işleyen kod kültüre bağlı çağrılardan kaçınmalı: Türkçe I/ı ve İ/i farkı tr-TR makinede
+        // sonucu değiştirir (ToLower, ToUpper, kültürlü karşılaştırma ve biçimlendirme). Karşılaştırma ordinal, biçimlendirme InvariantCulture, harf dönüşümü elle.
+        internal static readonly Kural[] KulturKurallari =
+        {
+            new Kural("ToLower/ToUpper", @"\.(ToLower|ToUpper)(Invariant)?\s*\(", "harf dönüşümü kültüre bağlı (Türkçe I/ı); elle tablo kullan"),
+            new Kural("string.Format", @"\b[Ss]tring\.Format\s*\(", "kültürlü biçimlendirme; InvariantCulture ile birleştir"),
+            new Kural("CurrentCulture", @"\bCurrent(UI)?Culture\b", "ortam kültürüne bağlı; yasak"),
+            new Kural("string.Compare", @"\b[Ss]tring\.Compare\s*\(", "kültürlü karşılaştırma; string.CompareOrdinal"),
+            new Kural("StartsWith/EndsWith/IndexOf(string)", @"\.(StartsWith|EndsWith|IndexOf)\s*\(\s*""[^""]*""\s*\)", "kültürlü karşılaştırma; StringComparison.Ordinal ver"),
+        };
+
+        internal static IReadOnlyList<(int Satir, string KuralAdi)> Tara(string kaynak, IEnumerable<Kural>? kurallar = null)
         {
             var temiz = YorumlariTemizle(kaynak);
             var bulunan = new List<(int, string)>();
             var satirlar = temiz.Split('\n');
+            var tum = kurallar ?? Kurallar;
             for (var i = 0; i < satirlar.Length; i++)
             {
-                foreach (var kural in Kurallar)
+                foreach (var kural in tum)
                 {
                     if (kural.Kalip.IsMatch(satirlar[i]))
                     {
@@ -169,6 +181,54 @@ namespace Yanki.Core.Tests.Determinizm
             }
 
             Assert.True(ihlaller.Count == 0, "Yasaklı API kullanımı:\n" + string.Join("\n", ihlaller));
+        }
+
+        [Fact]
+        public void Dialogue_kaynaginda_yasakli_ve_kulture_bagli_api_yoktur()
+        {
+            // 8. hafta: determinizm kuralları Yanki.Dialogue için de geçerlidir; ek olarak kültüre bağlı çağrılar yasaktır.
+            var kok = RepoRoot.Combine("src", "Yanki.Dialogue");
+            var tum = Kurallar.Concat(KulturKurallari).ToList();
+            var ihlaller = new List<string>();
+            var dosyalar = Directory.EnumerateFiles(kok, "*.cs", SearchOption.AllDirectories)
+                .Where(f => !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)
+                         && !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar))
+                .OrderBy(f => f, StringComparer.Ordinal)
+                .ToList();
+            Assert.NotEmpty(dosyalar);
+
+            foreach (var dosya in dosyalar)
+            {
+                var goreli = Path.GetRelativePath(kok, dosya).Replace('\\', '/');
+                foreach (var (satir, kuralAdi) in Tara(File.ReadAllText(dosya), tum))
+                {
+                    ihlaller.Add($"{goreli}:{satir}: '{kuralAdi}' yasak ({tum.First(k => k.Ad == kuralAdi).Neden}).");
+                }
+            }
+
+            Assert.True(ihlaller.Count == 0, "Yasaklı API kullanımı (Yanki.Dialogue):\n" + string.Join("\n", ihlaller));
+        }
+
+        [Theory]
+        [InlineData("var s = ad.ToLower();", "ToLower/ToUpper")]
+        [InlineData("var s = ad.ToUpperInvariant();", "ToLower/ToUpper")]
+        [InlineData("var s = string.Format(\"{0}\", x);", "string.Format")]
+        [InlineData("var c = CultureInfo.CurrentCulture;", "CurrentCulture")]
+        [InlineData("var c = string.Compare(a, b);", "string.Compare")]
+        [InlineData("if (ad.StartsWith(\"a\")) { }", "StartsWith/EndsWith/IndexOf(string)")]
+        [InlineData("var i = ad.IndexOf(\"ş\");", "StartsWith/EndsWith/IndexOf(string)")]
+        public void Kultur_tarayicisi_kulture_bagli_kalibi_yakalar(string kod, string beklenenKural)
+        {
+            Assert.Contains(Tara(kod, KulturKurallari), b => b.KuralAdi == beklenenKural);
+        }
+
+        [Theory]
+        [InlineData("if (ad.StartsWith(\"a\", StringComparison.Ordinal)) { }")]
+        [InlineData("var s = string.Concat(a, b); var t = ad.Replace(\"a\", \"b\");")]
+        [InlineData("var c = string.CompareOrdinal(a, b); var e = string.Equals(a, b, StringComparison.Ordinal);")]
+        public void Kultur_tarayicisi_ordinal_kullanimi_yakalamaz(string kod)
+        {
+            Assert.Empty(Tara(kod, KulturKurallari));
         }
 
         [Theory]

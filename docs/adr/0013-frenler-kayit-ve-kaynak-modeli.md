@@ -1,9 +1,9 @@
 # ADR-0013: Frenler, korumalar, yay değişkenleri, kayıt sürüm 2 ve kaynak modeli
 
-**Durum:** Önerildi
+**Durum:** Kabul edildi
 **Tarih:** 2026-11-04
-**Kabul eden:** —
-**Kabul tarihi:** —
+**Kabul eden:** Yusuf
+**Kabul tarihi:** 2026-11-05
 
 ## Bağlam
 
@@ -58,6 +58,15 @@ CLI: `yanki devam <kayit.json> [--eylem ...] [--tick M] --kaydet <yeni.json>`; �
 Her (önerme, kök, kaynak) için ayrı `duydu` kanıtı tutulur, hiçbiri silinmez; aynı (kök, kaynak) tekrarı güncel güçle karşılaştırılır. Güvende her kökten yalnızca en güçlü güncel kanıt noisy-or'a girer; `kaynak(desen, kisi)`, `KimdenDuydu` ve geri anlatmama hepsini görür; aktarım gücü ve dayanak yine en güçlü tek kanıttandır.
 **ADR-012 madde 4 ile çelişen yerler:** (a) "aynı kökten tekrar kanıtı tek tutulur, kaynak/alanlar yenilenir" kalktı: aynı kökten FARKLI kaynak ayrı kanıttır, eski kaynak silinmez (Can söylentiyi Ayşe'den de duyduğunu unutmaz); (b) geri anlatmama yalnızca en güçlü kaynağı değil bütün kaynakları kapsar. Yankı freninin amacı (A→B→C→A'da güven artmaz, kökü kendisi olan söylenti kanıt yazmaz) korunur. ADR-012 silinmedi, durumu değiştirilmedi.
 
+### 8. Sonradan eklenenler (8. hafta; kod incelemesi maddeleri)
+
+- **Korumalı varlığın `konum!`'unu yazan eylem (Minor 4, Yusuf'un kararı: seçenek a):** eylem aday aşamasında TAMAMEN düşer (`AdayUretici`); önceden yalnızca o etki düşüyor, eylem olayı ve diğer etkiler uygulanıyordu. Şablon aday aşamasında `ben`/`oyuncu`/`eylem.hedef` ile statik çözülür; nedeni karar izinde ve `korumali` fren olayında görünür. Dört golden aynı kaldı. **Sınır:** kriz satırının etkisi aynı ihlali yaparsa kriz seçilmiş eylem olduğundan yalnızca o etki düşer (kriz satırı aday değildir); `docs/authoring-guide.md`'de belgeli.
+- **Kural ve eylem kimliği çakışması (Minor 5):** fren tekilleştirme anahtarı (`tür|kimlik|npc|hedef`) kural ve eylemi ayırmıyor; çakışma eylemin aday frenini bastırabilirdi. Olay biçimi değişmesin diye `Simulasyon.Olustur` aynı kimlikli kural ve eylemi reddeder.
+- **`IhlalBayragi.Coz` desteklenmeyen rolde açık hata:** `oyuncu`, `konusan`, `dinleyen` rolleri hiçbir yükleyiciden gelmez (doğrulayıcı reddeder) ama elle kurulan nesnede boş kimlik (ya da `konusan` gibi sabit kimlik) dönüp korumayı SESSİZCE kapatıyordu; artık `InvalidOperationException`.
+- **`yay(ad)` kaynakları (Minor 3):** karar izi, eksen gibi birikmiş bir değer olan `yay`'ın son `yay_degisti` olayını kaynak gösterir ve birikimi `kaynaksiz` notuyla raporlar; hiç değişmediyse kaynak uydurulmaz.
+- **Hash sınırı (Minor 6):** `tanimsiz_rol` ve `kisi_olmayan_hedef` frenleri `cooldown`/`en_fazla` gibi fren alanı olmayan senaryolarda da yazılır; olay kimliklerini kaydırır ve `son_hash`'i değiştirir. "Fren alanı yoksa hash aynı" genel bir değişmez değildir; dört golden'da bu iki fren tetiklenmez (ölçüldü).
+- **`korumali` anahtarları (Minor 8, doğrulandı ve kapatıldı):** `oldurulemez`/`mekandan_ayrilamaz` anahtarı NPC ya da oyuncu olmak zorundadır (yazım hatası `Olustur`'da reddedilir); `calinamaz` eşya anahtarı yalnızca `korumali`'de bildirilir ve bir `ihlal_bayraklari` sabit kimliğiyle uyuşmazsa reddedilir. Hiçbir `ihlal_bayraklari` tarafından kullanılmayan bir `calinamaz` bildirimi etkisizdir (korunacak bir eylem yoktur) ve yazım hatası olsa da sessiz kalabilir; bu bilinçli bir sınırdır: daha sıkı doğrulama (atıfsız bildirimi reddetmek) örneklerin ve testlerin yaptığı meşru bildirimleri de kırardı.
+
 ## Değerlendirilen seçenekler
 
 |                         | Seçilen                                                   | Reddedilen                                                                                |
@@ -81,9 +90,9 @@ Her (önerme, kök, kaynak) için ayrı `duydu` kanıtı tutulur, hiçbiri silin
 Plan 3'teki "50 NPC'lik senaryoda tick başına ortalama 5 ms'nin altında" kriteri SİLİNMEZ. Durum (7. hafta sonu, `tools/olcum`, benchmark değil):
 
 - **8 NPC: tutuldu** (stres fikstürü 2.4 ms dedikodusuz / 4.1 ms dedikodulu).
-- **50 NPC: tutmadı.** Stres fikstürü: 35.8 ms dedikodusuz (≈ 7×), 186 ms dedikodulu (≈ 37×). Gerçekçi fikstür (8 mekan, 9 eylem, 12 kural, dedikodu açık, NPC'ler çoğu tick boşta): ölçümler `docs/notes/frenler.md`'de; gerçekçi fikstürde 8 NPC bile 6.6 ms'dir (5 ms'nin üstünde). Kalan farklar notta sayılarla yazılıdır.
-- Karar (kriterin korunması, değiştirilmesi ya da v0.2'ye ertelenmesi) 12. haftadaki BenchmarkDotNet ölçümünde verilecek. Blazor WASM'de tick süresi ve yükleme ölçülmedi (10. hafta açık maddesi).
-- Z3 (zihin kanonik metin önbelleği) uygulandı. Gossip önerme dizini/yüklem ön filtresi denendi, dedikodulu 50 NPC'de kazanç sağlamadı (≈ 171–180 → ≈ 193–198 ms), geri alındı. Z4 (kanıt+hafıza birleştirme, önem eşiği/silik hafıza) 11–12. hafta adayıdır.
+- **50 NPC: tutmadı.** Stres fikstürü: 35.8 ms dedikodusuz (≈ 7×), 186 ms dedikodulu (≈ 37×). Gerçekçi fikstür (8 mekan, 9 eylem, 12 kural, dedikodu açık, NPC'ler çoğu tick boşta): ölçümler `docs/notes/frenler.md`'de; gerçekçi fikstürde 8 NPC 7. hafta sonunda 6.6 ms ölçüldü (5 ms'nin üstünde). **8. hafta düzeltmesi:** bu sayı çift modlu bir dağılımın hızlı kuyruğundaydı ve çelişki dizini (`cfd02b3`) sonrası 8 NPC gerçekçi fikstür 2.88 ms (ayrıntı ve koşullar ADR-015). Kalan farklar notta sayılarla yazılıdır.
+- **Karar 8. haftada verildi ([ADR-015](0015-5ms-kriteri.md)):** v0.1 kriteri 8 NPC ortalama ≤ 5 ms, 50 NPC v0.2 hedefi. (Burada önceden "12. haftadaki BenchmarkDotNet ölçümünde" yazıyordu; bu yanlıştı: karar 12. haftaya bırakılmadı, BenchmarkDotNet tablosu plana göre 11. haftadadır.) Blazor WASM'de tick süresi ve yükleme ölçülmedi (10. hafta açık maddesi).
+- Z3 (zihin kanonik metin önbelleği) uygulandı. Gossip önerme dizini/yüklem ön filtresi denendi, dedikodulu 50 NPC'de kazanç sağlamadı (≈ 171–180 → ≈ 193–198 ms), geri alındı. Z4 (kanıt+hafıza birleştirme, önem eşiği/silik hafıza) 11. hafta adayıdır. (8. hafta: gossip denemesi yanlış katmana bakıyordu; asıl maliyet `Zihin.Inanilan` taramasıydı, çelişki dizini ile giderildi, bkz. ADR-015.)
 
 ## Gerekçe (Yusuf)
 
@@ -93,18 +102,18 @@ Plan 5.10 frenleri "Dwarf Fortress'ın sarmalları, Oblivion'ın görev kıran N
 Aday frenlerinin tekilleştirilmesi ve fren olayının yalnızca ön koşullar tutsaydı yazılması Yusuf'un düzeltmeleridir: aday elenmesi her tick tekrarladığı için aksi halde olay seli çıkardı; elenme nedeni karar izinde yine görünür.
 Zincir derinliğinde Yusuf Seçenek 1'i seçti ve "ertelenir" yerine etkinin düşmesini ADR'ye sapma olarak yazdırdı (kaskad v0 zaten her çıktıyı ertelediği için tick-içi derinlik anlamsızdı). Korumalı bayraklarda `oldurulemez`/`calinamaz`'ın yalnızca bildirilen eylemlerde uygulandığı sınırı Yusuf açıkça yazdırdı; yerleşik öldürme eylemi eklenmedi.
 Yay değişkenlerinin ve fren olaylarının zihin olayı sayılmaması (algılanmaz, kural tetiklemez) sarmal açmasın diyedir. Kaynak modelinde Yusuf Seçenek 1'i seçti: plan "kanıtlar silinmez ve kimden duydu birinci sınıf sorgu" der, bu yüzden güven kök başına tek sayılır ama kaynaklar silinmez. Kayıtta `gunluk_hash` Yusuf'un önerdiği gibi `son_hash`'i değiştirmeden seçici değişikliğini yakalar; `cooldown_kapsam` adı `kapsam` olarak, `tick_basina_en_fazla` kural geneli sayılacak biçimde Yusuf'un düzeltmesiyle değişti.
-5 ms hedefi planda sayısal bir başarı kriteridir; Yusuf kriterin silinmemesini, 8 NPC'nin tutulduğunun, 50 NPC'nin tutmadığının ve kalan farkın açıkça yazılmasını, kararın 12. haftadaki ölçüme bırakılmasını istedi.
+5 ms hedefi planda sayısal bir başarı kriteridir; Yusuf kriterin silinmemesini, 8 NPC'nin tutulduğunun, 50 NPC'nin tutmadığının ve kalan farkın açıkça yazılmasını istedi (7. hafta sonunda kararın ölçüme bırakılmasını da istemişti; karar 8. haftada ADR-015 ile verildi).
 
 ## Sonuçlar
 
 - Kolaylaşan: "bu neden olmadı?" sorusu `yanki why <fren olayı>` ile; cooldown/sınır/korumalı varlık/yay ile hikâye yayını sarmal açmadan yönlendirmek; kayıt/yüklemenin kesintisiz koşuyla birebir aynı olması (testli); "kimden duydu" sorgusunun doğru kalması.
-- Zorlaşan: fren olayı hacmi (özellikle kural frenleri); `kapsam` ayrıntısı; `oldurulemez`/`calinamaz`'ın yazarın bildirmesine bağımlı olması; 50 NPC performansı (5 ms kriteri tutmuyor).
-- Yeniden bakılacak: kural frenleri için tekilleştirme; gerçekçi fikstürdeki fren alanlarının maliyeti (aynı oturumda aynı kodda yeniden ölçüldü, 8 NPC, ortanca: frenli 5.80 ms, fren alanları çıkarılmış 2.38 ms; iki varyant aynı işi yapmaz, kararlar 1063 ve 1344, frenli 1156 fren olayı ekler; önceki 3.7 ms'lik rakamın koşulu kayıtlı değildi ve 6.6 ms ile karşılaştırılamaz, bkz. `docs/notes/frenler.md`); Z4 (11–12. hafta); Blazor WASM ölçümü (10. hafta); 12. haftada 5 ms kararı.
+- Zorlaşan: fren olayı hacmi (özellikle kural frenleri); `kapsam` ayrıntısı; `oldurulemez`/`calinamaz`'ın yazarın bildirmesine bağımlı olması; 50 NPC performansı (v0.2 hedefi, ADR-015).
+- Yeniden bakılacak: kural frenleri için tekilleştirme; gerçekçi fikstürdeki fren alanlarının maliyeti (aynı oturumda aynı kodda yeniden ölçüldü, 8 NPC, ortanca: frenli 5.80 ms, fren alanları çıkarılmış 2.38 ms; iki varyant aynı işi yapmaz, kararlar 1063 ve 1344, frenli 1156 fren olayı ekler; önceki 3.7 ms'lik rakamın koşulu kayıtlı değildi ve 6.6 ms ile karşılaştırılamaz, bkz. `docs/notes/frenler.md`); Z4 (11. hafta adayı); Blazor WASM ölçümü (10. hafta). 5 ms kararı 8. haftada ADR-015 ile verildi.
 
 ## Yapılacaklar
 
 1. [x] Fren olayı, cooldown/sınırlar, zincir derinliği, korumalı bayraklar, yay değişkenleri, kayıt sürüm 2, kaynak modeli, Z3, CsCheck değişmezleri, golden #4 (7. hafta).
-2. [ ] Gerçekçi fikstürde fren makinesi maliyetinin profili ve kural frenleri için tekilleştirme kararı (11–12. hafta).
-3. [ ] Z4: kanıt + hafıza birleştirme / önem eşiği / silik hafıza (11–12. hafta adayı, olay biçimini değiştirir, Yusuf'un kararı).
-4. [ ] Blazor WASM'de tick süresi ve yükleme ölçümü (10. hafta); 5 ms kriteri kararı (12. hafta, BenchmarkDotNet).
-5. [ ] Yusuf gerekçeyi onaylayınca durum "Kabul edildi" yapılır.
+2. [ ] Gerçekçi fikstürde fren makinesi maliyetinin profili ve kural frenleri için tekilleştirme kararı (11. hafta).
+3. [ ] Z4: kanıt + hafıza birleştirme / önem eşiği / silik hafıza (11. hafta adayı, olay biçimini değiştirir, Yusuf'un kararı).
+4. [ ] Blazor WASM'de tick süresi ve yükleme ölçümü (10. hafta). [x] 5 ms kriteri kararı 8. haftada verildi (ADR-015); BenchmarkDotNet tablosu 11. hafta.
+5. [x] Yusuf onayladı: durum "Kabul edildi" (kabul eden Yusuf, 2026-11-05; PR #13 düzeltme turu görev metnindeki açık talimatla).

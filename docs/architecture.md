@@ -46,3 +46,8 @@ flowchart TD
 - Çekirdek dış pakete, ağa, dosya sistemine bağımlı değildir.
 
 Kararların gerekçeleri: [`adr/`](adr/).
+
+## Diyalog katmanı (8. hafta)
+
+`Yanki.Dialogue`, çekirdeğe tek yönlü bakar: `Simulasyon.OlayYayinlandi` ve `Simulasyon.TickTamamlandi` abonelikleri ve salt okunur `SorguCozucusu()`. Çekirdek diyalogu tanımaz; diyalog açık ya da kapalı `son_hash` ve `gunluk_hash` aynıdır.
+Akış: olay → `NiyetUretici` → `Secici.EnIyiSec` (şablon kriterleri) → `SablonRenderer` (gramer + ekler) → `DiyalogSatiri` → `diyalog_hash`. Bkz. [ADR-014](adr/0014-diyalog-katmani.md).

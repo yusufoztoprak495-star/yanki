@@ -21,9 +21,9 @@ namespace Yanki.Scenarios.Tests
     public class OzellikTestleri
     {
         // CI: sabit tohum ve 20 örnek. CI DIŞI geniş koşu için ortam değişkenleri: YANKI_CSCHECK_ORNEK (örnek sayısı), YANKI_CSCHECK_TOHUM (CsCheck tohumu).
-        private static readonly int Ornek = int.TryParse(Environment.GetEnvironmentVariable("YANKI_CSCHECK_ORNEK"), out var o) && o > 0 ? o : 20;
-        private static readonly string Tohum = Environment.GetEnvironmentVariable("YANKI_CSCHECK_TOHUM") is { Length: > 0 } t ? t : "7Hjd1O9bXz0e";
-        private const int Tick = 24;
+        internal static readonly int Ornek = int.TryParse(Environment.GetEnvironmentVariable("YANKI_CSCHECK_ORNEK"), out var o) && o > 0 ? o : 20;
+        internal static readonly string Tohum = Environment.GetEnvironmentVariable("YANKI_CSCHECK_TOHUM") is { Length: > 0 } t ? t : "7Hjd1O9bXz0e";
+        internal const int Tick = 24;
 
         private static readonly string[] HanOnermeleri =
         {
@@ -33,7 +33,7 @@ namespace Yanki.Scenarios.Tests
         private static readonly string[] HanKisileri = { "Ayse", "Can", "Hatice", "Kemal", "Selim" };
 
         // HanGerilim eylem havuzu: 5 NPC × 4 önerme anlatım + 5 hakaret.
-        private static readonly PlayerAction[] HanHavuzu = HanKisileri
+        internal static readonly PlayerAction[] HanHavuzu = HanKisileri
             .SelectMany(k => HanOnermeleri.Select(o => new PlayerAction("anlatti", k, new[] { new KeyValuePair<string, string>("onerme", o) })))
             .Concat(HanKisileri.Select(k => new PlayerAction("hakaret_et", k)))
             .ToArray();
@@ -42,7 +42,7 @@ namespace Yanki.Scenarios.Tests
             new[] { "Hanci", "Ciftci", "Yabanci" }.Select(k => new PlayerAction("tehdit_etti", k)).ToArray();
 
         /// <summary>Üretilen girdi: (tick, havuz indeksi) listesi, sim seed'i, kayıt noktası N ve N+1. tick'in eylemlerinin bekleyen kaydedilip kaydedilmeyeceği.</summary>
-        private sealed class Vaka
+        internal sealed class Vaka
         {
             public Vaka((int Tick, int Eylem)[] eylemler, int seed, int n, bool bekleyen)
             {
@@ -64,7 +64,7 @@ namespace Yanki.Scenarios.Tests
                 $"seed {Seed}, N {N}, bekleyen {Bekleyen}, eylemler [{string.Join(", ", Eylemler.Select(e => "t" + e.Tick + ":#" + e.Eylem))}]";
         }
 
-        private static Gen<Vaka> Girdi(int havuz) =>
+        internal static Gen<Vaka> Girdi(int havuz) =>
             Gen.Select(
                 Gen.Int[1, Tick].Select(Gen.Int[0, havuz - 1]).List[0, 8], Gen.Int[1, 60], Gen.Int[1, Tick - 1], Gen.Bool,
                 (l, seed, n, bekleyen) => new Vaka(l.ToArray(), seed, n, bekleyen));
@@ -82,7 +82,7 @@ namespace Yanki.Scenarios.Tests
 
         private static string Yol(string klasor) => Path.Combine(Kok(), "samples", klasor, "scenario.json");
 
-        private static Simulasyon Yukle(string klasor, int seed)
+        internal static Simulasyon Yukle(string klasor, int seed)
         {
             var hata = new StringWriter();
             var sim = SenaryoDosyasi.Yukle(Yol(klasor), (ulong)seed, hata);
@@ -90,7 +90,7 @@ namespace Yanki.Scenarios.Tests
             return sim!;
         }
 
-        private static void Gonder(Simulasyon sim, IEnumerable<PlayerAction> eylemler)
+        internal static void Gonder(Simulasyon sim, IEnumerable<PlayerAction> eylemler)
         {
             foreach (var e in eylemler)
             {
@@ -105,10 +105,10 @@ namespace Yanki.Scenarios.Tests
             }
         }
 
-        private static ILookup<int, PlayerAction> Takvim((int Tick, int Eylem)[] eylemler, PlayerAction[] havuz) =>
+        internal static ILookup<int, PlayerAction> Takvim((int Tick, int Eylem)[] eylemler, PlayerAction[] havuz) =>
             eylemler.ToLookup(e => e.Tick, e => havuz[e.Eylem]);
 
-        private static Simulasyon Kos(string klasor, int seed, ILookup<int, PlayerAction> takvim, int tick, Action<Simulasyon>? herTick = null)
+        internal static Simulasyon Kos(string klasor, int seed, ILookup<int, PlayerAction> takvim, int tick, Action<Simulasyon>? herTick = null)
         {
             var sim = Yukle(klasor, seed);
             for (var t = 1; t <= tick; t++)
@@ -121,7 +121,7 @@ namespace Yanki.Scenarios.Tests
             return sim;
         }
 
-        private static string Ozet(Simulasyon s) =>
+        internal static string Ozet(Simulasyon s) =>
             string.Join("\n", s.Gunluk.Olaylar.Select(o => o.Id + "|" + o.Tick + "|" + o.Sira + "|" + o.Tur + "|" + o.Fail + "|" + o.Hedef + "|" + o.KuralId + "|"
                 + string.Join(",", o.Yuk.Select(kv => kv.Key + "=" + kv.Value)) + "|" + string.Join(",", o.NedenOlaylar)));
 

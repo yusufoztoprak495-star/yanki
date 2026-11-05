@@ -71,6 +71,43 @@ namespace Yanki.Core.Tests.Decision
 
         }
 
+        // ---- yay (8. hafta, Minor 3) ----
+
+        private static Olay YayDegisti(Duzen d, string ad, decimal delta, decimal deger, long tick)
+        {
+            var olay = Yanki.Core.Brakes.YayDegiskenleri.OlayYap(d.Gunluk.SonrakiId, tick, d.Gunluk.SonrakiSira(tick), ad, delta, deger, new long[0], "kural", "han");
+            d.Gunluk.Ekle(olay);
+            return olay;
+        }
+
+        [Fact]
+        public void Yay_sorgusu_son_degisim_olayini_kaynak_gosterir_birikmis_degeri_kaynaksiz_raporlar()
+        {
+            var d = new Duzen();
+            YayDegisti(d, "gerginlik", 1m, 1m, 3);
+            var son = YayDegisti(d, "gerginlik", 2m, 3m, 5);
+            YayDegisti(d, "baska", 1m, 1m, 6);   // başka değişken: kaynak olmaz
+
+            var (olaylar, kaynaksiz) = Topla(d, Kosullu("yay(gerginlik)", ">=", "1"));
+
+            Assert.Equal(new[] { son.Id }, olaylar);
+            var not = Assert.Single(kaynaksiz);
+            Assert.Contains("yay(gerginlik)", not);
+            Assert.Contains("#" + son.Id, not);
+        }
+
+        [Fact]
+        public void Yay_hic_degismediyse_kaynak_olay_uydurulmaz()
+        {
+            var d = new Duzen();
+            YayDegisti(d, "baska", 1m, 1m, 4);
+
+            var (olaylar, kaynaksiz) = Topla(d, Olcutlu("yay(gerginlik)"));
+
+            Assert.Empty(olaylar);
+            Assert.Empty(kaynaksiz);   // başlangıç değeri senaryodan gelir (kişilik gibi), olay gerektirmez
+        }
+
         // ---- fikir ----
 
         [Fact]

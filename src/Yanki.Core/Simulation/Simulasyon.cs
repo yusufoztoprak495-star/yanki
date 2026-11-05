@@ -112,6 +112,12 @@ namespace Yanki.Core.Simulation
         /// </summary>
         public event Action<Olay>? OlayYayinlandi;
 
+        /// <summary>
+        /// Her tick TAMAMEN bitince (o tick'in olayları <see cref="OlayYayinlandi"/> ile bildirildikten sonra, olay olmasa da) tick numarasıyla bildirilir. Durum hash'ine girmez, hiçbir şey yazmaz;
+        /// diyalog katmanı gibi salt okunur aboneler içindir (8. hafta). Abone simülasyona yazmamalıdır.
+        /// </summary>
+        public event Action<long>? TickTamamlandi;
+
         private Simulasyon(
             SenaryoTanimi senaryo, KuralMotoru motor, EylemKatalogu katalog, IActionSelector secici, ulong seed, AlgiAyarlari algi,
             DedikoduAyarlari dedikodu, StresAyarlari stres, IReadOnlyList<KrizSatiri> krizler, FrenAyarlari frenAyarlari)
@@ -166,6 +172,7 @@ namespace Yanki.Core.Simulation
             var krizListesi = KrizleriDenetle(senaryo, krizler, stres);
             KurallariDenetle(senaryo, motor, katalog, krizListesi);
             EylemleriDenetle(senaryo, katalog);
+            KuralEylemKimlikleriniDenetle(motor, katalog);
             KorumaliDenetle(senaryo, motor, katalog);
             YayDenetle(senaryo, motor, katalog);
             var sim = new Simulasyon(senaryo, motor, katalog, secici ?? new UtilitySelector(), seed, algiAyarlari ?? new AlgiAyarlari(), dedikodu, stres, krizListesi, frenAyarlari ?? new FrenAyarlari());
@@ -442,6 +449,12 @@ namespace Yanki.Core.Simulation
 
         private static string YakalamaAnahtari(string npc, long tick) =>
             npc + "@" + tick.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        /// <summary>
+        /// Şimdiki tick'in SONUNDAKİ durumu okuyan salt okunur sorgu çözücüsü (8. hafta, A kararı). Diyalog katmanı <see cref="OlayYayinlandi"/> aboneliğinde kullanır.
+        /// Simülasyonu, günlüğü ve durum hash'ini değiştirmez; hash'e girmez.
+        /// </summary>
+        public Criteria.ISorguCozucu SorguCozucusu() => new Criteria.ZihinSorguCozucusu(Dunya, Zihinler, Gunluk, _tick, _dedikodu, yay: _yay);
 
         /// <summary>Şu anki dünya ve zihin durumunun hash'i (16 karakter onaltılık).</summary>
         public string DurumHash() => DurumHashu.Hesapla(Dunya, Zihinler, _sayaclar.KanonikMetin() + _yay.KanonikMetin());
@@ -1336,15 +1349,15 @@ namespace Yanki.Core.Simulation
         {
             SonHash = DurumHash();
             var yayinlayici = OlayYayinlandi;
-            if (yayinlayici == null)
+            if (yayinlayici != null)
             {
-                return;
+                for (var i = baslangic; i < Gunluk.Sayi; i++)
+                {
+                    yayinlayici(Gunluk.Olaylar[i]);
+                }
             }
 
-            for (var i = baslangic; i < Gunluk.Sayi; i++)
-            {
-                yayinlayici(Gunluk.Olaylar[i]);
-            }
+            TickTamamlandi?.Invoke(_tick);
         }
 
         // ---- Kurulum ----
@@ -1585,6 +1598,25 @@ namespace Yanki.Core.Simulation
                     {
                         Kontrol($"Eylem \"{ey.Id}\"", e.Ad);
                     }
+                }
+            }
+        }
+
+        // Kural ve eylem kimlikleri ayrık olmalı (8. hafta, Minor 5): fren tekilleştirme anahtarı (tür|kimlik|npc|hedef) kural ve eylemi ayırmaz; çakışırsa eylemin
+        // aday freni kuralın freni yüzünden bastırılabilirdi. Olay biçimi değişmesin diye anahtar değil, giriş reddedilir.
+        private static void KuralEylemKimlikleriniDenetle(KuralMotoru motor, EylemKatalogu katalog)
+        {
+            var eylemKimlikleri = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var e in katalog.Eylemler)
+            {
+                eylemKimlikleri.Add(e.Id);
+            }
+
+            foreach (var k in motor.Kurallar)
+            {
+                if (eylemKimlikleri.Contains(k.Id))
+                {
+                    throw new ArgumentException($"Kural ve eylem aynı kimliği taşıyor: \"{k.Id}\" (kural ve eylem kimlikleri ayrık olmalı; fren olayları kimlikle eşleştirilir).", nameof(motor));
                 }
             }
         }
