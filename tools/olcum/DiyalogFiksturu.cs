@@ -34,7 +34,7 @@ namespace Yanki.Olcum
  },
  ""gramer"": { ""giris"": [""Dinle"", ""Bak"", ""Şunu duydum""] },
  ""sablonlar"": [
-  { ""id"": ""anlat_genel"", ""concept"": ""anlatma"", ""genel"": true, ""sonra"": { ""hedef"": ""dinleyen"", ""concept"": ""cevap"" }, ""metin"": ""#giris# #dinleyen.yonelme#: #konu#."" },
+  { ""id"": ""anlat_genel"", ""concept"": ""anlatma"", ""genel"": true, ""sonra"": { ""hedef"": ""dinleyen"", ""concept"": ""cevap"" }, ""metin"": ""#giris# #dinleyen#: #konu#."" },
   { ""id"": ""anlat_gergin"", ""concept"": ""anlatma"", ""kriterler"": [ { ""alan"": ""stres()"", ""op"": "">="", ""deger"": 5, ""zorunlu"": true, ""agirlik"": 3 } ], ""metin"": ""Gergin: #konu#."" },
   { ""id"": ""tesekkur_genel"", ""concept"": ""tesekkur"", ""genel"": true, ""metin"": ""Sağ ol #dinleyen#."" },
   { ""id"": ""tesekkur_minnetli"", ""concept"": ""tesekkur"", ""kriterler"": [ { ""alan"": ""modifier_var(dinleyen, minnet)"", ""op"": ""=="", ""deger"": true, ""zorunlu"": true } ], ""tekrar"": { ""tekrar_bekleme"": 12 }, ""metin"": ""Unutmam #dinleyen.yonelme#."" },

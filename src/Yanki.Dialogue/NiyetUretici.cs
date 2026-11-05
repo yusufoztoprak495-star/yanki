@@ -14,24 +14,36 @@ namespace Yanki.Dialogue
     {
         public static Niyet? Uret(Olay olay, Simulasyon sim, SablonDosyasi dosya, DiyalogAyarlari ayar)
         {
-            if (!dosya.Esleme.TryGetValue(olay.Tur, out var kural))
+            var kaynak = olay.Fail == sim.OyuncuId ? "oyuncu" : "npc";
+            var kural = dosya.Esleme.Bul(olay.Tur, kaynak);
+            if (kural == null)
             {
                 return null;
             }
 
             var konusan = kural.KonusanFail ? olay.Fail : olay.Hedef;
             var dinleyen = kural.KonusanFail ? olay.Hedef : olay.Fail;
+            if (kural.Dinleyensiz)
+            {
+                if (!sim.Zihinler.Var(konusan))
+                {
+                    return null;
+                }
+
+                return Olustur(sim, ayar, konusan, string.Empty, kural.Niyet, string.Empty, olay.Id, olay.Tick, false, olay.Mekan);
+            }
+
             if (!sim.Zihinler.Var(konusan) || !KisiMi(sim, dinleyen) || string.Equals(konusan, dinleyen, System.StringComparison.Ordinal))
             {
                 return null;   // yalnızca NPC'ler konuşur; dinleyen bir kişi (NPC ya da oyuncu) olmalı (mekan hedefli olaylar satır üretmez)
             }
 
             var konu = olay.Tur == YerlesikTurler.Anlatti ? olay.Deger("onerme") : string.Empty;
-            return Olustur(sim, ayar, konusan, dinleyen, kural.Niyet, konu, olay.Id, olay.Tick, false);
+            return Olustur(sim, ayar, konusan, dinleyen, kural.Niyet, konu, olay.Id, olay.Tick, false, string.Empty);
         }
 
         public static Niyet Followup(Niyet ana, string konusan, string concept, Simulasyon sim, DiyalogAyarlari ayar) =>
-            Olustur(sim, ayar, konusan, ana.Konusan, concept, ana.Konu, ana.OlayId, ana.Tick, true);
+            Olustur(sim, ayar, konusan, ana.Konusan, concept, ana.Konu, ana.OlayId, ana.Tick, true, string.Empty);
 
         public static bool KisiMi(Simulasyon sim, string kimlik)
         {
@@ -44,14 +56,14 @@ namespace Yanki.Dialogue
             return tur == VarlikTuru.Npc || tur == VarlikTuru.Oyuncu;
         }
 
-        private static Niyet Olustur(Simulasyon sim, DiyalogAyarlari ayar, string konusan, string dinleyen, string ad, string konu, long olayId, long tick, bool followup)
+        private static Niyet Olustur(Simulasyon sim, DiyalogAyarlari ayar, string konusan, string dinleyen, string ad, string konu, long olayId, long tick, bool followup, string mekan)
         {
             var zihin = sim.Zihinler[konusan];
             var simdi = sim.SimdikiTick;
-            var bant = zihin.FikirBandi(dinleyen, simdi);
+            var bant = dinleyen.Length == 0 ? "yok" : zihin.FikirBandi(dinleyen, simdi);
             var duygu = zihin.Duygu != null && zihin.BaskinDuyguSiddeti(simdi) > 0m ? zihin.Duygu.Tur : "yok";
-            var ton = ayar.TonTablosu.TryGetValue(duygu, out var t) ? t : ayar.VarsayilanTon;
-            return new Niyet(konusan, dinleyen, ad, konu, ton, bant, new NiyetGerekcesi(bant, duygu), olayId, tick, followup);
+            var ton = duygu == "yok" ? ayar.VarsayilanTon : ayar.TonSec(duygu, zihin.BaskinDuyguSiddeti(simdi));
+            return new Niyet(konusan, dinleyen, ad, konu, ton, bant, new NiyetGerekcesi(bant, duygu), olayId, tick, followup, mekan);
         }
     }
 }

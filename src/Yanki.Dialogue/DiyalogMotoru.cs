@@ -319,7 +319,7 @@ namespace Yanki.Dialogue
             _tekrar.Kaydet(secilen, niyet.Konusan, tick);
             notlar.Insert(1, $"seçilen şablon: {secilen.Id}");
             satir = new DiyalogSatiri(
-                _satirlar.Count + 1, tick, niyet.OlayId, niyet.Konusan, niyet.Dinleyen, secilen.Id, metin, varsayilanMetin, niyet.Followup, notlar);
+                _satirlar.Count + 1, tick, niyet.OlayId, niyet.Konusan, niyet.Dinleyen, secilen.Id, metin, varsayilanMetin, niyet.Followup, notlar, niyet.Mekan);
             _satirlar.Add(satir);
             return secilen;
         }
@@ -354,17 +354,21 @@ namespace Yanki.Dialogue
             void AdEkle(string yuva, string kimlik)
             {
                 var ad = OnermeMetni.GorunenAd(kimlik, _dosya);
-                gercekler.Add(new SecilmisGercek(yuva, ad.Ad, true, ad.OzelAd, ad.Ince));
+                gercekler.Add(new SecilmisGercek(yuva, ad.Ad, true, ad.OzelAd, ad.Ince, ad.Yumusak));
             }
 
             AdEkle("konusan", niyet.Konusan);
-            AdEkle("dinleyen", niyet.Dinleyen);
+            if (niyet.Dinleyen.Length > 0)
+            {
+                AdEkle("dinleyen", niyet.Dinleyen);
+            }
+
             AdEkle("oyuncu", _sim.OyuncuId);
             if (niyet.Konu.Length > 0)
             {
                 try
                 {
-                    gercekler.Add(new SecilmisGercek("konu", OnermeMetni.Uret(niyet.Konu, _dosya), false, false));
+                    gercekler.Add(new SecilmisGercek("konu", OnermeMetni.Uret(niyet.Konu, _dosya, niyet.Konusan, niyet.Dinleyen), false, false));
                 }
                 catch (InvalidOperationException)
                 {

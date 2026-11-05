@@ -34,7 +34,7 @@ namespace Yanki.Scenarios.Tests
  },
  'gramer': { 'giris': ['Dinle', 'Bak', 'Şunu duydum'] },
  'sablonlar': [
-  { 'id': 'anlat_genel', 'concept': 'anlatma', 'genel': true, 'sonra': { 'hedef': 'dinleyen', 'concept': 'cevap' }, 'metin': '#giris# #dinleyen.yonelme#: #konu#.' },
+  { 'id': 'anlat_genel', 'concept': 'anlatma', 'genel': true, 'sonra': { 'hedef': 'dinleyen', 'concept': 'cevap' }, 'metin': '#giris# #dinleyen#: #konu#.' },
   { 'id': 'anlat_bekle', 'concept': 'anlatma', 'kriterler': [ { 'alan': 'kisilik(sosyallik)', 'op': '>=', 'deger': 0, 'zorunlu': true, 'agirlik': 3 } ], 'tekrar': { 'tekrar_bekleme': 6 }, 'sonra': { 'hedef': 'dinleyen', 'concept': 'cevap' }, 'metin': 'Bekle: #konu#.' },
   { 'id': 'anlat_tek', 'concept': 'anlatma', 'kriterler': [ { 'alan': 'kisilik(sosyallik)', 'op': '>=', 'deger': 0, 'zorunlu': true, 'agirlik': 2 } ], 'tekrar': 'bir_kez', 'sonra': { 'hedef': 'dinleyen', 'concept': 'cevap' }, 'metin': 'Bir kez: #konu#.' },
   { 'id': 'anlat_gergin', 'concept': 'anlatma', 'kriterler': [ { 'alan': 'stres()', 'op': '>=', 'deger': 5, 'zorunlu': true, 'agirlik': 4 } ], 'sonra': { 'hedef': 'dinleyen', 'concept': 'cevap' }, 'metin': 'Gergin: #konu#.' },

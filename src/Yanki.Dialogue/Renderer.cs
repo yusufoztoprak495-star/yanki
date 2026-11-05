@@ -11,8 +11,9 @@ namespace Yanki.Dialogue
     /// </summary>
     public sealed class SecilmisGercek
     {
-        internal SecilmisGercek(string ad, string deger, bool adMi, bool ozelAd, bool ince = false)
+        internal SecilmisGercek(string ad, string deger, bool adMi, bool ozelAd, bool ince = false, string? yumusak = null)
         {
+            Yumusak = yumusak;
             Ad = ad;
             Deger = deger;
             AdMi = adMi;
@@ -34,6 +35,9 @@ namespace Yanki.Dialogue
 
         /// <summary>Yumuşak l (Kemal): arka ünlüyle yazılsa da ince ünlü eki alır.</summary>
         public bool Ince { get; }
+
+        /// <summary>p, ç, t, k ile biten cins isim için yazarın verdiği yumuşak gövde (borç → borc); yoksa boş.</summary>
+        public string? Yumusak { get; }
     }
 
     /// <summary>
@@ -102,11 +106,12 @@ namespace Yanki.Dialogue
             var olgular = new SortedDictionary<string, MetinOlgusu>(StringComparer.Ordinal);
             foreach (var g in girdi.SecilmisGercekler)
             {
-                olgular[g.Ad] = g.AdMi ? MetinOlgusu.Ad(g.Deger, g.OzelAd, g.Ince) : MetinOlgusu.Metin(g.Deger);
+                olgular[g.Ad] = g.AdMi ? MetinOlgusu.Ad(g.Deger, g.OzelAd, g.Ince, g.Yumusak) : MetinOlgusu.Metin(g.Deger);
             }
 
             var rng = AnahtarliRng.Icin(_seed, girdi.Niyet.Tick, girdi.Niyet.Konusan, DiyalogMotoru.RngAlani(girdi.Niyet) + ":metin");
-            return GramerAcilimi.Ac(girdi.SablonMetni, _dosya.Gramer, olgular, rng);
+            var turkce = _dosya.Dil == "tr";
+            return TurkceEkler.BasHarfBuyut(GramerAcilimi.Ac(girdi.SablonMetni, _dosya.Gramer, olgular, rng, turkce), turkce);
         }
     }
 }

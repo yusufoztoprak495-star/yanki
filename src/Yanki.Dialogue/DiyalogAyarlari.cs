@@ -1,10 +1,32 @@
 using System;
+using System.Collections.Generic;
 
 namespace Yanki.Dialogue
 {
+    /// <summary>Ton kuralı: baskın duygu bu türdeyse ve şiddeti eşik ve üstündeyse ton verilir. Kurallar sırayla denenir, ilk eşleşen kazanır.</summary>
+    public sealed class TonKurali
+    {
+        /// <summary>Kuralı kurar.</summary>
+        public TonKurali(string duygu, decimal esik, string ton)
+        {
+            Duygu = duygu;
+            Esik = esik;
+            Ton = ton;
+        }
+
+        /// <summary>Baskın duygunun türü (ör. ofke).</summary>
+        public string Duygu { get; }
+
+        /// <summary>Şiddet eşiği (≥).</summary>
+        public decimal Esik { get; }
+
+        /// <summary>Ton adı (ASCII).</summary>
+        public string Ton { get; }
+    }
+
     /// <summary>
-    /// Diyalog katmanının ayarları. Zaman ifadesi eşikleri ve ifade metinleri YER TUTUCUDUR: denge ve metin alanı Yusuf'undur (8. hafta, E kararı:
-    /// göreli ifade; takvim yok, oyun içi günden hesaplanır, 1 tick = 1 saat). Senaryo şeması değişmez; ayarlar şablon dosyasına ve hash'e girmez.
+    /// Diyalog katmanının ayarları. Eşikler YER TUTUCUDUR ve ayar sınıfında durur (şablon dosyasına ve hash'e girmez); denge alanı Yusuf'undur. Zaman ifadesi (E kararı):
+    /// göreli; takvim yok, oyun günü farkından hesaplanır, gün no = floor(tick / <see cref="GunUzunlugu"/>), 1 tick = 1 saat.
     /// </summary>
     public sealed class DiyalogAyarlari
     {
@@ -30,20 +52,35 @@ namespace Yanki.Dialogue
         public string HaftaIfadesi { get; set; } = "geçen hafta";
 
         /// <summary>Uzun süre eşiğinden sonra.</summary>
-        public string UzunSureIfadesi { get; set; } = "çok önce";
+        public string UzunSureIfadesi { get; set; } = "uzun zaman önce";
 
         /// <summary>
-        /// Baskın duygu → ton eşlemesi (B kararı: ton baskın duygudan türer; stres() ton tablosunda kullanılmaz). YER TUTUCU: tablo ve ton adları Yusuf'un alanıdır (DURAK 2).
-        /// Anahtar duygu türü (ör. ofke), değer ton adı (ASCII). Tabloda olmayan duygu ve duygu yokluğu için <see cref="VarsayilanTon"/> kullanılır.
+        /// Baskın duygu → ton kuralları (B kararı: ton baskın duygudan türer; stres() ton tablosunda KULLANILMAZ). Varsayılan: ofke ≥ 0.6 ofkeli, ofke ≥ 0.2 gergin, korku ≥ 0.2 urkek.
+        /// Eşikler yer tutucudur.
         /// </summary>
-        public System.Collections.Generic.SortedDictionary<string, string> TonTablosu { get; } = new System.Collections.Generic.SortedDictionary<string, string>(StringComparer.Ordinal)
+        public IList<TonKurali> TonKurallari { get; } = new List<TonKurali>
         {
-            ["ofke"] = "gergin",
-            ["korku"] = "urkek",
+            new TonKurali("ofke", 0.6m, "ofkeli"),
+            new TonKurali("ofke", 0.2m, "gergin"),
+            new TonKurali("korku", 0.2m, "urkek"),
         };
 
-        /// <summary>Tabloda karşılığı olmayan duygu ve duygusuzluk için ton.</summary>
+        /// <summary>Hiçbir kural eşleşmezse ton.</summary>
         public string VarsayilanTon { get; set; } = "notr";
+
+        /// <summary>Baskın duygu türü ve şiddetinden ton seçer.</summary>
+        public string TonSec(string duygu, decimal siddet)
+        {
+            foreach (var k in TonKurallari)
+            {
+                if (string.Equals(k.Duygu, duygu, StringComparison.Ordinal) && siddet >= k.Esik)
+                {
+                    return k.Ton;
+                }
+            }
+
+            return VarsayilanTon;
+        }
 
         /// <summary>Değerlerin tutarlılığını denetler.</summary>
         /// <exception cref="ArgumentException">Bir eşik ya da gün uzunluğu geçersizse.</exception>

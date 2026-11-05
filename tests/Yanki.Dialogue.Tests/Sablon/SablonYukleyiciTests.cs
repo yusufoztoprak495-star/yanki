@@ -294,10 +294,10 @@ namespace Yanki.Dialogue.Tests.Sablon
             Assert.Contains(Hatalar(en), h => h.Contains("yalnızca Türkçe", StringComparison.Ordinal));
 
             var metinOlgusunaEk = Degistir("Sağ ol #dinleyen#.", "Sağ ol #konu.yonelme#.");
-            Assert.Contains(Hatalar(metinOlgusunaEk), h => h.Contains("düz metindir, ek getirilmez", StringComparison.Ordinal));
+            Assert.Contains(Hatalar(metinOlgusunaEk), h => h.Contains("düz metin olgusuna yalnızca baslik getirilir", StringComparison.Ordinal));
 
-            var bilinmeyenEk = Degistir("Sağ ol #dinleyen#.", "Sağ ol #dinleyen.tamlayan#.");
-            Assert.Contains(Hatalar(bilinmeyenEk), h => h.Contains("bilinmeyen ya da birden çok ek", StringComparison.Ordinal));
+            var bilinmeyenEk = Degistir("Sağ ol #dinleyen#.", "Sağ ol #dinleyen.iliski#.");
+            Assert.Contains(Hatalar(bilinmeyenEk), h => h.Contains("bilinmeyen ek \"iliski\"", StringComparison.Ordinal));
         }
 
         [Fact]

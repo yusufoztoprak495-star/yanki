@@ -13,8 +13,9 @@ namespace Yanki.Dialogue
         private readonly List<string> _neden;
 
         internal DiyalogSatiri(
-            int no, long tick, long olayId, string konusan, string dinleyen, string sablonId, string metin, string varsayilanMetin, bool followup, List<string> neden)
+            int no, long tick, long olayId, string konusan, string dinleyen, string sablonId, string metin, string varsayilanMetin, bool followup, List<string> neden, string mekan = "")
         {
+            Mekan = mekan;
             No = no;
             Tick = tick;
             OlayId = olayId;
@@ -26,6 +27,9 @@ namespace Yanki.Dialogue
             Followup = followup;
             _neden = neden;
         }
+
+        /// <summary>Dinleyensiz satırın mekanı (dinleyenli satırda boş); kimin gördüğünü demo süzer.</summary>
+        public string Mekan { get; }
 
         /// <summary>Satır numarası (1'den, üretim sırasıyla; <c>--neden</c> bunu kullanır).</summary>
         public int No { get; }
@@ -78,7 +82,7 @@ namespace Yanki.Dialogue
             foreach (var s in satirlar)
             {
                 sb.Append(s.OlayId.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append('|')
-                    .Append(s.Konusan).Append('|').Append(s.Dinleyen).Append('|').Append(s.SablonId).Append('|')
+                    .Append(s.Konusan).Append('|').Append(s.Dinleyen).Append('|').Append(s.Mekan).Append('|').Append(s.SablonId).Append('|')
                     .Append(s.VarsayilanMetin.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\\n")).Append('\n');
             }
 

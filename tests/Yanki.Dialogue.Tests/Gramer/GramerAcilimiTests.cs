@@ -102,7 +102,7 @@ namespace Yanki.Dialogue.Tests.Gramer
 
             Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#hafiza.zaman.yonelme#", tablo, Olgular(), Rng()));
             Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#selam.yonelme#", tablo, Olgular(), Rng()));
-            Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#dinleyen.tamlayan#", tablo, Olgular(), Rng()));
+            Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#dinleyen.iliski#", tablo, Olgular(), Rng()));
         }
 
         [Fact]
@@ -154,6 +154,29 @@ namespace Yanki.Dialogue.Tests.Gramer
             {
                 System.Globalization.CultureInfo.CurrentCulture = onceki;
             }
+        }
+
+        [Fact]
+        public void Baslik_degistiricisi_cumle_ortasinda_ilk_harfi_buyutur_kendi_tablosuyla()
+        {
+            var tablo = Tablo(("giris", new[] { "ibrahim" }));
+            var olgular = Olgular();
+            olgular["hafiza.zaman"] = MetinOlgusu.Metin("ışık yılı önce");
+
+            Assert.Equal("Işık yılı önce", GramerAcilimi.Ac("#hafiza.zaman.baslik#", tablo, olgular, Rng()));
+            Assert.Equal("İbrahim", GramerAcilimi.Ac("#giris.baslik#", tablo, olgular, Rng()));      // kurala yalnızca .baslik getirilebilir
+            Assert.Equal("Ayşe'ye", GramerAcilimi.Ac("#dinleyen.yonelme.baslik#", tablo, olgular, Rng()));
+            Assert.Equal("Hancı", GramerAcilimi.Ac("#hafiza.fail.baslik#", tablo, olgular, Rng()));
+        }
+
+        [Fact]
+        public void Baslik_en_sonda_en_fazla_bir_kez_ve_ek_en_fazla_bir_tane()
+        {
+            var tablo = Tablo();
+
+            Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#dinleyen.baslik.yonelme#", tablo, Olgular(), Rng()));
+            Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#dinleyen.yonelme.belirtme#", tablo, Olgular(), Rng()));
+            Assert.Throws<InvalidOperationException>(() => GramerAcilimi.Ac("#dinleyen.baslik.baslik#", tablo, Olgular(), Rng()));
         }
 
         [Fact]

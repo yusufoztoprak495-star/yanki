@@ -28,8 +28,9 @@ namespace Yanki.Dialogue
     public sealed class Niyet
     {
         internal Niyet(
-            string konusan, string dinleyen, string ad, string konu, string ton, string fikirBandi, NiyetGerekcesi gerekce, long olayId, long tick, bool followup)
+            string konusan, string dinleyen, string ad, string konu, string ton, string fikirBandi, NiyetGerekcesi gerekce, long olayId, long tick, bool followup, string mekan = "")
         {
+            Mekan = mekan;
             Konusan = konusan;
             Dinleyen = dinleyen;
             Ad = ad;
@@ -41,6 +42,9 @@ namespace Yanki.Dialogue
             Tick = tick;
             Followup = followup;
         }
+
+        /// <summary>Dinleyensiz niyetin geçtiği mekan (dinleyenli niyette boş). Kimin gördüğünü demo süzer.</summary>
+        public string Mekan { get; }
 
         /// <summary>Konuşan NPC.</summary>
         public string Konusan { get; }
@@ -54,7 +58,7 @@ namespace Yanki.Dialogue
         /// <summary>Konu önermesi (ör. <c>borclu(Mehmet,Ayse,500)</c>); konusuz niyette boş.</summary>
         public string Konu { get; }
 
-        /// <summary>Baskın duygudan türeyen ton (tablo <see cref="DiyalogAyarlari.TonTablosu"/>).</summary>
+        /// <summary>Baskın duygudan türeyen ton (kurallar <see cref="DiyalogAyarlari.TonKurallari"/>).</summary>
         public string Ton { get; }
 
         /// <summary>Konuşanın dinleyene karşı fikir bandı (mevcut <c>fikir_bandi</c> sorgusu).</summary>

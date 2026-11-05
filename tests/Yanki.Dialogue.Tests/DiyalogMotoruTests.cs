@@ -173,7 +173,7 @@ namespace Yanki.Dialogue.Tests
             var (_, motor) = Oyna(Dosya(Genel + "," + Gecmis()), 31, Tickler("Ali", 1, 30), SonumsuzHafiza);
 
             Assert.Equal(new[] { "genel", "gecmis" }, motor.Satirlar.Select(s => s.SablonId).ToArray());   // ilk yardımın öncesi yok (tetikleyici olayın kendisi gönderme değildir)
-            Assert.Equal("dün yabancı bana yardım etmişti.", motor.Satirlar[1].Metin);
+            Assert.Equal("Dün yabancı bana yardım etmişti.", motor.Satirlar[1].Metin);   // satırın ilk harfi otomatik büyür
             Assert.Contains(motor.Satirlar[1].NedenSatirlari, n => n.StartsWith("hafıza göndermesi: olay #", StringComparison.Ordinal));
         }
 
@@ -217,7 +217,7 @@ namespace Yanki.Dialogue.Tests
             // olaylar tick 1 (gün 0), tick 60 (gün 2); şimdi tick 100 (gün 4): en yeni (60) ile fark 2 → "evvelsi gün"; en eskiyle 4 olurdu.
             var (_, motor) = Oyna(Dosya(Genel + "," + Gecmis()), 100, Tickler("Ali", 1, 60, 100), SonumsuzHafiza);
 
-            Assert.Equal("evvelsi gün yabancı bana yardım etmişti.", motor.Satirlar.Last().Metin);
+            Assert.Equal("Evvelsi gün yabancı bana yardım etmişti.", motor.Satirlar.Last().Metin);
         }
 
         // ---- G: followup ----

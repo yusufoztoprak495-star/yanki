@@ -115,7 +115,7 @@ namespace Yanki.Dialogue.Tests
         [Fact]
         public void Niyet_yalnizca_izinli_alanlari_tasir_KuralId_eylem_kok_yalan_alani_yoktur()
         {
-            var izinli = new[] { "Ad", "Dinleyen", "FikirBandi", "Followup", "Gerekce", "Konu", "Konusan", "OlayId", "Tick", "Ton" };
+            var izinli = new[] { "Ad", "Dinleyen", "FikirBandi", "Followup", "Gerekce", "Konu", "Konusan", "Mekan", "OlayId", "Tick", "Ton" };
             var gercek = typeof(Niyet).GetProperties().Select(p => p.Name).OrderBy(x => x, StringComparer.Ordinal).ToArray();
 
             Assert.Equal(izinli, gercek);
@@ -137,10 +137,12 @@ namespace Yanki.Dialogue.Tests
             sim.Zihinler["Ali"].Uygula(ZihinOlaylari.DuyguDegisti(sim.Gunluk.SonrakiId, sim.SimdikiTick, 0, "Ali", "ofke", 0.9m, "oyuncu", new[] { yardim.Id }, "kural"));
             var gergin = NiyetUretici.Uret(yardim, sim, Dosya, Ayar)!;
 
-            Assert.Equal(("gergin", "ofke"), (gergin.Ton, gergin.Gerekce.BaskinDuygu));
+            Assert.Equal(("ofkeli", "ofke"), (gergin.Ton, gergin.Gerekce.BaskinDuygu));   // ofke 0.9 >= 0.6
 
             var ayar = new DiyalogAyarlari { VarsayilanTon = "sakin" };
-            ayar.TonTablosu["ofke"] = "sert";
+            ayar.TonKurallari.Insert(0, new TonKurali("ofke", 0.95m, "sert"));
+            Assert.Equal("ofkeli", NiyetUretici.Uret(yardim, sim, Dosya, ayar)!.Ton);   // 0.9 < 0.95: ilk eşleşen kural kazanır
+            ayar.TonKurallari[0] = new TonKurali("ofke", 0.5m, "sert");
             Assert.Equal("sert", NiyetUretici.Uret(yardim, sim, Dosya, ayar)!.Ton);
         }
 

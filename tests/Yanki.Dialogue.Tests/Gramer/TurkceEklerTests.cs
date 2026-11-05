@@ -124,8 +124,8 @@ namespace Yanki.Dialogue.Tests.Gramer
         [Fact]
         public void Bilinmeyen_ek_sessizce_gecilmez_hata_verir()
         {
-            var hata = Assert.Throws<ArgumentException>(() => TurkceEkler.Uygula("Ayşe", true, "tamlayan"));
-            Assert.Contains("tamlayan", hata.Message);
+            var hata = Assert.Throws<ArgumentException>(() => TurkceEkler.Uygula("Ayşe", true, "iliski"));
+            Assert.Contains("iliski", hata.Message);
         }
 
         [Theory]

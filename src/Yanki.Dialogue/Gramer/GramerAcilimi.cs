@@ -7,8 +7,9 @@ namespace Yanki.Dialogue.Gramer
     /// <summary>Metin açılımında bağlanan bir olgu: ya bir ad (ek alabilir) ya da düz metin (ek almaz).</summary>
     internal sealed class MetinOlgusu
     {
-        private MetinOlgusu(string deger, bool ad, bool ozelAd, bool ince)
+        private MetinOlgusu(string deger, bool ad, bool ozelAd, bool ince, string? yumusakGovde)
         {
+            YumusakGovde = yumusakGovde;
             Deger = deger;
             AdMi = ad;
             OzelAd = ozelAd;
@@ -26,9 +27,12 @@ namespace Yanki.Dialogue.Gramer
         /// <summary>Yumuşak l: arka ünlüyle yazılsa da ince ünlü eki alır (Kemal'e).</summary>
         public bool Ince { get; }
 
-        public static MetinOlgusu Ad(string deger, bool ozelAd, bool ince = false) => new MetinOlgusu(deger, true, ozelAd, ince);
+        /// <summary>p, ç, t, k ile biten cins isimde ünlüyle başlayan ek için yazarın verdiği yumuşak gövde (borç → borc).</summary>
+        public string? YumusakGovde { get; }
 
-        public static MetinOlgusu Metin(string deger) => new MetinOlgusu(deger, false, false, false);
+        public static MetinOlgusu Ad(string deger, bool ozelAd, bool ince = false, string? yumusakGovde = null) => new MetinOlgusu(deger, true, ozelAd, ince, yumusakGovde);
+
+        public static MetinOlgusu Metin(string deger) => new MetinOlgusu(deger, false, false, false, null);
     }
 
     /// <summary>Gramer kuralları: kural adı → seçenek metinleri (her biri kural ve olgu etiketleri içerebilir). Kural adlarında nokta yoktur.</summary>
@@ -233,10 +237,58 @@ namespace Yanki.Dialogue.Gramer
             return new EtiketCozumu(EtiketTuru.Tanimsiz, ham, new string[0]);
         }
 
-        public static string Ac(string metin, GramerTablosu tablo, IReadOnlyDictionary<string, MetinOlgusu> olgular, AnahtarliRng rng) =>
-            Ac(metin, tablo, olgular, rng, 0);
+        /// <summary>
+        /// Ek listesini denetler (ek değiştiricileri en fazla bir ek ve en sonda en fazla bir <c>baslik</c> içerebilir). Ek yalnızca Türkçe dosyalarda ve yalnızca ad olgularında; kurala ve düz metin
+        /// olgusuna yalnızca <c>baslik</c> getirilebilir. Geçersizse açıklama, geçerliyse <c>null</c>.
+        /// </summary>
+        public static string? EkHatasi(IReadOnlyList<string> ekler, EtiketTuru tur, bool adOlgusu, bool turkce)
+        {
+            for (var i = 0; i < ekler.Count; i++)
+            {
+                var e = ekler[i];
+                if (e == "baslik")
+                {
+                    if (i != ekler.Count - 1)
+                    {
+                        return "baslik en sonda olmalı (ör. dinleyen.yonelme.baslik)";
+                    }
 
-        private static string Ac(string metin, GramerTablosu tablo, IReadOnlyDictionary<string, MetinOlgusu> olgular, AnahtarliRng rng, int seviye)
+                    continue;
+                }
+
+                if (Array.IndexOf(TurkceEkler.Ekler, e) < 0)
+                {
+                    return $"bilinmeyen ek \"{e}\" (geçerli: {string.Join(", ", TurkceEkler.Ekler)}, baslik)";
+                }
+
+                if (i > 0)
+                {
+                    return "birden çok ek getirilemez";
+                }
+
+                if (tur == EtiketTuru.Kural)
+                {
+                    return "gramer kuralına yalnızca baslik getirilir";
+                }
+
+                if (!adOlgusu)
+                {
+                    return "düz metin olgusuna yalnızca baslik getirilir (ek yalnızca ad olgularına)";
+                }
+
+                if (!turkce)
+                {
+                    return "ek değiştiricileri bu hafta yalnızca Türkçe (dil: tr) dosyalarında kullanılır";
+                }
+            }
+
+            return null;
+        }
+
+        public static string Ac(string metin, GramerTablosu tablo, IReadOnlyDictionary<string, MetinOlgusu> olgular, AnahtarliRng rng, bool turkce = true) =>
+            Ac(metin, tablo, olgular, rng, 0, turkce);
+
+        private static string Ac(string metin, GramerTablosu tablo, IReadOnlyDictionary<string, MetinOlgusu> olgular, AnahtarliRng rng, int seviye, bool turkce)
         {
             var etiketler = Etiketler(metin);
             if (etiketler.Count == 0)
@@ -255,12 +307,14 @@ namespace Yanki.Dialogue.Gramer
                 switch (cozum.Tur)
                 {
                     case EtiketTuru.Olgu:
-                        sb.Append(OlguMetni(e.Ham, olgular[cozum.Ad], cozum.Ekler));
+                        sb.Append(OlguMetni(e.Ham, olgular[cozum.Ad], cozum.Ekler, turkce));
                         break;
                     case EtiketTuru.Kural:
-                        if (cozum.Ekler.Count > 0)
+                    {
+                        var hata = EkHatasi(cozum.Ekler, EtiketTuru.Kural, false, turkce);
+                        if (hata != null)
                         {
-                            throw new InvalidOperationException($"#{e.Ham}#: gramer kuralına ek getirilmez (yalnızca ad olgularına: {string.Join(", ", TurkceEkler.Ekler)}).");
+                            throw new InvalidOperationException($"#{e.Ham}#: {hata}.");
                         }
 
                         if (seviye >= GramerTablosu.EnFazlaSeviye)
@@ -270,8 +324,10 @@ namespace Yanki.Dialogue.Gramer
 
                         var secenekler = tablo.Secenekler(cozum.Ad);
                         var secim = secenekler.Count > 1 ? rng.Aralik(0, secenekler.Count) : 0;
-                        sb.Append(Ac(secenekler[secim], tablo, olgular, rng, seviye + 1));
+                        var acilmis = Ac(secenekler[secim], tablo, olgular, rng, seviye + 1, turkce);
+                        sb.Append(cozum.Ekler.Count > 0 ? TurkceEkler.BasHarfBuyut(acilmis, turkce) : acilmis);
                         break;
+                    }
                     default:
                         throw new InvalidOperationException($"Tanımsız sembol \"#{e.Ham}#\".");
                 }
@@ -281,31 +337,33 @@ namespace Yanki.Dialogue.Gramer
             return sb.ToString();
         }
 
-        private static string OlguMetni(string ham, MetinOlgusu olgu, IReadOnlyList<string> ekler)
+        private static string OlguMetni(string ham, MetinOlgusu olgu, IReadOnlyList<string> ekler, bool turkce)
         {
             if (ekler.Count == 0)
             {
                 return olgu.Deger;
             }
 
-            if (!olgu.AdMi)
+            var hata = EkHatasi(ekler, EtiketTuru.Olgu, olgu.AdMi, turkce);
+            if (hata != null)
             {
-                throw new InvalidOperationException($"#{ham}#: metin olgusuna ek getirilmez (yalnızca ad olgularına).");
+                throw new InvalidOperationException($"#{ham}#: {hata}.");
             }
 
-            if (ekler.Count != 1 || Array.IndexOf(TurkceEkler.Ekler, ekler[0]) < 0)
-            {
-                throw new InvalidOperationException($"#{ham}#: bilinmeyen ya da birden çok ek (geçerli: {string.Join(", ", TurkceEkler.Ekler)}).");
-            }
-
+            var sonuc = olgu.Deger;
             try
             {
-                return TurkceEkler.Uygula(olgu.Deger, olgu.OzelAd, ekler[0], olgu.Ince);
+                if (ekler[0] != "baslik")
+                {
+                    sonuc = TurkceEkler.Uygula(olgu.Deger, olgu.OzelAd, ekler[0], olgu.Ince, olgu.YumusakGovde);
+                }
             }
             catch (ArgumentException e)
             {
                 throw new InvalidOperationException($"#{ham}#: {e.Message}");
             }
+
+            return ekler[ekler.Count - 1] == "baslik" ? TurkceEkler.BasHarfBuyut(sonuc, turkce) : sonuc;
         }
     }
 }

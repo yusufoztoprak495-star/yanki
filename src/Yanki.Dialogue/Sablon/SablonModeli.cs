@@ -14,7 +14,7 @@ namespace Yanki.Dialogue
     {
         internal SablonDosyasi(
             string dosyaAdi, string dil, string hash, SortedDictionary<string, AdKaydi> adlar, SortedDictionary<string, OnermeMetniKaydi> onermeMetinleri,
-            SortedDictionary<string, EslemeKurali> esleme, GramerTablosu gramer, IReadOnlyList<Sablon> sablonlar)
+            EslemeTablosu esleme, GramerTablosu gramer, IReadOnlyList<Sablon> sablonlar)
         {
             DosyaAdi = dosyaAdi;
             Dil = dil;
@@ -42,7 +42,7 @@ namespace Yanki.Dialogue
 
         internal SortedDictionary<string, OnermeMetniKaydi> OnermeMetinleri { get; }
 
-        internal SortedDictionary<string, EslemeKurali> Esleme { get; }
+        internal EslemeTablosu Esleme { get; }
 
         internal GramerTablosu Gramer { get; }
 
@@ -51,12 +51,16 @@ namespace Yanki.Dialogue
 
     internal sealed class AdKaydi
     {
-        public AdKaydi(string ad, bool ozelAd, bool ince)
+        public AdKaydi(string ad, bool ozelAd, bool ince, string? yumusak = null)
         {
             Ad = ad;
             OzelAd = ozelAd;
             Ince = ince;
+            Yumusak = yumusak;
         }
+
+        /// <summary>p, ç, t, k ile biten cins isimde ünlüyle başlayan ek için yazarın verdiği yumuşak gövde (borç → borc).</summary>
+        public string? Yumusak { get; }
 
         public string Ad { get; }
 
@@ -86,12 +90,22 @@ namespace Yanki.Dialogue
 
     internal sealed class OnermeMetniKaydi
     {
-        public OnermeMetniKaydi(IReadOnlyList<OnermeParcasi> olumlu, IReadOnlyList<OnermeParcasi> olumsuz, IReadOnlyList<int> sayilar)
+        public OnermeMetniKaydi(
+            IReadOnlyList<OnermeParcasi> olumlu, IReadOnlyList<OnermeParcasi> olumsuz, IReadOnlyList<int> sayilar, IReadOnlyList<int> ozneler,
+            SortedDictionary<string, OnermeVaryanti> varyantlar)
         {
             Olumlu = olumlu;
             Olumsuz = olumsuz;
             Sayilar = sayilar;
+            Ozneler = ozneler;
+            Varyantlar = varyantlar;
         }
+
+        /// <summary>Özne olabilecek (konuşan ya da dinleyen olabilen) argüman sıraları: her biri için ben ve sen varyantı zorunludur.</summary>
+        public IReadOnlyList<int> Ozneler { get; }
+
+        /// <summary>Anahtar "ben:0", "sen:1" gibi (kişi:argüman sırası); eklemli yüklem elle yazılır, motor fiil çekimi yapmaz.</summary>
+        public SortedDictionary<string, OnermeVaryanti> Varyantlar { get; }
 
         public IReadOnlyList<OnermeParcasi> Olumlu { get; }
 
@@ -103,8 +117,10 @@ namespace Yanki.Dialogue
 
     internal sealed class EslemeKurali
     {
-        public EslemeKurali(string olayTuru, string niyet, bool konusanFail, int satir)
+        public EslemeKurali(string olayTuru, string kaynak, string niyet, bool konusanFail, bool dinleyensiz, int satir)
         {
+            Kaynak = kaynak;
+            Dinleyensiz = dinleyensiz;
             OlayTuru = olayTuru;
             Niyet = niyet;
             KonusanFail = konusanFail;
@@ -112,6 +128,12 @@ namespace Yanki.Dialogue
         }
 
         public string OlayTuru { get; }
+
+        /// <summary>Olayın kaynağı: <c>oyuncu</c>, <c>npc</c> ya da boş (her ikisi).</summary>
+        public string Kaynak { get; }
+
+        /// <summary>Niyet dinleyensiz mi: satır mekanı taşır, kimin gördüğünü demo filtreler.</summary>
+        public bool Dinleyensiz { get; }
 
         /// <summary>Niyet (concept) adı.</summary>
         public string Niyet { get; }
@@ -234,6 +256,58 @@ namespace Yanki.Dialogue
 
                 return false;
             }
+        }
+    }
+}
+
+namespace Yanki.Dialogue
+{
+    internal sealed class OnermeVaryanti
+    {
+        public OnermeVaryanti(IReadOnlyList<OnermeParcasi> olumlu, IReadOnlyList<OnermeParcasi> olumsuz)
+        {
+            Olumlu = olumlu;
+            Olumsuz = olumsuz;
+        }
+
+        public IReadOnlyList<OnermeParcasi> Olumlu { get; }
+
+        public IReadOnlyList<OnermeParcasi> Olumsuz { get; }
+    }
+
+    /// <summary>
+    /// Olay türü → niyet eşlemeleri (DURAK 2 kararı 6: kaynağa göre ayrılır, oyuncu | npc). Önce kaynağı eşleşen kural, yoksa kaynaksız kural kullanılır.
+    /// </summary>
+    internal sealed class EslemeTablosu
+    {
+        private readonly List<EslemeKurali> _kurallar = new List<EslemeKurali>();
+
+        public IReadOnlyList<EslemeKurali> Hepsi => _kurallar;
+
+        public void Ekle(EslemeKurali k) => _kurallar.Add(k);
+
+        public EslemeKurali? Bul(string olayTuru, string kaynak)
+        {
+            EslemeKurali? genel = null;
+            foreach (var k in _kurallar)
+            {
+                if (k.OlayTuru != olayTuru)
+                {
+                    continue;
+                }
+
+                if (k.Kaynak == kaynak)
+                {
+                    return k;
+                }
+
+                if (k.Kaynak.Length == 0)
+                {
+                    genel = k;
+                }
+            }
+
+            return genel;
         }
     }
 }

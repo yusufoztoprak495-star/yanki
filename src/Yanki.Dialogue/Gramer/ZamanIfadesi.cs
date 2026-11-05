@@ -5,7 +5,7 @@ namespace Yanki.Dialogue.Gramer
 {
     /// <summary>
     /// Göreli zaman ifadesi (bugün, dün, üç gün önce ...). Takvim yoktur: ifade, olayın ve şimdiki tick'in OYUN İÇİ GÜN numaralarının farkından hesaplanır
-    /// (gün no = (tick − 1) / <see cref="DiyalogAyarlari.GunUzunlugu"/>). Eşikler ve metinler ayardandır.
+    /// (gün no = floor(tick / <see cref="DiyalogAyarlari.GunUzunlugu"/>)). Eşikler ve metinler ayardandır.
     /// </summary>
     internal static class ZamanIfadesi
     {
@@ -47,7 +47,7 @@ namespace Yanki.Dialogue.Gramer
             return fark < ayar.UzunSureEsigiGun ? ayar.HaftaIfadesi : ayar.UzunSureIfadesi;
         }
 
-        private static long GunNo(long tick, DiyalogAyarlari ayar) => Math.Max(tick - 1, 0L) / ayar.GunUzunlugu;
+        private static long GunNo(long tick, DiyalogAyarlari ayar) => Math.Max(tick, 0L) / ayar.GunUzunlugu;
 
         private static string Sayi(long n) => n >= 0 && n < Sayilar.Length ? Sayilar[n] : n.ToString(CultureInfo.InvariantCulture);
     }

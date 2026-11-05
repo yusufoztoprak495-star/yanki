@@ -184,11 +184,12 @@ namespace Yanki.Dialogue
                     var ad = v.Al("ad");
                     var cins = v.Al("cins");
                     var ince = v.Al("ince");
+                    var yumusak = v.Al("yumusak");
                     foreach (var o in v.Ozellikler)
                     {
-                        if (o.Key != "ad" && o.Key != "cins" && o.Key != "ince")
+                        if (o.Key != "ad" && o.Key != "cins" && o.Key != "ince" && o.Key != "yumusak")
                         {
-                            hata(o.Value.Satir, "adlar", kv.Key, $"bilinmeyen alan \"{o.Key}\" (ad, cins, ince)");
+                            hata(o.Value.Satir, "adlar", kv.Key, $"bilinmeyen alan \"{o.Key}\" (ad, cins, ince, yumusak)");
                         }
                     }
 
@@ -210,7 +211,20 @@ namespace Yanki.Dialogue
                         continue;
                     }
 
-                    sonuc[kv.Key] = new AdKaydi(ad.MetinDeger, !(cins != null && cins.MantiksalDeger), ince != null && ince.MantiksalDeger);
+                    if (yumusak != null && (yumusak.Tur != JsonTuru.Metin || yumusak.MetinDeger.Trim().Length == 0))
+                    {
+                        hata(yumusak.Satir, "adlar", kv.Key, "\"yumusak\" metin olmalı (yumuşak gövde, ör. borç → borc)");
+                        continue;
+                    }
+
+                    var cinsIsim = cins != null && cins.MantiksalDeger;
+                    if (cinsIsim && TurkceEkler.YumusamaAdayi(ad.MetinDeger.Trim()) && yumusak == null)
+                    {
+                        hata(v.Satir, "adlar", kv.Key, $"\"{ad.MetinDeger}\" p, ç, t ya da k ile biten bir cins isim: yumuşak gövde zorunlu (\"yumusak\": \"...\", ör. borç → borc; yumuşamayan sözcükte gövde aynen yazılır). Yanlış ek sessizce üretilmez.");
+                        continue;
+                    }
+
+                    sonuc[kv.Key] = new AdKaydi(ad.MetinDeger, !(cins != null && cins.MantiksalDeger), ince != null && ince.MantiksalDeger, yumusak == null ? null : yumusak.MetinDeger);
                 }
                 else
                 {
@@ -252,9 +266,9 @@ namespace Yanki.Dialogue
 
                 foreach (var o in v.Ozellikler)
                 {
-                    if (o.Key != "metin" && o.Key != "olumsuz" && o.Key != "sayilar")
+                    if (o.Key != "metin" && o.Key != "olumsuz" && o.Key != "sayilar" && o.Key != "ozne" && o.Key != "ben" && o.Key != "sen")
                     {
-                        hata(o.Value.Satir, "onerme_metni", kv.Key, $"bilinmeyen alan \"{o.Key}\" (metin, olumsuz, sayilar)");
+                        hata(o.Value.Satir, "onerme_metni", kv.Key, $"bilinmeyen alan \"{o.Key}\" (metin, olumsuz, sayilar, ozne, ben, sen)");
                     }
                 }
 
@@ -282,15 +296,128 @@ namespace Yanki.Dialogue
                     }
                 }
 
+                var ozneler = OzneleriOku(v.Al("ozne"), kv.Key, hata);
+                var varyantlar = new SortedDictionary<string, OnermeVaryanti>(StringComparer.Ordinal);
+                var varyantTamam = true;
+                foreach (var kisi in new[] { "ben", "sen" })
+                {
+                    varyantTamam &= VaryantlariOku(v.Al(kisi), kisi, kv.Key, ozneler, sayilar, dil, hata, varyantlar);
+                }
+
+                var okundu = varyantTamam;
+                foreach (var p in ozneler)
+                {
+                    foreach (var kisi in new[] { "ben", "sen" })
+                    {
+                        if (!varyantlar.ContainsKey(kisi + ":" + p.ToString(System.Globalization.CultureInfo.InvariantCulture)) && okundu)
+                        {
+                            hata(v.Satir, "onerme_metni", kv.Key, $"ozne {p} için {kisi} varyantı yok: özne konuşan ya da dinleyen olabiliyorsa ben ve sen varyantı zorunlu (eklemli yüklem elle yazılır, motor fiil çekimi yapmaz)");
+                        }
+                    }
+                }
+
                 var olumlu = OnermeParcalari(v.Al("metin"), "metin", kv.Key, sayilar, dil, hata);
                 var olumsuz = OnermeParcalari(v.Al("olumsuz"), "olumsuz", kv.Key, sayilar, dil, hata);
                 if (olumlu != null && olumsuz != null)
                 {
-                    sonuc[kv.Key] = new OnermeMetniKaydi(olumlu, olumsuz, sayilar);
+                    sonuc[kv.Key] = new OnermeMetniKaydi(olumlu, olumsuz, sayilar, ozneler, varyantlar);
                 }
             }
 
             return sonuc;
+        }
+
+        private static List<int> OzneleriOku(JsonDegeri? d, string yuklem, Action<int, string, string, string> hata)
+        {
+            var sonuc = new List<int>();
+            if (d == null)
+            {
+                return sonuc;
+            }
+
+            if (d.Tur != JsonTuru.Dizi)
+            {
+                hata(d.Satir, "onerme_metni", yuklem, "\"ozne\" tam sayı dizisi olmalı (özne olabilecek argüman sıraları)");
+                return sonuc;
+            }
+
+            foreach (var e in d.Elemanlar)
+            {
+                if (e.Tur != JsonTuru.Sayi || e.SayiDeger < 0 || e.SayiDeger != decimal.Truncate(e.SayiDeger))
+                {
+                    hata(e.Satir, "onerme_metni", yuklem, "\"ozne\" öğeleri 0 ya da büyük tam sayı olmalı");
+                }
+                else
+                {
+                    sonuc.Add((int)e.SayiDeger);
+                }
+            }
+
+            return sonuc;
+        }
+
+        // ben/sen varyantları: { "0": { "metin", "olumsuz" } }; anahtar özne sırası. Eklemli yüklem elle yazılır.
+        private static bool VaryantlariOku(
+            JsonDegeri? d, string kisi, string yuklem, List<int> ozneler, List<int> sayilar, string dil, Action<int, string, string, string> hata,
+            SortedDictionary<string, OnermeVaryanti> sonuc)
+        {
+            if (d == null)
+            {
+                return true;
+            }
+
+            if (d.Tur != JsonTuru.Nesne)
+            {
+                hata(d.Satir, "onerme_metni", yuklem, $"\"{kisi}\" bir nesne olmalı (özne sırası → {{ \"metin\", \"olumsuz\" }})");
+                return false;
+            }
+
+            var tamam = true;
+            foreach (var kv in d.Ozellikler)
+            {
+                var v = kv.Value;
+                if (!int.TryParse(kv.Key, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var sira) || !ozneler.Contains(sira))
+                {
+                    hata(v.Satir, "onerme_metni", yuklem, $"{kisi} varyantı {kv.Key}: ozne listesinde yok");
+                    tamam = false;
+                    continue;
+                }
+
+                if (v.Tur != JsonTuru.Nesne)
+                {
+                    hata(v.Satir, "onerme_metni", yuklem, $"{kisi} varyantı {kv.Key}: {{ \"metin\", \"olumsuz\" }} nesnesi olmalı");
+                    tamam = false;
+                    continue;
+                }
+
+                foreach (var o in v.Ozellikler)
+                {
+                    if (o.Key != "metin" && o.Key != "olumsuz")
+                    {
+                        hata(o.Value.Satir, "onerme_metni", yuklem, $"{kisi} varyantı {kv.Key}: bilinmeyen alan \"{o.Key}\" (metin, olumsuz)");
+                        tamam = false;
+                    }
+                }
+
+                if (v.Al("olumsuz") == null)
+                {
+                    hata(v.Satir, "onerme_metni", yuklem, $"{kisi} varyantı {kv.Key}: \"olumsuz\" gerekli (degil(...) için ayrı metin zorunludur)");
+                    tamam = false;
+                    continue;
+                }
+
+                var olumlu = OnermeParcalari(v.Al("metin"), "metin", yuklem, sayilar, dil, hata);
+                var olumsuz = OnermeParcalari(v.Al("olumsuz"), "olumsuz", yuklem, sayilar, dil, hata);
+                if (olumlu == null || olumsuz == null)
+                {
+                    tamam = false;
+                    continue;
+                }
+
+                sonuc[kisi + ":" + kv.Key] = new OnermeVaryanti(olumlu, olumsuz);
+            }
+
+            return tamam;
         }
 
         private static IReadOnlyList<OnermeParcasi>? OnermeParcalari(
@@ -376,67 +503,111 @@ namespace Yanki.Dialogue
             return tamam ? parcalar : null;
         }
 
-        private static SortedDictionary<string, EslemeKurali> EslemeyiOku(JsonDegeri? d, Action<int, string, string, string> hata)
+        private static EslemeTablosu EslemeyiOku(JsonDegeri? d, Action<int, string, string, string> hata)
         {
-            var sonuc = new SortedDictionary<string, EslemeKurali>(StringComparer.Ordinal);
+            var tablo = new EslemeTablosu();
             if (d == null)
             {
-                return sonuc;
+                return tablo;
             }
 
-            if (d.Tur != JsonTuru.Nesne)
+            // İki biçim: nesne (olay türü → { niyet, konusan, kaynak?, dinleyensiz? }) ya da dizi ([{ olay_turu, kaynak?, niyet, konusan, dinleyensiz? }]). Kaynak: oyuncu | npc.
+            var girdiler = new List<(string Tur, JsonDegeri Deger)>();
+            if (d.Tur == JsonTuru.Nesne)
             {
-                hata(d.Satir, "esleme", string.Empty, "bir nesne olmalı (olay türü → { niyet, konusan })");
-                return sonuc;
-            }
-
-            foreach (var kv in d.Ozellikler)
-            {
-                var v = kv.Value;
-                if (!KimlikMi(kv.Key))
+                foreach (var kv in d.Ozellikler)
                 {
-                    hata(v.Satir, "esleme", kv.Key, "olay türü ASCII olmalı");
+                    girdiler.Add((kv.Key, kv.Value));
+                }
+            }
+            else if (d.Tur == JsonTuru.Dizi)
+            {
+                foreach (var e in d.Elemanlar)
+                {
+                    var t = e.Tur == JsonTuru.Nesne ? e.Al("olay_turu") : null;
+                    if (t == null || t.Tur != JsonTuru.Metin)
+                    {
+                        hata(e.Satir, "esleme", string.Empty, "dizi elemanı { \"olay_turu\", \"niyet\", \"konusan\" } nesnesi olmalı");
+                        continue;
+                    }
+
+                    girdiler.Add((t.MetinDeger, e));
+                }
+            }
+            else
+            {
+                hata(d.Satir, "esleme", string.Empty, "bir nesne ya da dizi olmalı (olay türü → { niyet, konusan, kaynak })");
+                return tablo;
+            }
+
+            var gorulen = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var (tur, v) in girdiler)
+            {
+                if (!KimlikMi(tur))
+                {
+                    hata(v.Satir, "esleme", tur, "olay türü ASCII olmalı");
                     continue;
                 }
 
-                if (IcOlay(kv.Key))
+                if (IcOlay(tur))
                 {
-                    hata(v.Satir, "esleme", kv.Key, "iç olay türü eşlenemez (zihin, karar, fren, yay, dünya olayları ve aktarım kaydı diyalog katmanına kapalıdır; yalan gizliliği)");
+                    hata(v.Satir, "esleme", tur, "iç olay türü eşlenemez (zihin, karar, fren, yay, dünya olayları ve aktarım kaydı diyalog katmanına kapalıdır; yalan gizliliği)");
                     continue;
                 }
 
                 if (v.Tur != JsonTuru.Nesne)
                 {
-                    hata(v.Satir, "esleme", kv.Key, "{ \"niyet\", \"konusan\" } nesnesi olmalı");
+                    hata(v.Satir, "esleme", tur, "{ \"niyet\", \"konusan\" } nesnesi olmalı");
                     continue;
                 }
 
                 foreach (var o in v.Ozellikler)
                 {
-                    if (o.Key != "niyet" && o.Key != "konusan")
+                    if (o.Key != "niyet" && o.Key != "konusan" && o.Key != "kaynak" && o.Key != "dinleyensiz" && o.Key != "olay_turu")
                     {
-                        hata(o.Value.Satir, "esleme", kv.Key, $"bilinmeyen alan \"{o.Key}\" (niyet, konusan); eylem kimliği kullanılmaz, eşleme olay türüyle yapılır");
+                        hata(o.Value.Satir, "esleme", tur, $"bilinmeyen alan \"{o.Key}\" (olay_turu, kaynak, niyet, konusan, dinleyensiz); eylem kimliği kullanılmaz, eşleme olay türüyle yapılır");
                     }
                 }
 
                 var niyet = v.Al("niyet");
                 var konusan = v.Al("konusan");
+                var kaynak = v.Al("kaynak");
+                var dinleyensiz = v.Al("dinleyensiz");
                 if (niyet == null || niyet.Tur != JsonTuru.Metin || !KimlikMi(niyet.MetinDeger))
                 {
-                    hata(v.Satir, "esleme", kv.Key, "\"niyet\" (concept adı, ASCII) gerekli");
+                    hata(v.Satir, "esleme", tur, "\"niyet\" (concept adı, ASCII) gerekli");
                     continue;
                 }
 
                 if (konusan == null || konusan.Tur != JsonTuru.Metin || (konusan.MetinDeger != "fail" && konusan.MetinDeger != "hedef"))
                 {
-                    hata(v.Satir, "esleme", kv.Key, "\"konusan\" fail ya da hedef olmalı");
+                    hata(v.Satir, "esleme", tur, "\"konusan\" fail ya da hedef olmalı");
                     continue;
                 }
 
-                sonuc[kv.Key] = new EslemeKurali(kv.Key, niyet.MetinDeger, konusan.MetinDeger == "fail", v.Satir);
+                if (kaynak != null && (kaynak.Tur != JsonTuru.Metin || (kaynak.MetinDeger != "oyuncu" && kaynak.MetinDeger != "npc")))
+                {
+                    hata(kaynak.Satir, "esleme", tur, "\"kaynak\" oyuncu ya da npc olmalı (olayı yapanın kim olduğu)");
+                    continue;
+                }
+
+                if (dinleyensiz != null && dinleyensiz.Tur != JsonTuru.Mantiksal)
+                {
+                    hata(dinleyensiz.Satir, "esleme", tur, "\"dinleyensiz\" true ya da false olmalı");
+                    continue;
+                }
+
+                var kaynakMetni = kaynak == null ? string.Empty : kaynak.MetinDeger;
+                if (!gorulen.Add(tur + "|" + kaynakMetni))
+                {
+                    hata(v.Satir, "esleme", tur, "aynı olay türü ve kaynak için iki kez eşleme var (" + (kaynakMetni.Length == 0 ? "kaynaksız" : "kaynak " + kaynakMetni) + ")");
+                    continue;
+                }
+
+                tablo.Ekle(new EslemeKurali(tur, kaynakMetni, niyet.MetinDeger, konusan.MetinDeger == "fail", dinleyensiz != null && dinleyensiz.MantiksalDeger, v.Satir));
             }
 
-            return sonuc;
+            return tablo;
         }
 
         private static GramerTablosu GramerOku(JsonDegeri? d, Action<int, string, string, string> hata, out SortedDictionary<string, int> satirlar)
@@ -543,30 +714,17 @@ namespace Yanki.Dialogue
                 return;
             }
 
-            if (c.Tur == EtiketTuru.Kural)
+            var adOlgusu = c.Tur == EtiketTuru.Olgu && Array.IndexOf(MetinOlgulari, c.Ad) < 0;
+            var mesaj = GramerAcilimi.EkHatasi(c.Ekler, c.Tur, adOlgusu, dil == "tr");
+            if (mesaj != null)
             {
-                hata($"#{ham}#: gramer kuralına ek getirilmez");
-            }
-            else if (c.Tur == EtiketTuru.Olgu)
-            {
-                if (Array.IndexOf(MetinOlgulari, c.Ad) >= 0)
-                {
-                    hata($"#{ham}#: \"{c.Ad}\" düz metindir, ek getirilmez");
-                }
-                else if (c.Ekler.Count != 1 || Array.IndexOf(TurkceEkler.Ekler, c.Ekler[0]) < 0)
-                {
-                    hata($"#{ham}#: bilinmeyen ya da birden çok ek (yonelme, belirtme, bulunma, ayrilma, iyelik)");
-                }
-                else if (dil != "tr")
-                {
-                    hata($"#{ham}#: ek değiştiricileri bu hafta yalnızca Türkçe (dil: tr) dosyalarında kullanılır");
-                }
+                hata($"#{ham}#: {mesaj}");
             }
         }
 
         private static List<Sablon> SablonlariOku(
             JsonDegeri? d, Action<int, string, string, string> hata, string dil, GramerTablosu gramer, SortedDictionary<string, OnermeMetniKaydi> onermeMetinleri,
-            SortedDictionary<string, EslemeKurali> esleme)
+            EslemeTablosu esleme)
         {
             var sonuc = new List<Sablon>();
             if (d == null)
@@ -583,9 +741,9 @@ namespace Yanki.Dialogue
 
             // anlatti'ya eşlenen concept'ler (yalan gizliliği kuralları bunlara uygulanır) ve followup hedef concept'leri.
             var anlattiConceptleri = new SortedSet<string>(StringComparer.Ordinal);
-            foreach (var e in esleme.Values)
+            foreach (var e in esleme.Hepsi)
             {
-                if (e.OlayTuru == "anlatti")
+                if (e.OlayTuru == "anlatti" && e.Kaynak != "oyuncu" && e.KonusanFail)
                 {
                     anlattiConceptleri.Add(e.Niyet);
                 }
@@ -1027,6 +1185,53 @@ namespace Yanki.Dialogue
             }
         }
 
+        private static void DinleyensizDenetimi(List<Sablon> sablonlar, EslemeTablosu esleme, Action<int, string, string, string> hata)
+        {
+            var dinleyensiz = new SortedSet<string>(StringComparer.Ordinal);
+            var dinleyenli = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var e in esleme.Hepsi)
+            {
+                (e.Dinleyensiz ? dinleyensiz : dinleyenli).Add(e.Niyet);
+            }
+
+            foreach (var c in dinleyensiz)
+            {
+                if (dinleyenli.Contains(c))
+                {
+                    hata(1, "esleme", c, $"niyet \"{c}\" hem dinleyenli hem dinleyensiz olayla eşlenmiş: bir niyet ya dinleyenlidir ya dinleyensiz");
+                }
+            }
+
+            foreach (var s in sablonlar)
+            {
+                if (!dinleyensiz.Contains(s.Concept))
+                {
+                    continue;
+                }
+
+                foreach (var k in s.Kriterler)
+                {
+                    var roller = new List<Rol>();
+                    Topla(k.Alan, roller, new List<string>());
+                    if (roller.Contains(Rol.Dinleyen))
+                    {
+                        hata(s.Satir, "sablon", s.Id, "dinleyensiz niyette \"dinleyen\" rolü kullanılamaz (dinleyen yok)");
+                        break;
+                    }
+                }
+
+                if (s.Metin.Contains("#dinleyen", StringComparison.Ordinal))
+                {
+                    hata(s.Satir, "sablon", s.Id, "dinleyensiz niyette #dinleyen# yuvası kullanılamaz (dinleyen yok)");
+                }
+
+                if (s.Sonra != null && s.Sonra.Hedef == "dinleyen")
+                {
+                    hata(s.Satir, "sonra", s.Id, "dinleyensiz niyette followup hedefi dinleyen olamaz (dinleyen yok)");
+                }
+            }
+        }
+
         private static void Topla(SorguCagrisi c, List<Rol> roller, List<string> fonksiyonlar)
         {
             fonksiyonlar.Add(c.Ad);
@@ -1070,8 +1275,9 @@ namespace Yanki.Dialogue
             return false;
         }
 
-        private static void CaprazDenetimler(List<Sablon> sablonlar, SortedDictionary<string, EslemeKurali> esleme, Action<int, string, string, string> hata)
+        private static void CaprazDenetimler(List<Sablon> sablonlar, EslemeTablosu esleme, Action<int, string, string, string> hata)
         {
+            DinleyensizDenetimi(sablonlar, esleme, hata);
             var genelVar = new SortedSet<string>(StringComparer.Ordinal);
             var conceptler = new SortedSet<string>(StringComparer.Ordinal);
             var followupConceptleri = new SortedDictionary<string, int>(StringComparer.Ordinal);
@@ -1089,7 +1295,7 @@ namespace Yanki.Dialogue
                 }
             }
 
-            foreach (var e in esleme.Values)
+            foreach (var e in esleme.Hepsi)
             {
                 if (!genelVar.Contains(e.Niyet))
                 {
