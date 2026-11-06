@@ -15,7 +15,8 @@
     },
     "muhur": {
       "ad": "mühür",
-      "cins": true
+      "cins": true,
+      "yumusak": "mühr"
     },
     "kasa": {
       "ad": "kasa",
@@ -102,7 +103,7 @@
         }
       }
     },
-    "yeri": {
+    "konum!": {
       "metin": "{0.tamlayan} yeri {1.bulunma}",
       "olumsuz": "{0.tamlayan} yeri {1.bulunma} değil"
     },
@@ -444,7 +445,7 @@
           "zorunlu": true
         }
       ],
-      "konu_deseni": "yeri(muhur,*)",
+      "konu_deseni": "konum!(muhur,*)",
       "tekrar": {
         "tekrar_bekleme": 1
       },
@@ -575,7 +576,7 @@
           "zorunlu": true
         },
         {
-          "alan": "inanc(yeri(muhur, depo))",
+          "alan": "inanc(konum!(muhur, depo))",
           "op": ">=",
           "deger": 0.5,
           "agirlik": 2,

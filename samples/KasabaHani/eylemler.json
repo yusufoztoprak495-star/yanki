@@ -14,20 +14,19 @@
           }
         }
       ],
-      "on_kosullar": [
-        {
-          "alan": "kisilik(sosyallik)",
-          "op": ">=",
-          "deger": 0.5
-        }
-      ],
       "kisilik_carpani": {
         "ozellikler": [
           {
             "ozellik": "sosyallik"
           }
         ]
-      }
+      },
+      "aktorler": [
+        "Ayse",
+        "Can",
+        "Fatma",
+        "Kerem"
+      ]
     },
     {
       "id": "dinlen",
@@ -50,7 +49,7 @@
       "konu_desenleri": [
         "borclu(*,*,*)",
         "kardes(*,*)",
-        "yeri(*,*)",
+        "konum!(muhur,*)",
         "kese_calindi(*,*)"
       ],
       "olcutler": [
@@ -98,11 +97,6 @@
       },
       "on_kosullar": [
         {
-          "alan": "kisilik(acgozluluk)",
-          "op": ">=",
-          "deger": 0.7
-        },
-        {
           "alan": "hafiza_var(kese_calindi, ben, 72)",
           "op": "==",
           "deger": true
@@ -122,6 +116,9 @@
           "op": "==",
           "deger": false
         }
+      ],
+      "aktorler": [
+        "Kerem"
       ]
     },
     {
@@ -135,21 +132,6 @@
         }
       ],
       "on_kosullar": [
-        {
-          "alan": "kisilik(acgozluluk)",
-          "op": "<=",
-          "deger": 0.45
-        },
-        {
-          "alan": "kisilik(sosyallik)",
-          "op": ">=",
-          "deger": 0.65
-        },
-        {
-          "alan": "kisilik(durustluk)",
-          "op": ">=",
-          "deger": 0.65
-        },
         {
           "alan": "ayni_mekanda(eylem.hedef)",
           "op": "==",
@@ -168,6 +150,9 @@
           "tur": "hafiza",
           "onem": 0.4
         }
+      ],
+      "aktorler": [
+        "Riza"
       ]
     },
     {
@@ -175,23 +160,6 @@
       "olay_turu": "borc_sikintisi",
       "hedef": "yok",
       "taban": 1.2,
-      "on_kosullar": [
-        {
-          "alan": "kisilik(cesaret)",
-          "op": "<=",
-          "deger": 0.4
-        },
-        {
-          "alan": "kisilik(sosyallik)",
-          "op": "<=",
-          "deger": 0.35
-        },
-        {
-          "alan": "kisilik(merhamet)",
-          "op": ">=",
-          "deger": 0.55
-        }
-      ],
       "cooldown": 96,
       "kapsam": "npc",
       "etkiler": [
@@ -199,6 +167,9 @@
           "tur": "hafiza",
           "onem": 0.3
         }
+      ],
+      "aktorler": [
+        "Mehmet"
       ]
     },
     {
@@ -206,13 +177,6 @@
       "olay_turu": "para_sayildi",
       "hedef": "yok",
       "taban": 1,
-      "on_kosullar": [
-        {
-          "alan": "kisilik(sosyallik)",
-          "op": ">=",
-          "deger": 0.85
-        }
-      ],
       "cooldown": 72,
       "kapsam": "npc",
       "etkiler": [
@@ -220,6 +184,9 @@
           "tur": "hafiza",
           "onem": 0.2
         }
+      ],
+      "aktorler": [
+        "Ayse"
       ]
     },
     {
@@ -228,16 +195,6 @@
       "hedef": "npc",
       "taban": 2,
       "on_kosullar": [
-        {
-          "alan": "kisilik(kin_tutma)",
-          "op": ">=",
-          "deger": 0.8
-        },
-        {
-          "alan": "kisilik(cesaret)",
-          "op": ">=",
-          "deger": 0.7
-        },
         {
           "alan": "fikir(eylem.hedef)",
           "op": "<",
@@ -283,6 +240,9 @@
           "siddet": 0.5,
           "hedef": "eylem.hedef"
         }
+      ],
+      "aktorler": [
+        "Dursun"
       ]
     },
     {
@@ -291,16 +251,6 @@
       "hedef": "npc",
       "taban": 1.2,
       "on_kosullar": [
-        {
-          "alan": "kisilik(acgozluluk)",
-          "op": ">=",
-          "deger": 0.7
-        },
-        {
-          "alan": "kisilik(cesaret)",
-          "op": ">=",
-          "deger": 0.6
-        },
         {
           "alan": "ayni_mekanda(eylem.hedef)",
           "op": "==",
@@ -315,6 +265,9 @@
       "olcutler": [
         {
           "alan": "kisilik(acgozluluk)"
+        },
+        {
+          "alan": "kisilik(cesaret)"
         }
       ],
       "celisen_ozellikler": [
@@ -329,6 +282,9 @@
           "tur": "hafiza",
           "onem": 0.6
         }
+      ],
+      "aktorler": [
+        "Kerem"
       ]
     },
     {
@@ -399,16 +355,6 @@
       "taban": 1.5,
       "on_kosullar": [
         {
-          "alan": "kisilik(cesaret)",
-          "op": "<=",
-          "deger": 0.35
-        },
-        {
-          "alan": "kisilik(durustluk)",
-          "op": ">=",
-          "deger": 0.65
-        },
-        {
           "alan": "ayni_mekanda(eylem.hedef)",
           "op": "==",
           "deger": true
@@ -431,6 +377,9 @@
           "tur": "hafiza",
           "onem": 0.4
         }
+      ],
+      "aktorler": [
+        "Osman"
       ]
     },
     {
@@ -444,11 +393,6 @@
         }
       ],
       "on_kosullar": [
-        {
-          "alan": "kisilik(merhamet)",
-          "op": ">=",
-          "deger": 0.75
-        },
         {
           "alan": "fikir(eylem.hedef)",
           "op": "<",
@@ -476,16 +420,6 @@
       "taban": 2,
       "on_kosullar": [
         {
-          "alan": "kisilik(merhamet)",
-          "op": ">=",
-          "deger": 0.75
-        },
-        {
-          "alan": "kisilik(cesaret)",
-          "op": ">=",
-          "deger": 0.55
-        },
-        {
           "alan": "hafiza_var(ele_verdirme_istendi, oyuncu, 24)",
           "op": "==",
           "deger": true
@@ -512,6 +446,9 @@
           "tur": "hafiza",
           "onem": 0.7
         }
+      ],
+      "aktorler": [
+        "Can"
       ]
     },
     {
@@ -520,16 +457,6 @@
       "hedef": "yok",
       "taban": 2,
       "on_kosullar": [
-        {
-          "alan": "kisilik(cesaret)",
-          "op": "<=",
-          "deger": 0.35
-        },
-        {
-          "alan": "kisilik(durustluk)",
-          "op": ">=",
-          "deger": 0.65
-        },
         {
           "alan": "yay(kasaba_gerginligi)",
           "op": ">=",
@@ -553,6 +480,9 @@
           "tur": "hafiza",
           "onem": 0.3
         }
+      ],
+      "aktorler": [
+        "Osman"
       ]
     },
     {
@@ -561,21 +491,6 @@
       "hedef": "yok",
       "taban": 1,
       "on_kosullar": [
-        {
-          "alan": "kisilik(acgozluluk)",
-          "op": "<=",
-          "deger": 0.45
-        },
-        {
-          "alan": "kisilik(sosyallik)",
-          "op": ">=",
-          "deger": 0.65
-        },
-        {
-          "alan": "kisilik(durustluk)",
-          "op": ">=",
-          "deger": 0.65
-        },
         {
           "alan": "yay(han_itibari)",
           "op": ">=",
@@ -599,6 +514,9 @@
           "tur": "hafiza",
           "onem": 0.3
         }
+      ],
+      "aktorler": [
+        "Riza"
       ]
     }
   ]

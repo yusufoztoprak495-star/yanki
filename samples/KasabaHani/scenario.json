@@ -96,7 +96,7 @@
         "acgozluluk": 0.6,
         "durustluk": 0.7,
         "cesaret": 0.3,
-        "sosyallik": 0.45,
+        "sosyallik": 0.6,
         "kin_tutma": 0.4,
         "merhamet": 0.4
       }
@@ -142,8 +142,8 @@
     "borclu(Mehmet,Riza,500)",
     "kardes(Mehmet,Can)",
     "sahip!(muhur,Osman)",
-    "yeri(muhur,depo)",
-    "yeri(kasa,han)"
+    "konum!(muhur,depo)",
+    "konum!(kasa,han)"
   ],
   "olay_turleri": [
     "selam_oldu",

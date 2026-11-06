@@ -24,7 +24,7 @@
       "tur": "anlatti",
       "hedef_turu": "npc",
       "yuk": {
-        "onerme": "yeri(muhur,depo)"
+        "onerme": "konum!(muhur,depo)"
       },
       "metin": "Mührün depoda olduğunu söyle"
     },

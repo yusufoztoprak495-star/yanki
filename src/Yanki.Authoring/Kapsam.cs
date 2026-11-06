@@ -276,6 +276,7 @@ namespace Yanki.Authoring
             public readonly SortedDictionary<string, int> Fren = new SortedDictionary<string, int>(StringComparer.Ordinal);
             public readonly SortedDictionary<string, int> Sablon = new SortedDictionary<string, int>(StringComparer.Ordinal);
             public int Reddedilen;
+            public readonly SortedDictionary<string, int> Atlanan = new SortedDictionary<string, int>(StringComparer.Ordinal);
         }
 
         /// <summary>Senaryoyu doğrulayıp yükler; her betik × seed (1..seedSayisi) ve oyuncusuz koşuyu <paramref name="tick"/> tick koşar.</summary>
@@ -408,7 +409,16 @@ namespace Yanki.Authoring
                 reddedilenler.Add(new KeyValuePair<string, int>(ad, betikSayaclari[ad].Reddedilen));
             }
 
-            var md = Rapor.Yaz(yuklenen.Senaryo.Ad, seedSayisi, tick, betikAdlari, kurallar, eylemler, krizler, frenler, sablonlar, toplamTetik, hic, asan, hicSablon, ayar, yuklenen.Sablon != null, reddedilenler);
+            var atlananSatirlari = new List<KeyValuePair<string, int>>();
+            foreach (var ad in betikAdlari)
+            {
+                foreach (var kv in betikSayaclari[ad].Atlanan)
+                {
+                    atlananSatirlari.Add(new KeyValuePair<string, int>(ad + " | " + kv.Key, kv.Value));
+                }
+            }
+
+            var md = Rapor.Yaz(yuklenen.Senaryo.Ad, seedSayisi, tick, betikAdlari, kurallar, eylemler, krizler, frenler, sablonlar, toplamTetik, hic, asan, hicSablon, ayar, yuklenen.Sablon != null, reddedilenler, atlananSatirlari);
             return new KapsamSonucu(kurallar, eylemler, krizler, frenler, sablonlar, hic, asan, hicSablon, md);
         }
 
@@ -449,9 +459,9 @@ namespace Yanki.Authoring
         }
 
         // Betik eylemi o anki dünya durumunda geçersizse (ör. hedef başka mekana gitmiş) oyuncu o eylemi yapamaz: atlanır ve sayılır (rapor "reddedilen").
-        private static int Oyna(Simulasyon sim, Betik betik, long tick)
+        private static List<string> Oyna(Simulasyon sim, Betik betik, long tick)
         {
-            var reddedilen = 0;
+            var reddedilen = new List<string>();
             var sira = 0;
             for (long t = 1; t <= tick; t++)
             {
@@ -463,7 +473,8 @@ namespace Yanki.Authoring
                     }
                     catch (ArgumentException)
                     {
-                        reddedilen++;
+                        var e = betik.Eylemler[sira];
+                        reddedilen.Add(e.Tick.ToString(CultureInfo.InvariantCulture) + " " + e.Eylem.Tur + (e.Eylem.Hedef.Length > 0 ? " " + e.Eylem.Hedef : string.Empty));
                     }
 
                     sira++;
@@ -475,6 +486,18 @@ namespace Yanki.Authoring
             return reddedilen;
         }
 
+        /// <summary>Bu betik ve seed ile dünya durumu yüzünden geçersiz sayılıp atlanan eylemler (<c>tick tür hedef</c>), betik sırasıyla.</summary>
+        public static IReadOnlyList<string> AtlananEylemler(DogrulamaGirdisi girdi, Betik betik, ulong seed, long tick)
+        {
+            SenaryoDogrulayici.Yukle(girdi, out var yuklenen);
+            if (yuklenen == null)
+            {
+                throw new KapsamGirisHatasi(SenaryoDogrulayici.Dogrula(girdi).Bulgular);
+            }
+
+            return Oyna(yuklenen.SimulasyonKur(seed), betik, tick);
+        }
+
         private static void Kos(
             YuklenenSenaryo yuklenen, Betik betik, ulong seed, long tick, Sayac sayac,
             SortedSet<string> kuralKimlikleri, SortedSet<string> eylemKimlikleri, SortedSet<string> krizKimlikleri)
@@ -483,7 +506,13 @@ namespace Yanki.Authoring
             DiyalogMotoru? motor = yuklenen.Sablon != null ? DiyalogMotoru.Baglan(sim, yuklenen.Sablon) : null;
             try
             {
-                sayac.Reddedilen += Oyna(sim, betik, tick);
+                var atlanan = Oyna(sim, betik, tick);
+                sayac.Reddedilen += atlanan.Count;
+                foreach (var a in atlanan)
+                {
+                    Artir(sayac.Atlanan, a);
+                }
+
                 Say(sim.Gunluk.Olaylar, sayac, kuralKimlikleri, eylemKimlikleri, krizKimlikleri);
                 if (motor != null)
                 {
@@ -581,7 +610,7 @@ namespace Yanki.Authoring
             public static string Yaz(
                 string ad, int seedSayisi, long tick, List<string> betikler, IReadOnlyList<KapsamSatiri> kurallar, IReadOnlyList<KapsamSatiri> eylemler, IReadOnlyList<KapsamSatiri> krizler,
                 IReadOnlyList<KapsamSatiri> frenler, IReadOnlyList<KapsamSatiri> sablonlar, int toplamTetik, List<string> hic, List<string> asan, List<string> hicSablon,
-                KapsamAyarlari ayar, bool diyalogAcik, List<KeyValuePair<string, int>> reddedilenler)
+                KapsamAyarlari ayar, bool diyalogAcik, List<KeyValuePair<string, int>> reddedilenler, List<KeyValuePair<string, int>> atlananSatirlari)
             {
                 var sb = new StringBuilder();
                 var esikYuzde = Yuzde(ayar.PayEsigi * 100m, 0);
@@ -650,6 +679,17 @@ namespace Yanki.Authoring
                     foreach (var s in sablonlar)
                     {
                         Satir(sb, s, null, s.Toplam == 0 && s.OyuncusuzToplam == 0 ? "hiç seçilmedi" : string.Empty);
+                    }
+                }
+
+                if (atlananSatirlari.Count > 0)
+                {
+                    sb.Append('\n').Append("## Atlanan betik eylemleri (betik | tick tür hedef | atlanan koşu sayısı)\n\n");
+                    sb.Append("| betik | eylem | atlanan koşu |\n|---|---|---:|\n");
+                    foreach (var kv in atlananSatirlari)
+                    {
+                        var parca = kv.Key.Split(new[] { " | " }, 2, StringSplitOptions.None);
+                        sb.Append("| ").Append(parca[0]).Append(" | ").Append(parca[1]).Append(" | ").Append(kv.Value.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
                     }
                 }
 

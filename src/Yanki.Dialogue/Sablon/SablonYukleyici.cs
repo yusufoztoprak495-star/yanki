@@ -265,9 +265,10 @@ namespace Yanki.Dialogue
             foreach (var kv in d.Ozellikler)
             {
                 var v = kv.Value;
-                if (!KimlikMi(kv.Key))
+                // Tek değerli yüklem anahtarı sonda bir "!" taşıyabilir (konum!): çekirdeğin yüklem biçimiyle aynı.
+                if (!KimlikMi(kv.Key.EndsWith("!", StringComparison.Ordinal) ? kv.Key.Substring(0, kv.Key.Length - 1) : kv.Key))
                 {
-                    hata(v.Satir, "onerme_metni", kv.Key, "yüklem adı ASCII olmalı");
+                    hata(v.Satir, "onerme_metni", kv.Key, "yüklem adı ASCII olmalı (tek değerli yüklemde sonda bir '!' olabilir)");
                     continue;
                 }
 

@@ -545,7 +545,7 @@
       "ne_zaman": "anlatti",
       "kriterler": [
         {
-          "alan": "olay_konusu(yeri(muhur, *))",
+          "alan": "olay_konusu(konum!(muhur, *))",
           "op": "==",
           "deger": true
         },
@@ -562,6 +562,11 @@
           "modifier": "muhur_minneti",
           "deger": 25,
           "sure": 336
+        },
+        {
+          "tur": "gercek",
+          "islem": "ekle",
+          "gercek": "konum!(muhur,muhtarlik)"
         },
         {
           "tur": "yay",

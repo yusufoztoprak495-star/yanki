@@ -17,7 +17,7 @@
       "tur": "anlatti",
       "hedef": "Osman",
       "yuk": {
-        "onerme": "yeri(muhur,depo)"
+        "onerme": "konum!(muhur,depo)"
       }
     }
   ]

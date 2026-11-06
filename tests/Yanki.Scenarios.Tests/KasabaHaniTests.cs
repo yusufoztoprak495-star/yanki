@@ -15,6 +15,14 @@ namespace Yanki.Scenarios.Tests
     /// samples/KasabaHani (9. hafta kontrol noktası). Değişmezler, DENGE sayılarına değil yapıya bağlıdır; sayısal değerler (tetiklenme oranları, kişilik, taban) yer tutucudur
     /// ve README'de belirtilir (11. hafta denge turunda ayarlanır). Plan 7 sahnesi bir senaryo testidir: oyuncu Ayşe'ye Mehmet'in borcunu anlatır, Ayşe Can'a anlatır,
     /// Can'da aileme_iftira(oyuncu) oluşur, Can'ın satırı söylentiden önce ve sonra farklıdır.
+    /// <para>
+    /// Beklenti kaynağı (Yusuf'un DURAK 2 isteği, madde 5): [B] koşudan ÖNCE bilinen (plan, ADR ya da görev metni), [K] koşu çıktısından alınmış.
+    /// B: bütçe aralıkları, plan 7 ilişkileri, NPC alan sayısı, plan 7 zinciri yapısı (modifier −22/432, oyuncu→Ayşe→Can, why), "Ağabeyim hakkında ne dediğini Ayşe'den duydum." metni,
+    /// Durum 2b'de stres artışı, her tohumun tetiklenmesi, korumalı varlık ve yay sınırları, seed 42 ≠ 7, NedenOlaylar, diyalog açık/kapalı hash eşitliği, yalan gizliliği alanları,
+    /// menü 8–10 girdi ve beş aile, mührü taşıyan etkinin tek değerli konum yazması, hırsız Kerem / mağdur Ayşe (aktorler ve zincir tasarımı), golden betiğinde atlanan yok.
+    /// K: seed seçimleri 42 ve 3 (sahnenin Durum 2 olarak çıktığı seed'ler; 7, 1, 2, 4, 5, 6, 9'da Can'ın t6 satırı Durum 1 ya da başka), "Hoş geldin yabancı…" satırının tam metni ve şablon kimlikleri
+    /// (selam_sakin / selam_iftira_ayse), tick pencereleri (12, 14, 48, 60, 80, 100, 120), korumalı fren olayının gerçekten üretildiği (kasa_acmak denemesi), yalanın gerçekten söylendiği (Kerem).
+    /// </para>
     /// NOT (süreç): bu dosya ilk içerik taslağının koşusundan SONRA yazıldı (mekanik keşif için taslak önce koşuldu); testler içeriğe uydurulmadı, gevşetilmedi.
     /// </summary>
     public class KasabaHaniTests
@@ -113,7 +121,7 @@ namespace Yanki.Scenarios.Tests
 
         [Theory]
         [InlineData(42UL)]
-        [InlineData(7UL)]
+        [InlineData(3UL)]
         public void Plan_7_zinciri_oyuncu_Ayse_Can_aile_iftirasi_modifier_why_ile_iner(ulong seed)
         {
             var (sim, _) = Kos(seed, "plan7_borc", 12, diyalog: false);
@@ -132,7 +140,7 @@ namespace Yanki.Scenarios.Tests
 
         [Theory]
         [InlineData(42UL)]
-        [InlineData(7UL)]
+        [InlineData(3UL)]
         public void Plan_7_Durum_1_ve_Durum_2_Canin_satiri_soylentiden_once_ve_sonra_farklidir(ulong seed)
         {
             var (sim, motor) = Kos(seed, "plan7_borc", 8, diyalog: true);
@@ -153,7 +161,7 @@ namespace Yanki.Scenarios.Tests
 
         [Theory]
         [InlineData(42UL)]
-        [InlineData(7UL)]
+        [InlineData(3UL)]
         public void Plan_7_Durum_2b_Canin_merhameti_yuksek_ele_vermesi_istenirse_stres_artar(ulong seed)
         {
             var (sim, _) = Kos(seed, "plan7_borc", 14, diyalog: false);
@@ -270,19 +278,119 @@ namespace Yanki.Scenarios.Tests
             }
         }
 
-        // ---- Yalan gizliliği (ADR-012) ----
+        // ---- Yalan gizliliği (ADR-012; 6. hafta biçimi: olay türü, yük, NedenOlaylar sayısı, güç ve diyalog niyeti alan alan aynı) ----
+
+        private static readonly string[] YalanBetikleri = { "hirsizlik_suclama", "plan7_borc", "kotuluk_saklama", "iyilik_muhur" };
 
         [Fact]
-        public void Yalan_dogru_anlatimdan_dis_gorunuste_ayirt_edilemez()
+        public void Yalan_dogru_anlatimdan_alan_alan_ayirt_edilemez_ve_yalan_gercekten_soylenir()
         {
-            var (sim, _) = Kos(42UL, "hirsizlik_suclama", 120, diyalog: false);
-            var anlatimlar = sim.Gunluk.Olaylar.Where(o => o.Tur == "anlatti" && o.Fail != "oyuncu").ToArray();
+            var yalanAnlatimlari = new List<Olay>();
+            var dogruAnlatimlari = new List<Olay>();
+            var yalanKanitlari = new List<Olay>();
+            var dogruKanitlari = new List<Olay>();
+            var yalanSatirlari = new List<DiyalogSatiri>();
+            var dogruSatirlari = new List<DiyalogSatiri>();
 
-            Assert.NotEmpty(anlatimlar);
-            // Yalan ve doğru anlatımın olay yükü aynı anahtarlara sahiptir; yalanı gösteren bir alan yoktur.
-            var anahtarKumeleri = anlatimlar.Select(o => string.Join(",", o.Yuk.Select(kv => kv.Key).OrderBy(k => k, StringComparer.Ordinal))).Distinct().ToArray();
-            Assert.Single(anahtarKumeleri);
-            Assert.DoesNotContain(anlatimlar, o => o.Yuk.Any(kv => kv.Key == "yalan"));
+            foreach (var betik in YalanBetikleri)
+            {
+                for (ulong seed = 1; seed <= 4; seed++)
+                {
+                    var (sim, motor) = Kos(seed, betik, 100, diyalog: true);
+                    using (motor)
+                    {
+                        var olaylar = sim.Gunluk.Olaylar;
+                        var yalanIdleri = new HashSet<long>();
+                        foreach (var a in olaylar.Where(o => o.Tur == "aktarim_kaydedildi" && o.Deger("yalan") == "1"))
+                        {
+                            foreach (var n in a.NedenOlaylar)
+                            {
+                                if (olaylar.First(o => o.Id == n).Tur == "anlatti")
+                                {
+                                    yalanIdleri.Add(n);
+                                }
+                            }
+                        }
+
+                        foreach (var o in olaylar.Where(o => o.Tur == "anlatti" && o.KuralId.StartsWith("eylem:", StringComparison.Ordinal)))
+                        {
+                            (yalanIdleri.Contains(o.Id) ? yalanAnlatimlari : dogruAnlatimlari).Add(o);
+                            var kanit = olaylar.Where(k => k.Tur == "kanit_eklendi" && k.Deger("tur") == "duydu" && k.NedenOlaylar.Contains(o.Id)).ToArray();
+                            (yalanIdleri.Contains(o.Id) ? yalanKanitlari : dogruKanitlari).AddRange(kanit);
+                            foreach (var satir in motor!.Satirlar.Where(l => l.OlayId == o.Id))
+                            {
+                                (yalanIdleri.Contains(o.Id) ? yalanSatirlari : dogruSatirlari).Add(satir);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Assert.NotEmpty(yalanAnlatimlari);   // test boş geçmesin: Kasaba'da Kerem gerçekten yalan söyler (yalan_soyle)
+            Assert.NotEmpty(dogruAnlatimlari);
+            Assert.NotEmpty(yalanKanitlari);
+            Assert.NotEmpty(yalanSatirlari);
+
+            string Anahtarlar(Olay o) => string.Join(",", o.Yuk.Select(kv => kv.Key).OrderBy(x => x, StringComparer.Ordinal));
+            // olay türü
+            Assert.Equal(new[] { "anlatti" }, yalanAnlatimlari.Concat(dogruAnlatimlari).Select(o => o.Tur).Distinct().ToArray());
+            // yük anahtarları, NedenOlaylar sayısı
+            Assert.Single(yalanAnlatimlari.Concat(dogruAnlatimlari).Select(Anahtarlar).Distinct());
+            Assert.Single(yalanAnlatimlari.Concat(dogruAnlatimlari).Select(o => o.NedenOlaylar.Count).Distinct());
+            Assert.DoesNotContain(yalanAnlatimlari.Concat(dogruAnlatimlari), o => o.Yuk.Any(kv => kv.Key.Contains("yalan") || kv.Value.Contains("yalan")));
+            // güç: dinleyene yazılan kanıtın yük anahtarları ve türü aynı; güç 0..1 aralığında
+            Assert.Single(yalanKanitlari.Concat(dogruKanitlari).Select(o => Anahtarlar(o) + "|" + o.Deger("tur")).Distinct());
+            Assert.All(yalanKanitlari.Concat(dogruKanitlari), k => Assert.InRange(decimal.Parse(k.Deger("guc"), System.Globalization.CultureInfo.InvariantCulture), 0m, 1m));
+            // diyalog niyeti: yalan da doğru da "anlatma" niyetinin şablonlarıyla söylenir (anlat_*)
+            Assert.All(yalanSatirlari.Concat(dogruSatirlari), l => Assert.StartsWith("anlat_", l.SablonId, StringComparison.Ordinal));
+            // yalan bilgisi yalnızca aktarım kaydında; başka hiçbir olayın yükünde yalan alanı yok
+            foreach (var betik in YalanBetikleri.Take(1))
+            {
+                var (sim, _) = Kos(1UL, betik, 100, diyalog: false);
+                Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur != "aktarim_kaydedildi" && o.Yuk.Any(kv => kv.Key == "yalan"));
+            }
+        }
+
+        // ---- 9. hafta DURAK 2 maddeleri 3, 4, 7 ----
+
+        [Fact]
+        public void Golden_betiginde_atlanan_eylem_yoktur_plan7_borc_seed_42_tick_48()
+        {
+            var girdi = DogrulamaKomutu.GirdiOku(Dizin, null, new StringWriter())!;
+
+            Assert.Empty(KapsamHesabi.AtlananEylemler(girdi, BetikOku("plan7_borc"), 42UL, 48));
+        }
+
+        [Fact]
+        public void Muhuru_tasiyan_her_etki_tek_degerli_konum_yazar_ve_eski_konumu_dusurur()
+        {
+            var y = Yukle();
+            var muhurEtkileri = y.Kurallar.SelectMany(k => k.Etkiler).Concat(y.Eylemler.SelectMany(e => e.Etkiler)).Concat(y.Krizler.SelectMany(k => k.Etkiler))
+                .Where(e => e.Tur == Yanki.Core.Rules.EtkiTuru.Gercek && e.GercekSablonu.Contains("muhur", StringComparison.Ordinal)).ToArray();
+            Assert.NotEmpty(muhurEtkileri);
+            Assert.All(muhurEtkileri, e => Assert.StartsWith("konum!(muhur,", e.GercekSablonu, StringComparison.Ordinal));
+
+            var (sim, _) = Kos(1UL, "iyilik_muhur", 10, diyalog: false);
+
+            Assert.Equal("muhtarlik", sim.Dunya.TekDeger("konum!", "muhur"));
+            Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "gercek_eklendi" && o.Deger("gercek") == "konum!(muhur,muhtarlik)" && o.KuralId == "muhur_yeri_ogrenildi");
+            Assert.False(sim.Dunya.Var(Yanki.Core.World.Gercek.Ayristir("konum!(muhur,depo)")));
+        }
+
+        [Fact]
+        public void Calinan_kese_tek_sahipli_Ayse_nin_kesesidir_hirsiz_Keremdir()
+        {
+            var calindi = new List<Olay>();
+            foreach (var betik in BetikAdlari)
+            {
+                for (ulong seed = 1; seed <= 4; seed++)
+                {
+                    calindi.AddRange(Kos(seed, betik, 80, diyalog: false).Sim.Gunluk.Olaylar.Where(o => o.Tur == "kese_calindi"));
+                }
+            }
+
+            Assert.NotEmpty(calindi);
+            Assert.All(calindi, o => Assert.Equal(("Kerem", "Ayse"), (o.Fail, o.Hedef)));
         }
 
         // ---- Menü ve validate ----

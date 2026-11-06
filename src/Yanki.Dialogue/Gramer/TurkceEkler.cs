@@ -98,15 +98,20 @@ namespace Yanki.Dialogue.Gramer
             // Ünsüz yumuşaması: yalnızca cins isim ve yalnızca ünlüyle başlayan ek (bulunma ve ayrılma ünsüzle başlar).
             var govde = sozcuk;
             var unluylaBaslayanEk = ek == "yonelme" || ek == "belirtme" || ek == "iyelik" || ek == "tamlayan";
-            if (!ozelAd && unluylaBaslayanEk && YumusamaAdayi(sozcuk))
+            // 9. hafta: aynı "ünlüyle başlayan ekte kullanılacak gövde" kaydı ünlü düşmesi için de kullanılır (mühür → "mühr": mührün, mühre; motor düşmeyi kendiliğinden bilmez,
+            // yazar gövdeyi elle yazar; yazmazsa mühürün gibi düşmesiz biçim üretilir).
+            if (!ozelAd && unluylaBaslayanEk)
             {
-                if (string.IsNullOrWhiteSpace(yumusakGovde))
+                if (YumusamaAdayi(sozcuk) && string.IsNullOrWhiteSpace(yumusakGovde))
                 {
                     throw new ArgumentException(
                         $"\"{sozcuk}\" p, ç, t ya da k ile biten bir cins isim: .{ek} için adlar kaydında yumuşak gövde zorunlu (ör. borç → borc; yumuşamayan sözcükte gövde aynen yazılır).", nameof(yumusakGovde));
                 }
 
-                govde = yumusakGovde!.Trim();
+                if (!string.IsNullOrWhiteSpace(yumusakGovde))
+                {
+                    govde = yumusakGovde!.Trim();
+                }
             }
 
             var sonHarf = govde[govde.Length - 1];
