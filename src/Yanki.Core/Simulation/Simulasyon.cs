@@ -1520,6 +1520,14 @@ namespace Yanki.Core.Simulation
 
             foreach (var eylem in katalog.Eylemler)
             {
+                foreach (var aktor in eylem.Aktorler)
+                {
+                    if (!varliklar.Contains(aktor) || aktor == senaryo.OyuncuId)
+                    {
+                        throw new ArgumentException($"Eylem \"{eylem.Id}\": aktor \"{aktor}\" bu senaryoda bir NPC degil.", nameof(katalog));
+                    }
+                }
+
                 foreach (var etki in eylem.Etkiler)
                 {
                     if (etki.Hedef.Length > 0 && !RolAdiMi(etki.Hedef) && !varliklar.Contains(etki.Hedef))

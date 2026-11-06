@@ -72,6 +72,26 @@ namespace Yanki.Authoring
                 }
             }
 
+            var npcKimlikleri = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var n in senaryo.Npcler)
+            {
+                npcKimlikleri.Add(n.Id);
+            }
+
+            foreach (var kv in eylemDosyalari)
+            {
+                foreach (var e in kv.Value)
+                {
+                    foreach (var aktor in e.Aktorler)
+                    {
+                        if (!npcKimlikleri.Contains(aktor))
+                        {
+                            b.Add(new Bulgu(kv.Key, e.Satir, true, "eylem", e.Id, "aktorler: \"" + aktor + "\" senaryoda bir NPC degil"));
+                        }
+                    }
+                }
+            }
+
             EylemKatalogu? katalog = null;
             try
             {

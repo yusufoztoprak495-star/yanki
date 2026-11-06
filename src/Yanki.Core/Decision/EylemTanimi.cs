@@ -211,6 +211,31 @@ namespace Yanki.Core.Decision
         /// <summary>Eylemin çeliştiği kişilik özellikleri, ordinal sıralı. Seçilince <c>stres += StresTabani × Σ(özellik değeri)</c> (6. hafta).</summary>
         public IReadOnlyList<string> CelisenOzellikler { get; }
 
+        /// <summary>
+        /// Eylemi yapabilen NPC kimlikleri (9. hafta, <c>aktorler</c>). Boşsa her NPC yapabilir (alan yokken davranış ve hash aynıdır). Doluysa listede olmayan NPC bu eylemi hiç aday
+        /// göremez (kimlik belirler; kişilik yalnızca fiyatlar). Aday listesinde elenen olarak da yazılmaz.
+        /// </summary>
+        public IReadOnlyList<string> Aktorler { get; }
+
+        /// <summary>NPC bu eylemi yapabilir mi (aktorler bossa herkes).</summary>
+        public bool AktorMu(string npc)
+        {
+            if (Aktorler.Count == 0)
+            {
+                return true;
+            }
+
+            for (var i = 0; i < Aktorler.Count; i++)
+            {
+                if (string.Equals(Aktorler[i], npc, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Aktarım (dedikodu) türü; konuşma eylemi değilse <see cref="AktarimTuru.Yok"/>.</summary>
         public AktarimTuru Aktarim { get; }
 
@@ -310,7 +335,8 @@ namespace Yanki.Core.Decision
             string gorunurluk = "",
             decimal? stresTabani = null,
             Brakes.TetikSiniri? tetikSiniri = null,
-            IReadOnlyList<Brakes.IhlalBayragi>? ihlalBayraklari = null)
+            IReadOnlyList<Brakes.IhlalBayragi>? ihlalBayraklari = null,
+            IEnumerable<string>? aktorler = null)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -374,6 +400,9 @@ namespace Yanki.Core.Decision
             StresTabani = stresTabani;
             TetikSiniri = tetikSiniri;
             IhlalBayraklari = ihlalBayraklari ?? new Brakes.IhlalBayragi[0];
+            var aktorListesi = new List<string>(aktorler ?? new string[0]);
+            aktorListesi.Sort(StringComparer.Ordinal);
+            Aktorler = new ReadOnlyCollection<string>(aktorListesi);
             Id = id;
             OlayTuru = olayTuru ?? string.Empty;
             Hedef = hedef;
