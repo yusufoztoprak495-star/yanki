@@ -748,23 +748,24 @@
       "concept": "tehdit",
       "kriterler": [
         {
+          "alan": "fikir(dinleyen)",
+          "op": "<",
+          "deger": -10,
+          "agirlik": 1,
+          "zorunlu": true
+        },
+        {
           "alan": "hafiza_var(tehdit_etti, ben, 48)",
           "op": "==",
           "deger": true,
-          "agirlik": 2,
-          "zorunlu": true
+          "agirlik": 2
         }
       ],
-      "hafiza": {
-        "tur": "tehdit_etti",
-        "fail": "ben",
-        "son_n_tick": 48
-      },
       "sonra": {
         "hedef": "dinleyen",
         "concept": "cevap"
       },
-      "metin": "#hafiza.zaman# uyarmıştım seni #dinleyen#. Bu son."
+      "metin": "Sabrımı sınama #dinleyen#, ben lafımı iki kez söylemem."
     },
     {
       "id": "tehdit_cesur",

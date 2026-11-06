@@ -396,6 +396,50 @@ namespace Yanki.Scenarios.Tests
             Assert.True(secildi > 0, "hiçbir seed'de selam_muhur_hafiza seçilmedi: test anlamsız");
         }
 
+        /// <summary>
+        /// tehdit_gecmis uydurma gönderme yapmaz: "uyarmıştım seni" demek için konuşanın aynı kişiyi daha önce tehdit etmiş olması gerekir. Dursun başka birini tehdit ettikten sonra
+        /// bir başkasına söylüyorsa metin yanlış olaya bağlanır (hafiza_var hedefe bakmaz). Şablon artık geçmiş uyarı iddiası taşımaz; ayrıca hiçbir tehdit satırı "uyarmıştım" demez.
+        /// </summary>
+        [Fact]
+        public void Tehdit_satirlari_gecmis_uyari_iddiasi_tasimaz_baska_hedefe_uyarmistim_denmez()
+        {
+            var farkliHedefliTehdit = 0;
+            var yanlisIddia = new List<string>();
+            var tekrarUyarmistim = 0;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var (sim, motor) = KosOzel(seed, new (long, PlayerAction)[0], 168, diyalog: true);
+                using (motor)
+                {
+                    var tehditler = sim.Gunluk.Olaylar.Where(o => o.Tur == "tehdit_etti").ToArray();
+                    foreach (var satir in motor!.Satirlar.Where(l => tehditler.Any(t => t.Id == l.OlayId)))
+                    {
+                        var olay = tehditler.Single(t => t.Id == satir.OlayId);
+                        if (satir.Metin.Contains("uyarmıştım", StringComparison.Ordinal))
+                        {
+                            tekrarUyarmistim++;
+                        }
+
+                        if (satir.Metin.Contains("uyarmıştım", StringComparison.Ordinal)
+                            && !tehditler.Any(t => t.Fail == olay.Fail && t.Hedef == olay.Hedef && t.Tick < olay.Tick && olay.Tick - t.Tick <= 48))
+                        {
+                            yanlisIddia.Add($"seed {seed} t{olay.Tick}: {olay.Fail} → {olay.Hedef}: \"{satir.Metin}\" (aynı hedefe önceki tehdit yok)");
+                        }
+
+                        if (tehditler.Any(t => t.Fail == olay.Fail && t.Hedef != olay.Hedef && t.Tick < olay.Tick && olay.Tick - t.Tick <= 48))
+                        {
+                            farkliHedefliTehdit++;
+                        }
+                    }
+                }
+            }
+
+            Assert.True(yanlisIddia.Count == 0, "yanlış geçmiş uyarı iddiası:" + Environment.NewLine + string.Join(Environment.NewLine, yanlisIddia));
+            Assert.True(farkliHedefliTehdit > 0, "hiçbir seed'de aynı tehdit eden önce başka birini, sonra bir başkasını tehdit etmedi: test anlamsız");
+            Cikti.WriteLine($"başka hedefe tehdit sonrası tehdit satırı: {farkliHedefliTehdit}");
+            Assert.Equal(0, tekrarUyarmistim);
+        }
+
         // ---- Üç gerilim tohumu ----
 
         [Fact]
