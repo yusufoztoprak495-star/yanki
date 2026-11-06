@@ -16,17 +16,19 @@ namespace Yanki.Scenarios.Tests
     /// ve README'de belirtilir (11. hafta denge turunda ayarlanır). Plan 7 sahnesi bir senaryo testidir: oyuncu Ayşe'ye Mehmet'in borcunu anlatır, Ayşe Can'a anlatır,
     /// Can'da aileme_iftira(oyuncu) oluşur, Can'ın satırı söylentiden önce ve sonra farklıdır.
     /// <para>
-    /// Beklenti kaynağı (Yusuf'un DURAK 2 isteği, madde 5): [B] koşudan ÖNCE bilinen (plan, ADR ya da görev metni), [K] koşu çıktısından alınmış.
-    /// B: bütçe aralıkları, plan 7 ilişkileri, NPC alan sayısı, plan 7 zinciri yapısı (modifier −22/432, oyuncu→Ayşe→Can, why), "Ağabeyim hakkında ne dediğini Ayşe'den duydum." metni,
-    /// Durum 2b'de stres artışı, her tohumun tetiklenmesi, korumalı varlık ve yay sınırları, seed 42 ≠ 7, NedenOlaylar, diyalog açık/kapalı hash eşitliği, yalan gizliliği alanları,
-    /// menü 8–10 girdi ve beş aile, mührü taşıyan etkinin tek değerli konum yazması, hırsız Kerem / mağdur Ayşe (aktorler ve zincir tasarımı), golden betiğinde atlanan yok.
-    /// K: seed seçimleri 42 ve 3 (sahnenin Durum 2 olarak çıktığı seed'ler; 7, 1, 2, 4, 5, 6, 9'da Can'ın t6 satırı Durum 1 ya da başka), "Hoş geldin yabancı…" satırının tam metni ve şablon kimlikleri
-    /// (selam_sakin / selam_iftira_ayse), tick pencereleri (12, 14, 48, 60, 80, 100, 120), korumalı fren olayının gerçekten üretildiği (kasa_acmak denemesi), yalanın gerçekten söylendiği (Kerem).
+    /// Beklenti kaynağı ve pencereler (Yusuf'un DURAK 2/2b isteği). Seed seçimi içeren test kalmadı: plan 7 sırası 1..20 seed'in hepsinde sınanır. Pencereler:
+    /// 48 = golden betiğinin ufku; 168 = bir oyun içi hafta (plan 10, coverage varsayılanı), değişmezler için ufuk seçimi sonucu etkilemez;
+    /// T, T+1, T+2 = günlükten bulunan anlatım tick'ine göre SIRA (T: Ayşe'nin Can'a anlatımı; oyuncu eylemi adım 1'de işlendiği için T selamı söylentiden önce, kural çıktısı T+1'de yazılır, T+2 selamı sonradan);
+    /// mühür kuralı oyuncu eylemiyle aynı tick'te (oyuncu eylemi adım 1, kural adım 3). Yalnızca "seed sayısı" (20, 4, 3) ve "en az bir seed'de gerçekleşmeli" koruyucuları yer tutucudur.
     /// </para>
     /// NOT (süreç): bu dosya ilk içerik taslağının koşusundan SONRA yazıldı (mekanik keşif için taslak önce koşuldu); testler içeriğe uydurulmadı, gevşetilmedi.
     /// </summary>
     public class KasabaHaniTests
     {
+        private readonly Xunit.Abstractions.ITestOutputHelper Cikti;
+
+        public KasabaHaniTests(Xunit.Abstractions.ITestOutputHelper cikti) => Cikti = cikti;
+
         private static readonly string Dizin = Path.Combine(RepoKoku(), "samples", "KasabaHani");
 
         private static string RepoKoku()
@@ -117,58 +119,168 @@ namespace Yanki.Scenarios.Tests
             }
         }
 
-        // ---- Plan 7 sahnesi ----
+        // ---- Plan 7 sahnesi (SIRA iddiası, seed'e bağlı değil) ----
 
-        [Theory]
-        [InlineData(42UL)]
-        [InlineData(3UL)]
-        public void Plan_7_zinciri_oyuncu_Ayse_Can_aile_iftirasi_modifier_why_ile_iner(ulong seed)
+        private static (Simulasyon Sim, DiyalogMotoru? Motor) KosOzel(ulong seed, IEnumerable<(long Tick, PlayerAction Eylem)> eylemler, long tick, bool diyalog)
         {
-            var (sim, _) = Kos(seed, "plan7_borc", 12, diyalog: false);
-
-            var modifier = Assert.Single(sim.Gunluk.Olaylar, o => o.Tur == "modifier_eklendi" && o.Deger("npc") == "Can" && o.Deger("tur") == "aileme_iftira");
-            Assert.Equal(("-22", "432", "aile_iftirasi"), (modifier.Deger("deger"), modifier.Deger("sure"), modifier.KuralId));
-
-            var zincir = sim.Neden(modifier.Id);
-            var oyuncuAyse = zincir.FirstOrDefault(o => o.Tur == "anlatti" && o.Fail == "oyuncu" && o.Hedef == "Ayse");
-            var ayseCan = zincir.FirstOrDefault(o => o.Tur == "anlatti" && o.Fail == "Ayse" && o.Hedef == "Can");
-            Assert.NotNull(oyuncuAyse);
-            Assert.NotNull(ayseCan);
-            Assert.True(oyuncuAyse!.Id < ayseCan!.Id);
-            Assert.Equal("player", oyuncuAyse.KuralId);
-        }
-
-        [Theory]
-        [InlineData(42UL)]
-        [InlineData(3UL)]
-        public void Plan_7_Durum_1_ve_Durum_2_Canin_satiri_soylentiden_once_ve_sonra_farklidir(ulong seed)
-        {
-            var (sim, motor) = Kos(seed, "plan7_borc", 8, diyalog: true);
-            using (motor)
+            var y = Yukle();
+            var sim = y.SimulasyonKur(seed);
+            var motor = diyalog ? DiyalogMotoru.Baglan(sim, y.Sablon!) : null;
+            var liste = eylemler.ToList();
+            for (long t = 1; t <= tick; t++)
             {
-                var satirlar = motor!.Satirlar.Where(s => s.Konusan == "Can" && s.Dinleyen == "oyuncu").OrderBy(s => s.Tick).ToArray();
-                var once = satirlar.First(s => s.Tick == 1);
-                var sonra = satirlar.First(s => s.Tick == 6);
+                foreach (var e in liste.Where(x => x.Tick == t))
+                {
+                    sim.Submit(e.Eylem);
+                }
 
-                Assert.NotEqual(once.Metin, sonra.Metin);
-                Assert.Equal("Hoş geldin yabancı, bir ihtiyacın var mı?", once.Metin);                    // Durum 1: sakin ve yardımsever
-                Assert.Equal("Ağabeyim hakkında ne dediğini Ayşe'den duydum.", sonra.Metin);              // Durum 2 (plan 7)
-                Assert.Equal("selam_sakin", once.SablonId);
-                Assert.Equal("selam_iftira_ayse", sonra.SablonId);
-                Assert.NotNull(sim);
+                sim.Tick(1);
             }
+
+            return (sim, motor);
         }
 
-        [Theory]
-        [InlineData(42UL)]
-        [InlineData(3UL)]
-        public void Plan_7_Durum_2b_Canin_merhameti_yuksek_ele_vermesi_istenirse_stres_artar(ulong seed)
-        {
-            var (sim, _) = Kos(seed, "plan7_borc", 14, diyalog: false);
+        private static (long, PlayerAction) BorcuAyseyeAnlat() =>
+            (1, new PlayerAction("anlatti", "Ayse", new[] { new KeyValuePair<string, string>("onerme", "borclu(Mehmet,Riza,500)") }));
 
-            var secim = sim.Gunluk.Olaylar.FirstOrDefault(o => o.KuralId == "eylem:kardesi_ele_ver" && o.Fail == "Can");
-            Assert.NotNull(secim);
-            Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "stres_degisti" && o.Deger("npc") == "Can" && decimal.Parse(o.Deger("delta"), System.Globalization.CultureInfo.InvariantCulture) > 0m);
+        private static (long, PlayerAction) CanaSelam(long tick) => (tick, new PlayerAction("selam_oldu", "Can"));
+
+        /// <summary>Ayşe'nin Can'a borcu anlattığı ilk tick; yoksa <c>null</c>.</summary>
+        private static long? AyseCanTicki(Simulasyon sim) =>
+            sim.Gunluk.Olaylar.Where(o => o.Tur == "anlatti" && o.Fail == "Ayse" && o.Hedef == "Can" && o.Deger("onerme") == "borclu(Mehmet,Riza,500)").Select(o => (long?)o.Tick).FirstOrDefault();
+
+        private const int PlanYediSeed = 20;
+
+        /// <summary>
+        /// Plan 7'nin iddiası SIRA'dır: aynı seed'de günlükten Ayşe'nin Can'a anlatımının tick'i (T) bulunur; oyuncunun Can'a selamı bir koşuda T'de (anlatımla aynı tick, oyuncu
+        /// eylemi adım 1'de işlenir: Can henüz söylentiyi duymamıştır), bir koşuda T+2'de (anlatım T'de, kural çıktısı T+1'de yazılır, T+2 selamı bunu görür) gönderilir.
+        /// Önce Durum 1 (selam_sakin), sonra Durum 2 (selam_iftira_ayse) şablonu beklenir. Anlatımın gerçekleştiği her seed'de tutmalıdır; tutmayan seed testi düşürür.
+        /// </summary>
+        [Fact]
+        public void Plan_7_sirasi_20_seedin_anlatimin_gerceklestigi_hepsinde_Durum_1_sonra_Durum_2()
+        {
+            var basarisiz = new List<string>();
+            var anlatimOlan = 0;
+            var zincirOlan = 0;
+            for (ulong seed = 1; seed <= PlanYediSeed; seed++)
+            {
+                var (taban, _) = KosOzel(seed, new[] { BorcuAyseyeAnlat() }, 168, diyalog: false);
+                var t = AyseCanTicki(taban);
+                if (t == null)
+                {
+                    continue;
+                }
+
+                anlatimOlan++;
+
+                // Zincir: modifier T+1'de, oyuncu → Ayşe → Can anlatımlarına iner (why).
+                var modifier = taban.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.Deger("npc") == "Can" && o.Deger("tur") == "aileme_iftira").ToArray();
+                if (modifier.Length != 1 || modifier[0].Tick != t + 1 || modifier[0].KuralId != "aile_iftirasi")
+                {
+                    basarisiz.Add($"seed {seed}: aileme_iftira modifier beklenen T+1={t + 1} tick'te tek ve aile_iftirasi'ndan değil ({string.Join(",", modifier.Select(m => m.Tick + ":" + m.KuralId))})");
+                }
+                else
+                {
+                    var zincir = taban.Neden(modifier[0].Id);
+                    if (!zincir.Any(o => o.Tur == "anlatti" && o.Fail == "oyuncu" && o.Hedef == "Ayse") || !zincir.Any(o => o.Tur == "anlatti" && o.Fail == "Ayse" && o.Hedef == "Can"))
+                    {
+                        basarisiz.Add($"seed {seed}: why zinciri oyuncu → Ayşe → Can anlatımlarına inmiyor");
+                    }
+                    else
+                    {
+                        zincirOlan++;
+                    }
+                }
+
+                var (once, motorOnce) = KosOzel(seed, new[] { BorcuAyseyeAnlat(), CanaSelam(t.Value) }, t.Value + 1, diyalog: true);
+                using (motorOnce)
+                {
+                    if (AyseCanTicki(once) != t)
+                    {
+                        basarisiz.Add($"seed {seed}: selam eklenince Ayşe'nin anlatım tick'i değişti ({t} → {AyseCanTicki(once)})");
+                    }
+
+                    var satir = motorOnce!.Satirlar.FirstOrDefault(l => l.Konusan == "Can" && l.Dinleyen == "oyuncu" && l.Tick == t.Value);
+                    if (satir == null || satir.SablonId != "selam_sakin")
+                    {
+                        basarisiz.Add($"seed {seed}: T={t} selamı Durum 1 (selam_sakin) değil: {satir?.SablonId ?? "satır yok"}");
+                    }
+                }
+
+                var (sonra, motorSonra) = KosOzel(seed, new[] { BorcuAyseyeAnlat(), CanaSelam(t.Value + 2) }, t.Value + 2, diyalog: true);
+                using (motorSonra)
+                {
+                    var satir = motorSonra!.Satirlar.FirstOrDefault(l => l.Konusan == "Can" && l.Dinleyen == "oyuncu" && l.Tick == t.Value + 2);
+                    if (satir == null || satir.SablonId != "selam_iftira_ayse")
+                    {
+                        basarisiz.Add($"seed {seed}: T+2={t + 2} selamı Durum 2 (selam_iftira_ayse) değil: {satir?.SablonId ?? "satır yok"} \"{satir?.Metin}\"");
+                    }
+                    else
+                    {
+                        Assert.Equal("Ağabeyim hakkında ne dediğini Ayşe'den duydum.", satir.Metin);
+                    }
+                }
+            }
+
+            Assert.True(anlatimOlan > 0, "hiçbir seed'de Ayşe Can'a anlatmadı: test anlamsız");
+            Assert.True(basarisiz.Count == 0, $"anlatım olan {anlatimOlan}/{PlanYediSeed} seed, zincir tamam {zincirOlan}; başarısız:\n" + string.Join("\n", basarisiz));
+            Cikti.WriteLine($"Plan 7 sırası: {PlanYediSeed} seed içinde Ayşe→Can anlatımı olan {anlatimOlan}, hepsinde Durum 1 → Durum 2 ve zincir tamam.");
+        }
+
+        /// <summary>
+        /// Rıza kökenli (başlangıç inancı) söylenti plan 7'yi bozmaz: <c>aile_iftirasi_npc</c> (hedef: anlatan, kendi <c>en_fazla</c>'sı) önce çalışsa bile oyuncu kökenli anlatım gelince
+        /// <c>aile_iftirasi</c> (hedef: oyuncu) yine tam bir kez çalışır. Önce NPC kuralının çalıştığı en az bir seed bulunmalıdır (test boş geçmesin).
+        /// </summary>
+        [Fact]
+        public void NPC_kokenli_soylenti_kuralinin_hedefi_ve_en_fazlasi_oyuncu_kokenli_kurali_engellemez()
+        {
+            var npcOnce = 0;
+            for (ulong seed = 1; seed <= PlanYediSeed; seed++)
+            {
+                var (sim, _) = KosOzel(seed, new[] { BorcuAyseyeAnlat() }, 168, diyalog: false);
+                var npc = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi_npc" && o.Deger("npc") == "Can").ToArray();
+                var oyuncu = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi" && o.Deger("npc") == "Can").ToArray();
+
+                Assert.True(npc.Length <= 1 && oyuncu.Length <= 1, $"seed {seed}: en_fazla 1 aşıldı");
+                Assert.All(npc, m => Assert.NotEqual("oyuncu", m.Deger("hedef")));          // hedef anlatan NPC
+                Assert.All(oyuncu, m => Assert.Equal("oyuncu", m.Deger("hedef")));
+                if (AyseCanTicki(sim) != null)
+                {
+                    Assert.Single(oyuncu);                                                  // anlatım oldu: oyuncu kökenli kural çalıştı
+                }
+
+                if (npc.Length == 1 && oyuncu.Length == 1 && npc[0].Tick < oyuncu[0].Tick)
+                {
+                    npcOnce++;
+                }
+            }
+
+            Assert.True(npcOnce > 0, "hiçbir seed'de NPC kökenli kural oyuncu kökenliden önce çalışmadı: test anlamsız");
+            Cikti.WriteLine($"NPC kuralı oyuncu kuralından önce çalışan seed sayısı: {npcOnce}/{PlanYediSeed}.");
+        }
+
+        /// <summary>
+        /// Durum 2b (koşul biçiminde): oyuncu Can'dan Mehmet'i ele vermesini isterse, Can'ın <c>kardesi_ele_ver</c> eylemini SEÇTİĞİ her tick'te stresi artar (merhametine aykırı eylem).
+        /// Seçilme olasılıksaldır; en az bir seed'de seçilmelidir (test boş geçmesin).
+        /// </summary>
+        [Fact]
+        public void Plan_7_Durum_2b_Can_ele_verme_eylemini_secerse_stresi_artar()
+        {
+            var secildi = 0;
+            for (ulong seed = 1; seed <= PlanYediSeed; seed++)
+            {
+                var (sim, _) = KosOzel(seed, new[] { BorcuAyseyeAnlat(), (7L, new PlayerAction("ele_verdirme_istendi", "Can")) }, 60, diyalog: false);
+                foreach (var secim in sim.Gunluk.Olaylar.Where(o => o.KuralId == "eylem:kardesi_ele_ver" && o.Tur == "kardes_ele_verildi"))
+                {
+                    secildi++;
+                    Assert.Equal("Can", secim.Fail);
+                    Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "stres_degisti" && o.Deger("npc") == "Can" && o.Tick == secim.Tick
+                        && decimal.Parse(o.Deger("delta"), System.Globalization.CultureInfo.InvariantCulture) > 0m);
+                }
+            }
+
+            Assert.True(secildi > 0, "hiçbir seed'de Can ele verme eylemini seçmedi: test anlamsız");
+            Cikti.WriteLine($"Durum 2b: ele verme eylemi seçilen toplam {secildi} (20 seed).");
         }
 
         // ---- Üç gerilim tohumu ----
@@ -181,7 +293,7 @@ namespace Yanki.Scenarios.Tests
             var hirsizlik = false;
             foreach (var ad in BetikAdlari)
             {
-                var (sim, _) = Kos(1UL, ad, 60, diyalog: false);
+                var (sim, _) = Kos(1UL, ad, 168, diyalog: false);
                 borc |= sim.Gunluk.Olaylar.Any(o => o.KuralId == "aile_iftirasi" || o.KuralId == "borc_odendi_alacakli");
                 eşya |= sim.Gunluk.Olaylar.Any(o => o.KuralId == "muhur_yeri_ogrenildi");
                 hirsizlik |= sim.Gunluk.Olaylar.Any(o => o.Tur == "kese_calindi");
@@ -206,7 +318,7 @@ namespace Yanki.Scenarios.Tests
                 var sim = y.SimulasyonKur(seed);
                 var b = BetikOku(ad);
                 var sira = 0;
-                for (long t = 1; t <= 120; t++)
+                for (long t = 1; t <= 168; t++)
                 {
                     while (sira < b.Eylemler.Count && b.Eylemler[sira].Tick == t)
                     {
@@ -252,7 +364,7 @@ namespace Yanki.Scenarios.Tests
         [Fact]
         public void Her_olayin_neden_olaylari_gunluktedir_ve_kendisinden_kucuktur()
         {
-            var (sim, _) = Kos(42UL, "hirsizlik_suclama", 80, diyalog: false);
+            var (sim, _) = Kos(42UL, "hirsizlik_suclama", 168, diyalog: false);
             var kimlikler = new HashSet<long>(sim.Gunluk.Olaylar.Select(o => o.Id));
 
             foreach (var o in sim.Gunluk.Olaylar)
@@ -268,8 +380,8 @@ namespace Yanki.Scenarios.Tests
         [InlineData(7UL)]
         public void Diyalog_acik_ya_da_kapali_son_hash_ve_gunluk_hash_ayni(ulong seed)
         {
-            var (kapali, _) = Kos(seed, "plan7_borc", 60, diyalog: false);
-            var (acik, motor) = Kos(seed, "plan7_borc", 60, diyalog: true);
+            var (kapali, _) = Kos(seed, "plan7_borc", 168, diyalog: false);
+            var (acik, motor) = Kos(seed, "plan7_borc", 168, diyalog: true);
             using (motor)
             {
                 Assert.Equal(kapali.DurumHash(), acik.DurumHash());
@@ -296,7 +408,7 @@ namespace Yanki.Scenarios.Tests
             {
                 for (ulong seed = 1; seed <= 4; seed++)
                 {
-                    var (sim, motor) = Kos(seed, betik, 100, diyalog: true);
+                    var (sim, motor) = Kos(seed, betik, 168, diyalog: true);
                     using (motor)
                     {
                         var olaylar = sim.Gunluk.Olaylar;
@@ -346,7 +458,7 @@ namespace Yanki.Scenarios.Tests
             // yalan bilgisi yalnızca aktarım kaydında; başka hiçbir olayın yükünde yalan alanı yok
             foreach (var betik in YalanBetikleri.Take(1))
             {
-                var (sim, _) = Kos(1UL, betik, 100, diyalog: false);
+                var (sim, _) = Kos(1UL, betik, 168, diyalog: false);
                 Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur != "aktarim_kaydedildi" && o.Yuk.Any(kv => kv.Key == "yalan"));
             }
         }
@@ -370,10 +482,11 @@ namespace Yanki.Scenarios.Tests
             Assert.NotEmpty(muhurEtkileri);
             Assert.All(muhurEtkileri, e => Assert.StartsWith("konum!(muhur,", e.GercekSablonu, StringComparison.Ordinal));
 
-            var (sim, _) = Kos(1UL, "iyilik_muhur", 10, diyalog: false);
+            var (sim, _) = Kos(1UL, "iyilik_muhur", 168, diyalog: false);
 
+            var anlatim = sim.Gunluk.Olaylar.Single(o => o.Tur == "anlatti" && o.Fail == "oyuncu" && o.Hedef == "Osman");
             Assert.Equal("muhtarlik", sim.Dunya.TekDeger("konum!", "muhur"));
-            Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "gercek_eklendi" && o.Deger("gercek") == "konum!(muhur,muhtarlik)" && o.KuralId == "muhur_yeri_ogrenildi");
+            Assert.Contains(sim.Gunluk.Olaylar, o => o.Tur == "gercek_eklendi" && o.Deger("gercek") == "konum!(muhur,muhtarlik)" && o.KuralId == "muhur_yeri_ogrenildi" && o.Tick == anlatim.Tick);   // oyuncu eylemi adım 1, kural adım 3: aynı tick
             Assert.False(sim.Dunya.Var(Yanki.Core.World.Gercek.Ayristir("konum!(muhur,depo)")));
         }
 
@@ -385,7 +498,7 @@ namespace Yanki.Scenarios.Tests
             {
                 for (ulong seed = 1; seed <= 4; seed++)
                 {
-                    calindi.AddRange(Kos(seed, betik, 80, diyalog: false).Sim.Gunluk.Olaylar.Where(o => o.Tur == "kese_calindi"));
+                    calindi.AddRange(Kos(seed, betik, 168, diyalog: false).Sim.Gunluk.Olaylar.Where(o => o.Tur == "kese_calindi"));
                 }
             }
 

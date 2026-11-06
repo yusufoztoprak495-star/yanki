@@ -13,12 +13,22 @@
       "hedef": "Fatma"
     },
     {
+      "tick": 2,
+      "tur": "selam_oldu",
+      "hedef": "Riza"
+    },
+    {
       "tick": 3,
       "tur": "anlatti",
       "hedef": "Osman",
       "yuk": {
         "onerme": "konum!(muhur,depo)"
       }
+    },
+    {
+      "tick": 5,
+      "tur": "selam_oldu",
+      "hedef": "Osman"
     }
   ]
 }

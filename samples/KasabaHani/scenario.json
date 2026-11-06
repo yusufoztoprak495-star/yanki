@@ -170,6 +170,20 @@
       "calinamaz"
     ]
   },
+  "baslangic_inanclari": [
+    {
+      "npc": "Riza",
+      "onerme": "borclu(Mehmet,Riza,500)"
+    },
+    {
+      "npc": "Mehmet",
+      "onerme": "borclu(Mehmet,Riza,500)"
+    },
+    {
+      "npc": "Fatma",
+      "onerme": "konum!(muhur,depo)"
+    }
+  ],
   "yay_degiskenleri": {
     "kasaba_gerginligi": {
       "baslangic": 0,

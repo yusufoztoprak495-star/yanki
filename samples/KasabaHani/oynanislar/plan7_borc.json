@@ -24,6 +24,11 @@
       "tick": 7,
       "tur": "ele_verdirme_istendi",
       "hedef": "Can"
+    },
+    {
+      "tick": 12,
+      "tur": "selam_oldu",
+      "hedef": "Can"
     }
   ]
 }

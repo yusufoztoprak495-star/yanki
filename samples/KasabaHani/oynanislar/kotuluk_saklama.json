@@ -23,6 +23,11 @@
       "hedef": "Riza"
     },
     {
+      "tick": 6,
+      "tur": "selam_oldu",
+      "hedef": "Kerem"
+    },
+    {
       "tick": 8,
       "tur": "hakaret_et",
       "hedef": "Fatma"

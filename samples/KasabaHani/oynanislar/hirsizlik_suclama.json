@@ -22,6 +22,16 @@
       "tick": 5,
       "tur": "sakladi",
       "hedef": "Fatma"
+    },
+    {
+      "tick": 12,
+      "tur": "selam_oldu",
+      "hedef": "Ayse"
+    },
+    {
+      "tick": 12,
+      "tur": "selam_oldu",
+      "hedef": "Fatma"
     }
   ]
 }
