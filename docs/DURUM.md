@@ -7,6 +7,11 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 - **Tarih:** 2026-11-05
 - **PR:** [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) (8. hafta: diyalog katmanı ve düzeltme turu), `hafta-08` dalı, **merge edildi** (merge commit `162e180`). [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
 
+## Hafta 9: Kasaba Hanı, yanki validate, yanki coverage (`hafta-09` dalı, devam ediyor)
+
+- **Bitti (şu ana kadar):** `Yanki.Authoring` derlemesi (`yanki validate`, `yanki coverage`), `kok(onerme, kisi)` 19. sözlük fonksiyonu, eylem `aktorler`, senaryo `baslangic_inanclari`, `onerme_metinleri` tek değerli yüklem (`konum!`) ve ünlü düşmesi için yumuşak gövde, Kasaba Hanı içeriği (8 NPC, 16 eylem, 31 kural, 80 şablon, 4 kriz satırı, 9 menü girdisi, 5 betik), `KasabaHaniTests`, `docs/evaluation.md` ilk coverage tablosu. Golden #5 ve Kasaba diyalog golden'ı henüz yazılmadı (Yusuf'un onayıyla sırada).
+- **Açık madde (11. hafta denge turu):** hırsızlık tohumu payı **%59.9** (tanık kuralları, han kalabalığı), borç %27.2, kayıp eşya %6.6. Kural başına kriter tutuyor (en büyük pay `tehdit_tanik` %24.0), tohum dengesi tutmuyor. Ayrıca `kac`/`patla` krizleri hiç seçilmiyor ve hiç seçilmeyen 32 şablonun dökümü `docs/evaluation.md`'de (üç grup: konsepti satır üretmedi 4, genel şablon 12, spesifik şablon 16).
+
 ## Hafta 8: performans kararı ve diyalog (`hafta-08` dalı, [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) merge edildi, düzeltme turu bitti)
 
 - **Bitti:** `Yanki.Dialogue` (olaydan niyet, kriterle şablon seçimi, tekrar, hafıza göndermesi, Türkçe mini gramer, tek seviye followup, `IDialogueRenderer`), `yanki diyalog` / `diyalog-replay`, ayrı şablon dosyası, ADR-014 (Önerildi), ADR-015 (Önerildi), 3 diyalog golden'ı + CI adımı (dört ana golden değişmedi), sıra etkisi diyalog testleri, CsCheck değişmezleri (5 tohum × 200: 5/5 yeşil).

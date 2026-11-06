@@ -212,6 +212,31 @@ namespace Yanki.Authoring
         }
     }
 
+    /// <summary>Hiç seçilmeyen bir şablonun grubu (<see cref="KapsamSonucu.SablonGruplari"/>).</summary>
+    public sealed class SablonGrubu
+    {
+        /// <summary><c>a</c>, <c>b</c> ya da <c>c</c>.</summary>
+        public char Grup { get; }
+
+        /// <summary>Şablon kimliği.</summary>
+        public string Id { get; }
+
+        /// <summary>Şablonun concept'i.</summary>
+        public string Concept { get; }
+
+        /// <summary>Gruplandırma gerekçesi (hangi olay hiç oluşmadı, kaç satır başka şablonla üretildi).</summary>
+        public string Aciklama { get; }
+
+        /// <summary>Grup kaydı kurar.</summary>
+        public SablonGrubu(char grup, string id, string concept, string aciklama)
+        {
+            Grup = grup;
+            Id = id;
+            Concept = concept;
+            Aciklama = aciklama;
+        }
+    }
+
     /// <summary>Coverage sonucu: sayılar, işaretler ve Markdown rapor.</summary>
     public sealed class KapsamSonucu
     {
@@ -239,6 +264,12 @@ namespace Yanki.Authoring
         /// <summary>Hiç seçilmeyen şablonlar (bilgi amaçlı; çıkış koduna girmez).</summary>
         public IReadOnlyList<string> HicSecilmeyenSablonlar { get; }
 
+        /// <summary>
+        /// Hiç seçilmeyen şablonların üç grubu (kimlik, concept, açıklama; grup: <c>a</c> konsepti hiç satır üretmedi, <c>b</c> genel şablon (aynı konseptte spesifik kazandı),
+        /// <c>c</c> spesifik şablon (kriteri ya da betiği hiç tutmadı)). Kimliğe göre ordinal sıralı.
+        /// </summary>
+        public IReadOnlyList<SablonGrubu> SablonGruplari { get; }
+
         /// <summary>Plan 3 kriteri tuttu mu (her kural en az bir kez, hiçbiri eşiği aşmadan).</summary>
         public bool Basarili => HicTetiklenmeyenKurallar.Count == 0 && PayiAsanKurallar.Count == 0;
 
@@ -247,8 +278,9 @@ namespace Yanki.Authoring
 
         internal KapsamSonucu(
             IReadOnlyList<KapsamSatiri> kurallar, IReadOnlyList<KapsamSatiri> eylemler, IReadOnlyList<KapsamSatiri> krizler, IReadOnlyList<KapsamSatiri> frenler,
-            IReadOnlyList<KapsamSatiri> sablonlar, IReadOnlyList<string> hic, IReadOnlyList<string> pay, IReadOnlyList<string> hicSablon, string markdown)
+            IReadOnlyList<KapsamSatiri> sablonlar, IReadOnlyList<string> hic, IReadOnlyList<string> pay, IReadOnlyList<string> hicSablon, string markdown, IReadOnlyList<SablonGrubu> gruplar)
         {
+            SablonGruplari = gruplar;
             Kurallar = kurallar;
             Eylemler = eylemler;
             Krizler = krizler;
@@ -276,6 +308,7 @@ namespace Yanki.Authoring
             public readonly SortedDictionary<string, int> Fren = new SortedDictionary<string, int>(StringComparer.Ordinal);
             public readonly SortedDictionary<string, int> Sablon = new SortedDictionary<string, int>(StringComparer.Ordinal);
             public int Reddedilen;
+            public readonly SortedDictionary<string, int> OlayTuru = new SortedDictionary<string, int>(StringComparer.Ordinal);
             public readonly SortedDictionary<string, int> Atlanan = new SortedDictionary<string, int>(StringComparer.Ordinal);
         }
 
@@ -418,8 +451,133 @@ namespace Yanki.Authoring
                 }
             }
 
-            var md = Rapor.Yaz(yuklenen.Senaryo.Ad, seedSayisi, tick, betikAdlari, kurallar, eylemler, krizler, frenler, sablonlar, toplamTetik, hic, asan, hicSablon, ayar, yuklenen.Sablon != null, reddedilenler, atlananSatirlari);
-            return new KapsamSonucu(kurallar, eylemler, krizler, frenler, sablonlar, hic, asan, hicSablon, md);
+            var gruplar = SablonGruplariHesapla(yuklenen, sablonlar, betikSayaclari.Values, oyuncusuz);
+            var md = Rapor.Yaz(yuklenen.Senaryo.Ad, seedSayisi, tick, betikAdlari, kurallar, eylemler, krizler, frenler, sablonlar, toplamTetik, hic, asan, hicSablon, ayar, yuklenen.Sablon != null, reddedilenler, atlananSatirlari, gruplar);
+            return new KapsamSonucu(kurallar, eylemler, krizler, frenler, sablonlar, hic, asan, hicSablon, md, gruplar);
+        }
+
+        private static List<SablonGrubu> SablonGruplariHesapla(YuklenenSenaryo y, IReadOnlyList<KapsamSatiri> sablonlar, IEnumerable<Sayac> betikSayaclari, Sayac oyuncusuz)
+        {
+            var sonuc = new List<SablonGrubu>();
+            if (y.Sablon == null)
+            {
+                return sonuc;
+            }
+
+            var olayToplami = new SortedDictionary<string, int>(StringComparer.Ordinal);
+            foreach (var sayac in betikSayaclari)
+            {
+                foreach (var kv in sayac.OlayTuru)
+                {
+                    olayToplami.TryGetValue(kv.Key, out var n);
+                    olayToplami[kv.Key] = n + kv.Value;
+                }
+            }
+
+            foreach (var kv in oyuncusuz.OlayTuru)
+            {
+                olayToplami.TryGetValue(kv.Key, out var n);
+                olayToplami[kv.Key] = n + kv.Value;
+            }
+
+            var secilen = new SortedDictionary<string, int>(StringComparer.Ordinal);
+            foreach (var satir in sablonlar)
+            {
+                secilen[satir.Id] = satir.Toplam + satir.OyuncusuzToplam;
+            }
+
+            // concept → şablonlar ve satır toplamı; concept → eşlemedeki olay türleri; concept → followup kaynağı concept'leri
+            var conceptSablonlari = new SortedDictionary<string, List<Yanki.Dialogue.Sablon>>(StringComparer.Ordinal);
+            var conceptSatirlari = new SortedDictionary<string, int>(StringComparer.Ordinal);
+            var followupKaynaklari = new SortedDictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+            foreach (var sb in y.Sablon.Sablonlar)
+            {
+                if (!conceptSablonlari.TryGetValue(sb.Concept, out var liste))
+                {
+                    liste = new List<Yanki.Dialogue.Sablon>();
+                    conceptSablonlari[sb.Concept] = liste;
+                    conceptSatirlari[sb.Concept] = 0;
+                }
+
+                liste.Add(sb);
+                conceptSatirlari[sb.Concept] += secilen.TryGetValue(sb.Id, out var m) ? m : 0;
+                if (sb.Sonra != null)
+                {
+                    if (!followupKaynaklari.TryGetValue(sb.Sonra.Concept, out var kume))
+                    {
+                        kume = new SortedSet<string>(StringComparer.Ordinal);
+                        followupKaynaklari[sb.Sonra.Concept] = kume;
+                    }
+
+                    kume.Add(sb.Concept);
+                }
+            }
+
+            var conceptOlaylari = new SortedDictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+            foreach (var e in y.Sablon.Esleme.Hepsi)
+            {
+                if (!conceptOlaylari.TryGetValue(e.Niyet, out var kume))
+                {
+                    kume = new SortedSet<string>(StringComparer.Ordinal);
+                    conceptOlaylari[e.Niyet] = kume;
+                }
+
+                kume.Add(e.OlayTuru);
+            }
+
+            foreach (var kv in conceptSablonlari)
+            {
+                var toplamSatir = conceptSatirlari[kv.Key];
+                foreach (var sb in kv.Value)
+                {
+                    if (secilen.TryGetValue(sb.Id, out var n) && n > 0)
+                    {
+                        continue;
+                    }
+
+                    if (toplamSatir == 0)
+                    {
+                        sonuc.Add(new SablonGrubu('a', sb.Id, kv.Key, KonseptNedeni(kv.Key, conceptOlaylari, olayToplami, followupKaynaklari, conceptSatirlari)));
+                    }
+                    else if (sb.Genel)
+                    {
+                        sonuc.Add(new SablonGrubu('b', sb.Id, kv.Key, "concept " + toplamSatir.ToString(CultureInfo.InvariantCulture) + " satır üretti, hepsini spesifik şablonlar aldı"));
+                    }
+                    else
+                    {
+                        sonuc.Add(new SablonGrubu('c', sb.Id, kv.Key, "concept " + toplamSatir.ToString(CultureInfo.InvariantCulture) + " satır üretti, bu şablonun kriteri ya da betiği hiç tutmadı"));
+                    }
+                }
+            }
+
+            sonuc.Sort((a, b) => { var c = a.Grup.CompareTo(b.Grup); return c != 0 ? c : string.CompareOrdinal(a.Id, b.Id); });
+            return sonuc;
+        }
+
+        private static string KonseptNedeni(
+            string concept, SortedDictionary<string, SortedSet<string>> conceptOlaylari, SortedDictionary<string, int> olayToplami,
+            SortedDictionary<string, SortedSet<string>> followupKaynaklari, SortedDictionary<string, int> conceptSatirlari)
+        {
+            var parcalar = new List<string>();
+            if (conceptOlaylari.TryGetValue(concept, out var olaylar))
+            {
+                foreach (var tur in olaylar)
+                {
+                    olayToplami.TryGetValue(tur, out var n);
+                    parcalar.Add(n == 0 ? "olay türü " + tur + " hiç oluşmadı" : "olay türü " + tur + " " + n.ToString(CultureInfo.InvariantCulture) + " kez oluştu ama satır üretilmedi");
+                }
+            }
+
+            if (followupKaynaklari.TryGetValue(concept, out var kaynaklar))
+            {
+                foreach (var k in kaynaklar)
+                {
+                    conceptSatirlari.TryGetValue(k, out var n);
+                    parcalar.Add("followup kaynağı " + k + " " + n.ToString(CultureInfo.InvariantCulture) + " satır üretti");
+                }
+            }
+
+            return parcalar.Count == 0 ? "ne eşlemede ne followup'ta" : string.Join("; ", parcalar);
         }
 
         /// <summary>Test ve ölçüm için: tek betik ve seed'i koşup simülasyonu döndürür (diyalog bağlanmaz).</summary>
@@ -537,6 +695,7 @@ namespace Yanki.Authoring
             var krizImzalari = new SortedSet<string>(StringComparer.Ordinal);
             foreach (var o in olaylar)
             {
+                Artir(sayac.OlayTuru, o.Tur);
                 if (o.Tur == FrenOlayi.Tur)
                 {
                     if (o.KuralId.StartsWith("fren:", StringComparison.Ordinal))
@@ -610,7 +769,7 @@ namespace Yanki.Authoring
             public static string Yaz(
                 string ad, int seedSayisi, long tick, List<string> betikler, IReadOnlyList<KapsamSatiri> kurallar, IReadOnlyList<KapsamSatiri> eylemler, IReadOnlyList<KapsamSatiri> krizler,
                 IReadOnlyList<KapsamSatiri> frenler, IReadOnlyList<KapsamSatiri> sablonlar, int toplamTetik, List<string> hic, List<string> asan, List<string> hicSablon,
-                KapsamAyarlari ayar, bool diyalogAcik, List<KeyValuePair<string, int>> reddedilenler, List<KeyValuePair<string, int>> atlananSatirlari)
+                KapsamAyarlari ayar, bool diyalogAcik, List<KeyValuePair<string, int>> reddedilenler, List<KeyValuePair<string, int>> atlananSatirlari, List<SablonGrubu> gruplar)
             {
                 var sb = new StringBuilder();
                 var esikYuzde = Yuzde(ayar.PayEsigi * 100m, 0);
@@ -690,6 +849,31 @@ namespace Yanki.Authoring
                     {
                         var parca = kv.Key.Split(new[] { " | " }, 2, StringSplitOptions.None);
                         sb.Append("| ").Append(parca[0]).Append(" | ").Append(parca[1]).Append(" | ").Append(kv.Value.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+                    }
+                }
+
+                if (diyalogAcik && gruplar.Count > 0)
+                {
+                    sb.Append('\n').Append("## Hiç seçilmeyen şablonlar (üç grup)\n\n");
+                    foreach (var (harf, baslik) in new[] { ('a', "(a) Konsepti hiç satır üretmedi"), ('b', "(b) Genel şablon: aynı konseptte spesifik şablon kazandı"), ('c', "(c) Spesifik şablon: kriteri ya da betiği hiç tutmadı") })
+                    {
+                        sb.Append("### ").Append(baslik).Append("\n\n| şablon | concept | açıklama |\n|---|---|---|\n");
+                        var varMi = false;
+                        foreach (var g in gruplar)
+                        {
+                            if (g.Grup == harf)
+                            {
+                                sb.Append("| ").Append(g.Id).Append(" | ").Append(g.Concept).Append(" | ").Append(g.Aciklama).Append(" |\n");
+                                varMi = true;
+                            }
+                        }
+
+                        if (!varMi)
+                        {
+                            sb.Append("| (yok) | | |\n");
+                        }
+
+                        sb.Append('\n');
                     }
                 }
 

@@ -163,5 +163,29 @@ namespace Yanki.Scenarios.Tests
             Assert.Contains(s.Eylemler, e => e.Id == "dinlen");
             Assert.Contains("## Eylemler", s.Markdown, StringComparison.Ordinal);
         }
+
+        [Fact]
+        public void Hic_secilmeyen_sablonlar_uc_gruba_ayrilir_a_konsept_satir_uretmedi_b_genel_kaybetti_c_spesifik_tutmadi()
+        {
+            var senaryo = Senaryo.Replace("\"olay_turleri\": [\"hakaret_et\", \"yardim_etti\"]", "\"olay_turleri\": [\"hakaret_et\", \"yardim_etti\", \"hayalet_oldu\"]");
+            var sablon = @"{ ""dil"": ""tr"", ""adlar"": { ""Ayse"": ""Ayşe"", ""Can"": ""Can"", ""oyuncu"": { ""ad"": ""yabancı"", ""cins"": true } },
+  ""onerme_metinleri"": { ""borclu"": { ""metin"": ""{0} {1.yonelme} {2} lira borçlu"", ""olumsuz"": ""{0} {1.yonelme} {2} lira borçlu değil"", ""sayilar"": [2] } },
+  ""esleme"": [ { ""olay_turu"": ""dinlendi"", ""niyet"": ""dinlenme"", ""konusan"": ""fail"", ""dinleyensiz"": true }, { ""olay_turu"": ""hayalet_oldu"", ""niyet"": ""hayalet"", ""konusan"": ""hedef"" } ],
+  ""sablonlar"": [
+    { ""id"": ""dinlenme_genel"", ""concept"": ""dinlenme"", ""genel"": true, ""metin"": ""Dinleniyorum."" },
+    { ""id"": ""dinlenme_hep_tutan"", ""concept"": ""dinlenme"", ""kriterler"": [ { ""alan"": ""kisilik(sosyallik)"", ""op"": "">="", ""deger"": 0.1, ""zorunlu"": true, ""agirlik"": 1 } ], ""metin"": ""Hep tutan."" },
+    { ""id"": ""dinlenme_hic_tutmayan"", ""concept"": ""dinlenme"", ""kriterler"": [ { ""alan"": ""kisilik(sosyallik)"", ""op"": "">="", ""deger"": 0.99, ""zorunlu"": true, ""agirlik"": 1 } ], ""metin"": ""Hiç tutmayan."" },
+    { ""id"": ""hayalet_genel"", ""concept"": ""hayalet"", ""genel"": true, ""metin"": ""Hayalet."" } ] }";
+            var dosyalar = new List<DosyaGirdisi> { new DosyaGirdisi("kurallar.json", "x/kurallar.json", DortKural), new DosyaGirdisi("eylemler.json", "x/eylemler.json", Eylemler) };
+            var girdi = new DogrulamaGirdisi("x/scenario.json", senaryo, dosyalar, new DosyaGirdisi("sablonlar.json", "x/sablonlar.json", sablon), null);
+
+            var s = KapsamHesabi.Hesapla(girdi, new[] { HakaretBetigi() }, 2, 10, new KapsamAyarlari());
+
+            Assert.Equal(new[] { ("a", "hayalet_genel"), ("b", "dinlenme_genel"), ("c", "dinlenme_hic_tutmayan") },
+                s.SablonGruplari.Select(g => (g.Grup.ToString(), g.Id)).ToArray());
+            Assert.Contains("hayalet_oldu hiç oluşmadı", s.SablonGruplari.Single(g => g.Grup == 'a').Aciklama, StringComparison.Ordinal);
+            Assert.Contains("### (a)", s.Markdown, StringComparison.Ordinal);
+            Assert.Contains("| dinlenme_genel | dinlenme |", s.Markdown, StringComparison.Ordinal);
+        }
     }
 }

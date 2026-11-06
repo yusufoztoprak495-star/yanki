@@ -574,13 +574,6 @@
           "deger": true,
           "agirlik": 3,
           "zorunlu": true
-        },
-        {
-          "alan": "inanc(konum!(muhur, depo))",
-          "op": ">=",
-          "deger": 0.5,
-          "agirlik": 2,
-          "zorunlu": true
         }
       ],
       "hafiza": {

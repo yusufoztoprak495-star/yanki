@@ -57,7 +57,34 @@ namespace Yanki.Scenarios.Tests
         private static readonly string[] BetikAdlari = { "hirsizlik_suclama", "iyilik_muhur", "kotuluk_saklama", "plan7_borc" };
 
         /// <summary>Betiği koşar (geçersiz kalan eylemler atlanır, kapsama ile aynı kural); isteğe bağlı diyalog motoru bağlar.</summary>
+        // Süre (DURAK 2c madde 1): 168 tick'lik betik × seed koşuları test sınıfı başına BİR kez koşulur ve paylaşılır (salt okunur; determinizm aynı, diyalog bağlamak durumu değiştirmez:
+        // Diyalog_acik_ya_da_kapali testi bunu önbelleksiz KosYeni ile ayrıca kanıtlar). Önbellekli koşular diyalog motoru bağlı gelir.
+        private static readonly object OnbellekKilidi = new object();
+
+        private static readonly Dictionary<string, Lazy<(Simulasyon, DiyalogMotoru?)>> Onbellek = new Dictionary<string, Lazy<(Simulasyon, DiyalogMotoru?)>>();
+
         private static (Simulasyon Sim, DiyalogMotoru? Motor) Kos(ulong seed, string betik, long tick, bool diyalog)
+        {
+            if (tick != 168)
+            {
+                return KosYeni(seed, betik, tick, diyalog);
+            }
+
+            Lazy<(Simulasyon, DiyalogMotoru?)> kayit;
+            lock (OnbellekKilidi)
+            {
+                var anahtar = seed.ToString(System.Globalization.CultureInfo.InvariantCulture) + "|" + betik;
+                if (!Onbellek.TryGetValue(anahtar, out kayit!))
+                {
+                    kayit = new Lazy<(Simulasyon, DiyalogMotoru?)>(() => KosYeni(seed, betik, 168, true));
+                    Onbellek[anahtar] = kayit;
+                }
+            }
+
+            return kayit.Value;
+        }
+
+        private static (Simulasyon Sim, DiyalogMotoru? Motor) KosYeni(ulong seed, string betik, long tick, bool diyalog)
         {
             var y = Yukle();
             var sim = y.SimulasyonKur(seed);
@@ -151,6 +178,46 @@ namespace Yanki.Scenarios.Tests
 
         private const int PlanYediSeed = 20;
 
+        private static readonly Dictionary<ulong, (Simulasyon Sim, long? T)> TabanOnbellegi = new Dictionary<ulong, (Simulasyon, long?)>();
+
+        /// <summary>Yalnızca oyuncu → Ayşe borç anlatımı; Ayşe'nin Can'a anlatımı (T) görülünce bir tick daha (kural çıktısı T+1) koşup durur; anlatım hiç olmazsa 168'e kadar koşar.</summary>
+        private static (Simulasyon Sim, long? T) TabanErken(ulong seed)
+        {
+            lock (OnbellekKilidi)
+            {
+                if (TabanOnbellegi.TryGetValue(seed, out var onceki))
+                {
+                    return onceki;
+                }
+
+                var y = Yukle();
+                var sim = y.SimulasyonKur(seed);
+                var (tick1, eylem) = BorcuAyseyeAnlat();
+                long? t = null;
+                for (long k = 1; k <= 168; k++)
+                {
+                    if (k == tick1)
+                    {
+                        sim.Submit(eylem);
+                    }
+
+                    sim.Tick(1);
+                    if (t == null)
+                    {
+                        t = AyseCanTicki(sim);
+                    }
+
+                    if (t != null && k >= t.Value + 1)
+                    {
+                        break;
+                    }
+                }
+
+                TabanOnbellegi[seed] = (sim, t);
+                return (sim, t);
+            }
+        }
+
         /// <summary>
         /// Plan 7'nin iddiası SIRA'dır: aynı seed'de günlükten Ayşe'nin Can'a anlatımının tick'i (T) bulunur; oyuncunun Can'a selamı bir koşuda T'de (anlatımla aynı tick, oyuncu
         /// eylemi adım 1'de işlenir: Can henüz söylentiyi duymamıştır), bir koşuda T+2'de (anlatım T'de, kural çıktısı T+1'de yazılır, T+2 selamı bunu görür) gönderilir.
@@ -164,8 +231,7 @@ namespace Yanki.Scenarios.Tests
             var zincirOlan = 0;
             for (ulong seed = 1; seed <= PlanYediSeed; seed++)
             {
-                var (taban, _) = KosOzel(seed, new[] { BorcuAyseyeAnlat() }, 168, diyalog: false);
-                var t = AyseCanTicki(taban);
+                var (taban, t) = TabanErken(seed);
                 if (t == null)
                 {
                     continue;
@@ -237,7 +303,7 @@ namespace Yanki.Scenarios.Tests
             var npcOnce = 0;
             for (ulong seed = 1; seed <= PlanYediSeed; seed++)
             {
-                var (sim, _) = KosOzel(seed, new[] { BorcuAyseyeAnlat() }, 168, diyalog: false);
+                var (sim, _) = TabanErken(seed);
                 var npc = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi_npc" && o.Deger("npc") == "Can").ToArray();
                 var oyuncu = sim.Gunluk.Olaylar.Where(o => o.Tur == "modifier_eklendi" && o.KuralId == "aile_iftirasi" && o.Deger("npc") == "Can").ToArray();
 
@@ -314,29 +380,15 @@ namespace Yanki.Scenarios.Tests
         {
             foreach (var ad in BetikAdlari)
             {
-                var y = Yukle();
-                var sim = y.SimulasyonKur(seed);
-                var b = BetikOku(ad);
-                var sira = 0;
-                for (long t = 1; t <= 168; t++)
+                var (sim, _) = Kos(seed, ad, 168, diyalog: true);
+                // yay sınırı: her yay_degisti olayının yeni değeri aralıkta (günlükten; tick tick denetimle eşdeğer)
+                foreach (var o in sim.Gunluk.Olaylar.Where(x => x.Tur == "yay_degisti"))
                 {
-                    while (sira < b.Eylemler.Count && b.Eylemler[sira].Tick == t)
-                    {
-                        try
-                        {
-                            sim.Submit(b.Eylemler[sira].Eylem);
-                        }
-                        catch (ArgumentException)
-                        {
-                        }
-
-                        sira++;
-                    }
-
-                    sim.Tick(1);
-                    Assert.InRange(sim.Yay("kasaba_gerginligi"), 0m, 10m);
-                    Assert.InRange(sim.Yay("han_itibari"), 0m, 10m);
+                    Assert.InRange(decimal.Parse(o.Deger("deger"), System.Globalization.CultureInfo.InvariantCulture), 0m, 10m);
                 }
+
+                Assert.InRange(sim.Yay("kasaba_gerginligi"), 0m, 10m);
+                Assert.InRange(sim.Yay("han_itibari"), 0m, 10m);
 
                 Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur == "ayrildi" && o.Fail == "Riza");          // mekandan_ayrilamaz
                 Assert.DoesNotContain(sim.Gunluk.Olaylar, o => o.Tur == "kasa_acildi");                           // calinamaz: kasa hiç açılmaz
@@ -380,8 +432,8 @@ namespace Yanki.Scenarios.Tests
         [InlineData(7UL)]
         public void Diyalog_acik_ya_da_kapali_son_hash_ve_gunluk_hash_ayni(ulong seed)
         {
-            var (kapali, _) = Kos(seed, "plan7_borc", 168, diyalog: false);
-            var (acik, motor) = Kos(seed, "plan7_borc", 168, diyalog: true);
+            var (kapali, _) = KosYeni(seed, "plan7_borc", 168, diyalog: false);
+            var (acik, motor) = KosYeni(seed, "plan7_borc", 168, diyalog: true);
             using (motor)
             {
                 Assert.Equal(kapali.DurumHash(), acik.DurumHash());
