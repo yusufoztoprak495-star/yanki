@@ -1,3 +1,4 @@
+using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,8 +28,32 @@ namespace Yanki.Olcum
         // --gercekci: ayrı, gerçekçi 50 NPC fikstürü (GercekciFikstur.cs); stres fikstürü değişmez.
         private static bool _gercekci;
 
+        // 9. hafta: --senaryo <dizin> [--betik <dosya>] [--sablon <dosya>]: GERÇEK senaryo dosyaları (fikstür değil). Betik oyuncu eylemlerini tick tick gönderir (geçersiz kalan atlanır).
+        private static string? _senaryoDizini;
+        private static Yanki.Authoring.YuklenenSenaryo? _yuklenen;
+        private static List<(long Tick, PlayerAction Eylem)> _betik = new List<(long, PlayerAction)>();
+
         private static void Girdi(Simulasyon sim, int tick)
         {
+            if (_senaryoDizini != null)
+            {
+                foreach (var e in _betik)
+                {
+                    if (e.Tick == tick)
+                    {
+                        try
+                        {
+                            sim.Submit(e.Eylem);
+                        }
+                        catch (ArgumentException)
+                        {
+                        }
+                    }
+                }
+
+                return;
+            }
+
             if (_gercekci)
             {
                 GercekciFikstur.Girdi(sim, tick);
@@ -37,7 +62,7 @@ namespace Yanki.Olcum
 
         private static void Kos(Simulasyon sim, int tickSayisi)
         {
-            if (!_gercekci)
+            if (!_gercekci && _senaryoDizini == null)
             {
                 sim.Tick(tickSayisi);
                 return;
@@ -45,7 +70,7 @@ namespace Yanki.Olcum
 
             for (var t = 1; t <= tickSayisi; t++)
             {
-                GercekciFikstur.Girdi(sim, t);
+                Girdi(sim, t);
                 sim.Tick(1);
             }
         }
@@ -152,6 +177,11 @@ namespace Yanki.Olcum
 
         private static Simulasyon KurAsil(int npcSayisi, ulong seed, bool dedikodu = false)
         {
+            if (_senaryoDizini != null)
+            {
+                return _yuklenen!.SimulasyonKur(seed);
+            }
+
             if (_gercekci)
             {
                 return GercekciFikstur.Kur(npcSayisi, seed);
@@ -264,7 +294,9 @@ namespace Yanki.Olcum
             var oturum = Encoding.UTF8.GetByteCount(OturumKaydi.Yaz(OturumKaydi.Uret(son, "olcum.json")));
             var ic = CultureInfo.InvariantCulture;
 
-            Console.WriteLine(_gercekci
+            Console.WriteLine(_senaryoDizini != null
+                ? $"### {npcSayisi} NPC, {TickSayisi} tick (GERÇEK SENARYO: {_senaryoDizini}, {_yuklenen!.Eylemler.Count} eylem, {_yuklenen.Kurallar.Count} kural, {(_yuklenen.Sablon != null ? _yuklenen.Sablon.SablonSayisi + " şablon, diyalog açık" : "diyalog kapalı")}, betik {_betik.Count} eylem)"
+                : _gercekci
                 ? $"### {npcSayisi} NPC, {TickSayisi} tick ({(GercekciFikstur.Butce ? "BÜTÇE varyantı: 8 mekan, 15 eylem, 30 kural (plan bütçesine yakın hacim, sahte içerik)" : "GERÇEKÇİ fikstür: 8 mekan, 9 eylem, 12 kural")}, dedikodu açık, NPC'ler çoğu tick boşta)"
                 : $"### {npcSayisi} NPC, {TickSayisi} tick ({(dedikodu ? "dedikodulu" : "dedikodusuz")} stres fikstürü: her NPC her tick eylem seçer)");
             Console.WriteLine();
@@ -445,6 +477,62 @@ namespace Yanki.Olcum
             Console.WriteLine(string.Join(";", "OYNAT", npcSayisi.ToString(ic), tekrar.ToString(ic), oynat[oynat.Count / 2].ToString("F1", ic), oynat[0].ToString("F1", ic), oynat[oynat.Count - 1].ToString("F1", ic), kurulum[kurulum.Count / 2].ToString("F1", ic), tutuyor ? "evet" : "HAYIR", gunlukTutuyor ? "evet" : "HAYIR"));
         }
 
+        // Senaryo dizinini Yanki.Authoring ile yükler (validate/coverage ile aynı yükleme yolu). --sablon verilirse diyalog açılır. Başarısızlıkta hata metni döner.
+        private static string? SenaryoYukle(string dizin, string? betikYolu, string? sablonYolu)
+        {
+            var senaryoYolu = Path.Combine(dizin, "scenario.json");
+            if (!File.Exists(senaryoYolu))
+            {
+                return "Dosya bulunamadı: " + senaryoYolu;
+            }
+
+            var metin = File.ReadAllText(senaryoYolu);
+            var yukleme = SenaryoYukleyici.Yukle(metin, senaryoYolu);
+            if (!yukleme.Basarili)
+            {
+                return string.Join("\n", yukleme.Hatalar);
+            }
+
+            var dosyalar = new List<Yanki.Authoring.DosyaGirdisi>();
+            var s = yukleme.Senaryo!;
+            foreach (var ad in s.EylemDosyalari.Concat(s.KrizDosyalari).Concat(s.KuralDosyalari))
+            {
+                var tam = Path.Combine(dizin, ad);
+                if (File.Exists(tam))
+                {
+                    dosyalar.Add(new Yanki.Authoring.DosyaGirdisi(ad, tam, File.ReadAllText(tam)));
+                }
+            }
+
+            Yanki.Authoring.DosyaGirdisi? sablon = sablonYolu == null || !File.Exists(sablonYolu) ? null : new Yanki.Authoring.DosyaGirdisi(Path.GetFileName(sablonYolu), sablonYolu, File.ReadAllText(sablonYolu));
+            if (sablonYolu != null && sablon == null)
+            {
+                return "Dosya bulunamadı: " + sablonYolu;
+            }
+
+            var girdi = new Yanki.Authoring.DogrulamaGirdisi(senaryoYolu, metin, dosyalar, sablon, null);
+            var sonuc = Yanki.Authoring.SenaryoDogrulayici.Yukle(girdi, out var yuklenen);
+            if (yuklenen == null)
+            {
+                return string.Join("\n", sonuc.Bulgular.Select(b => b.ToString()));
+            }
+
+            _yuklenen = yuklenen;
+            if (betikYolu != null)
+            {
+                var betik = Yanki.Authoring.BetikOkuyucu.Oku(File.ReadAllText(betikYolu), betikYolu);
+                _betik = betik.Eylemler.Select(e => (e.Tick, e.Eylem)).ToList();
+            }
+
+            if (sablon != null)
+            {
+                _diyalog = true;
+                _sablon = yuklenen.Sablon;
+            }
+
+            return null;
+        }
+
         public static int Main(string[] args)
         {
             var npcler = new[] { 3, 10, 50 };
@@ -452,6 +540,8 @@ namespace Yanki.Olcum
             var dedikodu = false;
             var ozet = false;
             var oynat = false;
+            string? betikYolu = null;
+            string? sablonYolu = null;
             for (var i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--ozet")
@@ -485,15 +575,39 @@ namespace Yanki.Olcum
                     _gercekci = true;
                     dedikodu = true;
                 }
+                else if (args[i] == "--senaryo" && i + 1 < args.Length)
+                {
+                    _senaryoDizini = args[++i];
+                }
+                else if (args[i] == "--betik" && i + 1 < args.Length)
+                {
+                    betikYolu = args[++i];
+                }
+                else if (args[i] == "--sablon" && i + 1 < args.Length)
+                {
+                    sablonYolu = args[++i];
+                }
                 else if (args[i] == "--tekrar" && i + 1 < args.Length)
                 {
                     tekrar = int.Parse(args[++i], CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci | --butce] [--ozet | --oynat]");
+                    Console.Error.WriteLine("Kullanım: olcum [--npc 3,10,50] [--tekrar N] [--dedikodu | --gercekci | --butce | --senaryo <dizin> [--betik <dosya>] [--sablon <dosya>]] [--ozet | --oynat]");
                     return 1;
                 }
+            }
+
+            if (_senaryoDizini != null)
+            {
+                var hata = SenaryoYukle(_senaryoDizini, betikYolu, sablonYolu);
+                if (hata != null)
+                {
+                    Console.Error.WriteLine(hata);
+                    return 1;
+                }
+
+                npcler = new[] { _yuklenen!.Senaryo.Npcler.Count };
             }
 
             if (oynat)

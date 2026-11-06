@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Yanki.Core\Yanki.Core.csproj" />
     <ProjectReference Include="..\..\src\Yanki.Dialogue\Yanki.Dialogue.csproj" />
+    <ProjectReference Include="..\..\src\Yanki.Authoring\Yanki.Authoring.csproj" />
   </ItemGroup>
 
 </Project>
