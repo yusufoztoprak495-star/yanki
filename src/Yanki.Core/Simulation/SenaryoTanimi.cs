@@ -54,6 +54,12 @@ namespace Yanki.Core.Simulation
         /// <summary>Başlangıç gerçekleri (kanonik metin), dosyadaki sırayla.</summary>
         public IReadOnlyList<string> Gercekler { get; }
 
+        /// <summary>
+        /// Başlangıç inançları (9. hafta, <c>baslangic_inanclari</c>): (NPC, önerme) çiftleri, dosyadaki sırayla. Tick 0'da NPC kimliğine göre ordinal sırayla, mevcut <c>kanit_eklendi</c> olayıyla
+        /// (<c>gordu</c>, kaynak ve kök NPC'nin kendisi, <c>KuralId: senaryo</c>) yazılır. Boşsa hiçbir olay yazılmaz.
+        /// </summary>
+        public IReadOnlyList<KeyValuePair<string, string>> BaslangicInanclari { get; }
+
         /// <summary>Oyuncunun gönderebileceği eylem (olay) türleri, ordinal sıralı.</summary>
         public IReadOnlyList<string> OlayTurleri { get; }
 
@@ -96,8 +102,11 @@ namespace Yanki.Core.Simulation
             Brakes.GenelFrenler? frenler = null,
             Brakes.Korumalilik? korumali = null,
             IEnumerable<KeyValuePair<string, IReadOnlyList<Brakes.IhlalBayragi>>>? oyuncuIhlalleri = null,
-            IEnumerable<Brakes.YayTanimi>? yayDegiskenleri = null)
+            IEnumerable<Brakes.YayTanimi>? yayDegiskenleri = null,
+            IEnumerable<KeyValuePair<string, string>>? baslangicInanclari = null)
         {
+            var bi = new List<KeyValuePair<string, string>>(baslangicInanclari ?? new KeyValuePair<string, string>[0]);
+            BaslangicInanclari = new ReadOnlyCollection<KeyValuePair<string, string>>(bi);
             YayDegiskenleri = new ReadOnlyCollection<Brakes.YayTanimi>(new List<Brakes.YayTanimi>(yayDegiskenleri ?? new Brakes.YayTanimi[0]));
             Korumali = korumali ?? Brakes.Korumalilik.Yok;
             var oi = new SortedDictionary<string, IReadOnlyList<Brakes.IhlalBayragi>>(StringComparer.Ordinal);

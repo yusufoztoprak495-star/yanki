@@ -45,7 +45,7 @@ namespace Yanki.Core.Simulation
             var sb = new StringBuilder();
             sb.Append('#').Append(olay.Id.ToString(CultureInfo.InvariantCulture)).Append(' ').Append(olay.Tur)
                 .Append(" (tick ").Append(olay.Tick.ToString(CultureInfo.InvariantCulture))
-                .Append(", kural ").Append(olay.KuralId).Append(')');
+                .Append(olay.KuralId == "senaryo" && olay.Tur == "kanit_eklendi" ? ", senaryo başlangıcı" : ", kural " + olay.KuralId).Append(')');
 
             if (olay.Fail.Length > 0 || olay.Hedef.Length > 0)
             {

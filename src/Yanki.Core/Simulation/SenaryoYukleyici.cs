@@ -19,7 +19,7 @@ namespace Yanki.Core.Simulation
 
         private static readonly string[] KokAnahtarlari =
         {
-            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler", "korumali", "oyuncu_ihlalleri", "yay_degiskenleri",
+            "surum", "ad", "mekanlar", "baglantilar", "oyuncu", "npcler", "gercekler", "olay_turleri", "kural_dosyalari", "eylem_dosyalari", "kriz_dosyalari", "frenler", "korumali", "oyuncu_ihlalleri", "yay_degiskenleri", "baslangic_inanclari",
         };
 
         /// <summary>Senaryo metnini okur ve doğrular. Tüm hatalar toplanır.</summary>
@@ -422,8 +422,76 @@ namespace Yanki.Core.Simulation
                 }
             }
 
+            var baslangicInanclari = new List<KeyValuePair<string, string>>();
+            var biDugumu = kok.Al("baslangic_inanclari");
+            if (biDugumu != null)
+            {
+                if (biDugumu.Tur != JsonTuru.Dizi)
+                {
+                    Hata(biDugumu.Satir, "\"baslangic_inanclari\" bir dizi olmalı: [ { \"npc\", \"onerme\" } ]");
+                }
+                else
+                {
+                    var gorulen = new SortedSet<string>(StringComparer.Ordinal);
+                    foreach (var g in biDugumu.Elemanlar)
+                    {
+                        if (g.Tur != JsonTuru.Nesne)
+                        {
+                            Hata(g.Satir, "baslangic_inanclari öğesi bir nesne olmalı: { \"npc\", \"onerme\" }");
+                            continue;
+                        }
+
+                        var tamam = true;
+                        foreach (var alan in g.Ozellikler)
+                        {
+                            if (alan.Key != "npc" && alan.Key != "onerme")
+                            {
+                                Hata(alan.Value.Satir, $"baslangic_inanclari: bilinmeyen alan \"{alan.Key}\" (npc, onerme)");
+                                tamam = false;
+                            }
+                        }
+
+                        var npcDugumu = g.Al("npc");
+                        var onermeDugumu = g.Al("onerme");
+                        if (npcDugumu == null || npcDugumu.Tur != JsonTuru.Metin || onermeDugumu == null || onermeDugumu.Tur != JsonTuru.Metin)
+                        {
+                            Hata(g.Satir, "baslangic_inanclari: \"npc\" ve \"onerme\" metin olarak gerekli");
+                            continue;
+                        }
+
+                        if (!npcler.Exists(n => n.Id == npcDugumu.MetinDeger))
+                        {
+                            Hata(npcDugumu.Satir, $"baslangic_inanclari: \"{npcDugumu.MetinDeger}\" senaryoda bir NPC değil");
+                            continue;
+                        }
+
+                        string onermeMetni;
+                        try
+                        {
+                            onermeMetni = Yanki.Core.Mind.Onerme.Ayristir(onermeDugumu.MetinDeger).ToString();
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Hata(onermeDugumu.Satir, $"baslangic_inanclari: geçersiz onerme \"{onermeDugumu.MetinDeger}\": {e.Message}");
+                            continue;
+                        }
+
+                        if (!gorulen.Add(npcDugumu.MetinDeger + "|" + onermeMetni))
+                        {
+                            Hata(g.Satir, $"baslangic_inanclari: aynı (npc, onerme) çifti tekrar ediyor: \"{npcDugumu.MetinDeger}\", \"{onermeMetni}\"");
+                            continue;
+                        }
+
+                        if (tamam)
+                        {
+                            baslangicInanclari.Add(new KeyValuePair<string, string>(npcDugumu.MetinDeger, onermeMetni));
+                        }
+                    }
+                }
+            }
+
             return new SenaryoYuklemeSonucu(
-                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler, new Brakes.Korumalilik(korumaGirdisi), oyuncuIhlalleri, yayTanimlari),
+                new SenaryoTanimi(ad?.MetinDeger ?? string.Empty, mekanlar, baglantilar, oyuncuId, oyuncuKonumu, npcler, gercekler, turler, dosyalar, eylemDosyalari, krizDosyalari, genelFrenler, new Brakes.Korumalilik(korumaGirdisi), oyuncuIhlalleri, yayTanimlari, baslangicInanclari),
                 hatalar);
         }
 
