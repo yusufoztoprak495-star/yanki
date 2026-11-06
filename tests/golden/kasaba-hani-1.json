@@ -1,0 +1,40 @@
+{
+  "surum": 2,
+  "seed": 42,
+  "senaryo": "../../samples/KasabaHani/scenario.json",
+  "tick_sayisi": 48,
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    },
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "borclu(Mehmet,Riza,500)"
+      }
+    },
+    {
+      "tick": 6,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    },
+    {
+      "tick": 7,
+      "tur": "ele_verdirme_istendi",
+      "hedef": "Can"
+    },
+    {
+      "tick": 12,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    }
+  ],
+  "son_hash": "993d83a17817026c",
+  "gunluk_hash": "7c118a6c64ca7ff1",
+  "senaryo_hash": "6c70a3462430c766",
+  "bekleyen_eylemler": []
+}

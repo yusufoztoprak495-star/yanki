@@ -1,0 +1,34 @@
+{
+  "ad": "iyilik_muhur",
+  "aciklama": "İyilik: borç ödemesine yardım, Fatma'ya yardım, mührün yerini muhtara söyle.",
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "borc_odendi",
+      "hedef": "Riza"
+    },
+    {
+      "tick": 2,
+      "tur": "yardim_etti",
+      "hedef": "Fatma"
+    },
+    {
+      "tick": 2,
+      "tur": "selam_oldu",
+      "hedef": "Riza"
+    },
+    {
+      "tick": 3,
+      "tur": "anlatti",
+      "hedef": "Osman",
+      "yuk": {
+        "onerme": "konum!(muhur,depo)"
+      }
+    },
+    {
+      "tick": 5,
+      "tur": "selam_oldu",
+      "hedef": "Osman"
+    }
+  ]
+}

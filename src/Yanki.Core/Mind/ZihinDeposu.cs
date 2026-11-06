@@ -12,6 +12,21 @@ namespace Yanki.Core.Mind
     {
         private readonly SortedDictionary<string, Zihin> _zihinler = new SortedDictionary<string, Zihin>(StringComparer.Ordinal);
 
+        // Onerme.Ayristir sonuçları (Onerme değişmezdir): konu hesabı her tick bütün inançları yeniden ayrıştırmasın diye. Yalnızca arama; durum hash'ine girmez.
+        private readonly SortedDictionary<string, Onerme> _ayristirilmis = new SortedDictionary<string, Onerme>(StringComparer.Ordinal);
+
+        /// <summary>Önerme metnini ayrıştırır; aynı metin için sonuç depoda önbelleklenir (davranış <see cref="Onerme.Ayristir"/> ile aynıdır).</summary>
+        public Onerme OnermeAyristir(string metin)
+        {
+            if (!_ayristirilmis.TryGetValue(metin, out var o))
+            {
+                o = Onerme.Ayristir(metin);
+                _ayristirilmis[metin] = o;
+            }
+
+            return o;
+        }
+
         /// <summary>Zihin sahiplerinin kimlikleri, ordinal sıralı.</summary>
         public IReadOnlyList<string> Kimlikler => new ReadOnlyCollection<string>(new List<string>(_zihinler.Keys));
 
@@ -96,6 +111,21 @@ namespace Yanki.Core.Mind
             return sb.ToString();
         }
 
+        /// <summary><see cref="KanonikMetin"/>'i birleştirmeden hash akışına ekler (aynı baytlar).</summary>
+        public void HashAkisinaEkle(ref Hash64.Akis akis)
+        {
+            if (_zihinler.Count == 0)
+            {
+                return;
+            }
+
+            akis.Ekle("ZIHIN|1\n");
+            foreach (var z in _zihinler.Values)
+            {
+                akis.Ekle(z.KanonikMetin());
+            }
+        }
+
         /// <summary>Yalnızca zihin durumunun 64 bit hash'i (16 karakter onaltılık).</summary>
         public string DurumHash() => Hash64.Hex(Hash64.Hesapla(KanonikMetin()));
     }
@@ -119,7 +149,12 @@ namespace Yanki.Core.Mind
                 throw new ArgumentNullException(nameof(zihinler));
             }
 
-            return Hash64.Hex(Hash64.Hesapla(dunya.KanonikMetin() + zihinler.KanonikMetin() + ekMetin));
+            // Parça parça akış: dunya.KanonikMetin() + zihinler.KanonikMetin() + ekMetin ile BİREBİR aynı hash, ama birleştirilmiş metin ve bayt dizisi ayrılmaz.
+            var akis = new Hash64.Akis();
+            akis.Ekle(dunya.KanonikMetin());
+            zihinler.HashAkisinaEkle(ref akis);
+            akis.Ekle(ekMetin);
+            return Hash64.Hex(akis.Bitir());
         }
     }
 }

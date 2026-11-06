@@ -1,0 +1,146 @@
+{
+  "ad": "gezgin",
+  "aciklama": "Gezgin: ilk tickte han'daki herkese selam, sonra her mekana uğrar, dönüşte tekrar selam.",
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Riza"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Mehmet"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Ayse"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Kerem"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Osman"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Fatma"
+    },
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Dursun"
+    },
+    {
+      "tick": 2,
+      "tur": "hareket",
+      "hedef": "pazar"
+    },
+    {
+      "tick": 3,
+      "tur": "hareket",
+      "hedef": "tarla"
+    },
+    {
+      "tick": 4,
+      "tur": "hareket",
+      "hedef": "pazar"
+    },
+    {
+      "tick": 5,
+      "tur": "hareket",
+      "hedef": "dukkan"
+    },
+    {
+      "tick": 6,
+      "tur": "hareket",
+      "hedef": "pazar"
+    },
+    {
+      "tick": 7,
+      "tur": "hareket",
+      "hedef": "muhtarlik"
+    },
+    {
+      "tick": 8,
+      "tur": "hareket",
+      "hedef": "pazar"
+    },
+    {
+      "tick": 9,
+      "tur": "hareket",
+      "hedef": "han"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Riza"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Mehmet"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Ayse"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Kerem"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Osman"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Fatma"
+    },
+    {
+      "tick": 10,
+      "tur": "selam_oldu",
+      "hedef": "Dursun"
+    },
+    {
+      "tick": 11,
+      "tur": "hareket",
+      "hedef": "ahir"
+    },
+    {
+      "tick": 12,
+      "tur": "hareket",
+      "hedef": "han"
+    },
+    {
+      "tick": 13,
+      "tur": "hareket",
+      "hedef": "depo"
+    },
+    {
+      "tick": 14,
+      "tur": "hareket",
+      "hedef": "han"
+    }
+  ]
+}

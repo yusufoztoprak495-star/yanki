@@ -47,6 +47,112 @@ namespace Yanki.Core.World
             return Hesapla(Encoding.UTF8.GetBytes(metin));
         }
 
+        /// <summary>
+        /// Parça parça beslenen hash (9. hafta optimizasyonu): <c>Ekle(a); Ekle(b); Bitir()</c>, <c>Hesapla(a + b)</c> ile BİREBİR aynı değeri verir ama birleştirilmiş metin ve UTF-8 bayt dizisi
+        /// ayırmaz. UTF-8 dönüşümü <c>Encoding.UTF8</c> ile aynıdır (geçersiz vekil çifti U+FFFD olur; parçalar arasına düşen vekil çifti de doğru birleşir).
+        /// </summary>
+        public struct Akis
+        {
+            private ulong _h;
+            private char _bekleyenYuksek;
+            private bool _basladi;
+
+            /// <summary>Metni akışa ekler.</summary>
+            public void Ekle(string metin)
+            {
+                if (metin == null)
+                {
+                    throw new ArgumentNullException(nameof(metin));
+                }
+
+                if (!_basladi)
+                {
+                    _h = FnvOffset;
+                    _basladi = true;
+                }
+
+                unchecked
+                {
+                    var h = _h;
+                    for (var i = 0; i < metin.Length; i++)
+                    {
+                        var c = metin[i];
+                        if (_bekleyenYuksek != '\0')
+                        {
+                            if (c >= '\uDC00' && c <= '\uDFFF')
+                            {
+                                var cp = 0x10000 + ((_bekleyenYuksek - 0xD800) << 10) + (c - 0xDC00);
+                                _bekleyenYuksek = '\0';
+                                h = Bayt(h, 0xF0 | (cp >> 18));
+                                h = Bayt(h, 0x80 | ((cp >> 12) & 0x3F));
+                                h = Bayt(h, 0x80 | ((cp >> 6) & 0x3F));
+                                h = Bayt(h, 0x80 | (cp & 0x3F));
+                                continue;
+                            }
+
+                            _bekleyenYuksek = '\0';
+                            h = Degistirme(h);
+                        }
+
+                        if (c < 0x80)
+                        {
+                            h = Bayt(h, c);
+                        }
+                        else if (c < 0x800)
+                        {
+                            h = Bayt(h, 0xC0 | (c >> 6));
+                            h = Bayt(h, 0x80 | (c & 0x3F));
+                        }
+                        else if (c >= '\uD800' && c <= '\uDBFF')
+                        {
+                            _bekleyenYuksek = c;
+                        }
+                        else if (c >= '\uDC00' && c <= '\uDFFF')
+                        {
+                            h = Degistirme(h);
+                        }
+                        else
+                        {
+                            h = Bayt(h, 0xE0 | (c >> 12));
+                            h = Bayt(h, 0x80 | ((c >> 6) & 0x3F));
+                            h = Bayt(h, 0x80 | (c & 0x3F));
+                        }
+                    }
+
+                    _h = h;
+                }
+            }
+
+            /// <summary>Akışı bitirir ve <see cref="Hesapla(string)"/> ile aynı değeri döndürür.</summary>
+            public ulong Bitir()
+            {
+                if (!_basladi)
+                {
+                    _h = FnvOffset;
+                    _basladi = true;
+                }
+
+                if (_bekleyenYuksek != '\0')
+                {
+                    _bekleyenYuksek = '\0';
+                    _h = Degistirme(_h);
+                }
+
+                return Karistir(_h);
+            }
+
+            private static ulong Bayt(ulong h, int b)
+            {
+                unchecked
+                {
+                    return (h ^ (byte)b) * FnvAsal;
+                }
+            }
+
+            // Geçersiz vekil: U+FFFD = EF BF BD.
+            private static ulong Degistirme(ulong h) => Bayt(Bayt(Bayt(h, 0xEF), 0xBF), 0xBD);
+        }
+
         /// <summary>64 bit değeri 16 karakterlik, küçük harfli, sıfır dolgulu onaltılık metne çevirir.</summary>
         public static string Hex(ulong deger) => deger.ToString("x16", System.Globalization.CultureInfo.InvariantCulture);
 

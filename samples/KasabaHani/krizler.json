@@ -1,0 +1,42 @@
+{
+  "krizler": [
+    {
+      "id": "itiraf",
+      "seviye": 1,
+      "olay_turu": "itiraf_etti",
+      "hedef": "en_yakin",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ]
+    },
+    {
+      "id": "sakinles",
+      "seviye": 1,
+      "olay_turu": "sakinlesti",
+      "hedef": "yok"
+    },
+    {
+      "id": "patla",
+      "seviye": 2,
+      "olay_turu": "patladi",
+      "hedef": "en_soguk",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ]
+    },
+    {
+      "id": "kac",
+      "seviye": 2,
+      "olay_turu": "kacti",
+      "hedef": "yok"
+    }
+  ]
+}

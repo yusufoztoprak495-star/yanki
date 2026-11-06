@@ -38,6 +38,12 @@ namespace Yanki.Core.Decision
 
             foreach (var eylem in eylemler)
             {
+                // Aktor kisitli eylem: listede olmayan NPC icin eylem hic aday degildir (kimlik belirler; elenen listesine yazilmaz).
+                if (!eylem.AktorMu(baglam.Npc))
+                {
+                    continue;
+                }
+
                 // Önbellek yalnızca bu eylem için bu çağrının içinde yaşar (bu NPC'nin bu karar adımı); hiçbir yere taşınmaz.
                 var onbellek = new OnKosulOnbellegi(eylem);
                 var hedefler = Hedefler(eylem, baglam, konum);

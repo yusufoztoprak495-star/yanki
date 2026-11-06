@@ -1,0 +1,199 @@
+{
+  "surum": 1,
+  "ad": "KasabaHani",
+  "mekanlar": [
+    "han",
+    "pazar",
+    "tarla",
+    "dukkan",
+    "muhtarlik",
+    "ahir",
+    "depo"
+  ],
+  "baglantilar": [
+    [
+      "han",
+      "pazar"
+    ],
+    [
+      "pazar",
+      "tarla"
+    ],
+    [
+      "pazar",
+      "dukkan"
+    ],
+    [
+      "pazar",
+      "muhtarlik"
+    ],
+    [
+      "han",
+      "ahir"
+    ],
+    [
+      "han",
+      "depo"
+    ]
+  ],
+  "oyuncu": {
+    "id": "oyuncu",
+    "konum": "han"
+  },
+  "npcler": [
+    {
+      "id": "Riza",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.4,
+        "durustluk": 0.7,
+        "cesaret": 0.5,
+        "sosyallik": 0.7,
+        "kin_tutma": 0.4,
+        "merhamet": 0.6
+      }
+    },
+    {
+      "id": "Mehmet",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.4,
+        "sosyallik": 0.3,
+        "kin_tutma": 0.5,
+        "merhamet": 0.6
+      }
+    },
+    {
+      "id": "Ayse",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.5,
+        "durustluk": 0.5,
+        "cesaret": 0.4,
+        "sosyallik": 0.9,
+        "kin_tutma": 0.4,
+        "merhamet": 0.5
+      }
+    },
+    {
+      "id": "Kerem",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.8,
+        "durustluk": 0.3,
+        "cesaret": 0.8,
+        "sosyallik": 0.6,
+        "kin_tutma": 0.5,
+        "merhamet": 0.2
+      }
+    },
+    {
+      "id": "Osman",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.6,
+        "durustluk": 0.7,
+        "cesaret": 0.3,
+        "sosyallik": 0.6,
+        "kin_tutma": 0.4,
+        "merhamet": 0.4
+      }
+    },
+    {
+      "id": "Can",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.3,
+        "durustluk": 0.8,
+        "cesaret": 0.6,
+        "sosyallik": 0.5,
+        "kin_tutma": 0.6,
+        "merhamet": 0.8
+      }
+    },
+    {
+      "id": "Fatma",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.3,
+        "durustluk": 0.9,
+        "cesaret": 0.4,
+        "sosyallik": 0.6,
+        "kin_tutma": 0.2,
+        "merhamet": 0.8
+      }
+    },
+    {
+      "id": "Dursun",
+      "konum": "han",
+      "kisilik": {
+        "acgozluluk": 0.6,
+        "durustluk": 0.4,
+        "cesaret": 0.8,
+        "sosyallik": 0.4,
+        "kin_tutma": 0.9,
+        "merhamet": 0.3
+      }
+    }
+  ],
+  "gercekler": [
+    "borclu(Mehmet,Riza,500)",
+    "kardes(Mehmet,Can)",
+    "sahip!(muhur,Osman)",
+    "konum!(muhur,depo)",
+    "konum!(kasa,han)"
+  ],
+  "olay_turleri": [
+    "selam_oldu",
+    "yardim_etti",
+    "hakaret_et",
+    "borc_odendi",
+    "sakladi",
+    "ele_verdirme_istendi"
+  ],
+  "kural_dosyalari": [
+    "kurallar.json"
+  ],
+  "eylem_dosyalari": [
+    "eylemler.json"
+  ],
+  "kriz_dosyalari": [
+    "krizler.json"
+  ],
+  "korumali": {
+    "Riza": [
+      "mekandan_ayrilamaz"
+    ],
+    "kasa": [
+      "calinamaz"
+    ]
+  },
+  "baslangic_inanclari": [
+    {
+      "npc": "Riza",
+      "onerme": "borclu(Mehmet,Riza,500)"
+    },
+    {
+      "npc": "Mehmet",
+      "onerme": "borclu(Mehmet,Riza,500)"
+    },
+    {
+      "npc": "Fatma",
+      "onerme": "konum!(muhur,depo)"
+    }
+  ],
+  "yay_degiskenleri": {
+    "kasaba_gerginligi": {
+      "baslangic": 0,
+      "min": 0,
+      "max": 10
+    },
+    "han_itibari": {
+      "baslangic": 3,
+      "min": 0,
+      "max": 10
+    }
+  }
+}

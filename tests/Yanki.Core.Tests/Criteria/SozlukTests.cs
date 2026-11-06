@@ -27,6 +27,7 @@ namespace Yanki.Core.Tests.Criteria
         [InlineData("yay", 1, DonusTuru.Sayi, -1)]
         [InlineData("konu_puani", 1, DonusTuru.Sayi, -1)]
         [InlineData("olay_konusu", 1, DonusTuru.Mantiksal, 0)]
+        [InlineData("kok", 2, DonusTuru.Mantiksal, 0)]
         public void Fonksiyon_tanimi_ad_arguman_sayisi_ve_donus_turu(string ad, int arguman, DonusTuru donus, int onermeIndeksi)
         {
             var t = SorguSozlugu.Bul(ad);
@@ -39,11 +40,11 @@ namespace Yanki.Core.Tests.Criteria
         }
 
         [Fact]
-        public void Sozluk_tam_18_fonksiyon_ve_ordinal_siralidir()
+        public void Sozluk_tam_19_fonksiyon_ve_ordinal_siralidir()
         {
             var adlar = SorguSozlugu.Hepsi.Select(t => t.Ad).ToArray();
 
-            Assert.Equal(18, adlar.Length);
+            Assert.Equal(19, adlar.Length);
             Assert.Equal(adlar.OrderBy(a => a, StringComparer.Ordinal).ToArray(), adlar);
             Assert.Null(SorguSozlugu.Bul("yok_boyle_bir_sey"));
         }
@@ -54,7 +55,7 @@ namespace Yanki.Core.Tests.Criteria
             var satirlar = File.ReadAllLines(RepoRoot.Combine("docs", "criteria-language.md"))
                 .Where(s => s.StartsWith("| ", StringComparison.Ordinal) && char.IsDigit(s[2]))
                 .ToList();
-            Assert.Equal(18, satirlar.Count);
+            Assert.Equal(19, satirlar.Count);
 
             var gorulen = new List<string>();
             foreach (var satir in satirlar)

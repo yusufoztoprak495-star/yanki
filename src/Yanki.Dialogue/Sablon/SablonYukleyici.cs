@@ -48,7 +48,7 @@ namespace Yanki.Dialogue
         private static readonly string[] Reddedilen = { "olay_rolu", "olay_konusu", "konu_puani", "gercek", "yalan_soyledi" };
 
         // anlatti niyetine eşlenen şablonlarda ek olarak reddedilenler: doğru ve yalan anlatımı ayırt ettirir (yalan = konuşan buna inanmıyor; gören kişinin hafızası vardır).
-        private static readonly string[] AnlattiReddedilen = { "inanc", "kaynak", "hafiza_var" };
+        private static readonly string[] AnlattiReddedilen = { "inanc", "kaynak", "kok", "hafiza_var" };
 
         // Eşlenemeyen iç olay türleri: zihin/karar/fren/yay/dünya olayları ve aktarım kaydı (yalan bilgisini taşır).
         private static bool IcOlay(string tur) =>
@@ -265,9 +265,10 @@ namespace Yanki.Dialogue
             foreach (var kv in d.Ozellikler)
             {
                 var v = kv.Value;
-                if (!KimlikMi(kv.Key))
+                // Tek değerli yüklem anahtarı sonda bir "!" taşıyabilir (konum!): çekirdeğin yüklem biçimiyle aynı.
+                if (!KimlikMi(kv.Key.EndsWith("!", StringComparison.Ordinal) ? kv.Key.Substring(0, kv.Key.Length - 1) : kv.Key))
                 {
-                    hata(v.Satir, "onerme_metni", kv.Key, "yüklem adı ASCII olmalı");
+                    hata(v.Satir, "onerme_metni", kv.Key, "yüklem adı ASCII olmalı (tek değerli yüklemde sonda bir '!' olabilir)");
                     continue;
                 }
 
@@ -1006,7 +1007,7 @@ namespace Yanki.Dialogue
         {
             foreach (var k in kriterler)
             {
-                if (k.Alan.Ad != "inanc" && k.Alan.Ad != "kaynak")
+                if (k.Alan.Ad != "inanc" && k.Alan.Ad != "kaynak" && k.Alan.Ad != "kok")
                 {
                     continue;
                 }

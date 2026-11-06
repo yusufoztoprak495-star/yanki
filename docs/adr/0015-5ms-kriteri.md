@@ -111,7 +111,7 @@ Yusuf kriterin silinmemesini, 50 NPC için ölçülen değerlerin açıkça yay�
 ## Yapılacaklar
 
 1. [x] 5.80/6.58 farkını kanıtla açıkla, adım dökümü, optimizasyon turu, replay ölçümü (8. hafta).
-2. [ ] 9. hafta: gerçek Kasaba Hanı senaryosunda 8 NPC ölçümü (bütçe riski).
+2. [x] 9. hafta: gerçek Kasaba Hanı senaryosunda 8 NPC ölçümü ve tek optimizasyon turu (aşağıdaki "9. hafta" bölümü; diyalog açık 5.04 → 2.98 ms, kriter tutuyor).
 3. [ ] 10. hafta: Blazor WASM tick süresi ve yükleme ölçümü; kabul sınırı.
 4. [ ] 11. hafta: BenchmarkDotNet tablosu (10 / 50 / 200 NPC).
 5. [ ] Yusuf gerekçeyi onaylayınca durum "Kabul edildi" yapılır.
@@ -128,3 +128,54 @@ Yusuf kriterin silinmemesini, 50 NPC için ölçülen değerlerin açıkça yay�
 - Fark replay'de ≈ +5 %, tick başında ≈ +10 %; iki kolda da dağılımlar büyük ölçüde örtüşür. Aynı düzenekle ve dönüşümlü ölçülünce replay ve tick ölçümleri **çelişmiyor**; diyalog 8 NPC'de ≤ 5 ms kriterini bozmaz (3.06 ms).
 - Önceki "+%24 replay (0.54 s'ye karşı 0.43 s)" farkı, kolların ayrı zamanlarda ardışık koşulmasından (süreç çift modu, bkz. yukarısı) geliyordu; 0.68 s ve 0.43 s gibi tek koşular aynı dağılımın iki ucudur (kapalı kolda da 0.44–0.62 s görüldü). Kök neden: ölçüm düzeneğinin dönüşümlü olmaması, diyalog değil. Süreç çift modunun kendisi hâlâ açıklanmış değildir.
 - Diyalog fikstürü sahte içeriktir (hacim ölçümü); gerçek Kasaba Hanı hacmi 9. haftada yeniden ölçülür. 50 NPC v0.2 hedefidir.
+
+## 9. hafta: gerçek Kasaba Hanı ölçümü ve optimizasyon turu
+
+**Kriter (Yusuf, DURAK 3):** 8 NPC ≤ 5 ms **demo yapılandırmasıyla, yani diyalog AÇIK** ölçülür. Ölçüt gerçek `samples/KasabaHani` (`tools/olcum --senaryo samples/KasabaHani --betik oynanislar/plan7_borc.json [--sablon sablonlar.json]`).
+Yöntem aynı: ayrı süreçler, kapalı/açık dönüşümlü sıra, 20'şer süreç, her süreçte ısınma + 5 × 168 tick. Koşullar: Windows 11 dizüstü, Intel i7-12700H, .NET SDK 10, Release, şarjda (AC, %81), güç planı "Dengeli" (değiştirilmedi), ölçüm sırasında başka ağır iş yok.
+
+### Önce (optimizasyondan önce, `257f25b`+) ve sonra
+
+| Ölçü (süreç ortancası) | Önce: kapalı | Önce: açık | **Sonra: kapalı** | **Sonra: açık** | Bütçe varyantı önce → sonra |
+|---|---|---|---|---|---|
+| tick başına ortalama (ms) | 4.87 | **5.04** | 2.71 | **2.98** | 6.80 → 4.85 |
+| en düşük–en yüksek süreç | 4.09–5.41 | 4.59–5.68 | 2.39–4.86 | 2.31–4.76 | 3.34–8.24 → 4.30–5.53 |
+| p10–p90 | 4.30–5.21 | 4.71–5.38 | 2.49–2.90 | 2.54–3.59 | 5.46–7.77 → 4.63–5.31 |
+| p95 tick (ortanca, ms) | 12.2 | 12.9 | 7.3 | 7.7 | 17.5 → 10.7 |
+| en yavaş tick (ortanca / maks, ms) | 26.5 / 39.9 | 29.2 / 34.6 | 21.5 / 40.2 | 24.9 / 44.9 | 31.7 / 53.5 → 31.2 / 40.2 |
+| 168 tick toplam tahsis (MB, ortanca) | 478 | 480 | 299 | 301 | 621 → 412 |
+| 168 tick baştan oynatma (ms, ortanca; en düşük–en yüksek) | 518 (462–556) | 569 (503–837) | 434 (414–477) | **513 (462–548)** | |
+
+Diyalog açık: 5.04 → **2.98 ms (−%41)**; kapalı 4.87 → 2.71 (−%44); bütçe varyantı −%29. Tahsis −%37. `son_hash` ve `gunluk_hash` her oynatmada tuttu. **Kriter tutuyor** (diyalog açık 2.98 ms ≤ 5 ms; süreç dağılımının üst ucu 4.76 ms). En yavaş tick düzeyi (maks 40–45 ms) düşmedi.
+
+### Adım dökümü (geçici zamanlama kodu, commit'lenmedi; tek süreç, 5 × 168 tick, diyalog açık; yaklaşık, ölçüm yükü dahil)
+
+| Adım | Önce (ms/tick) | Pay |
+|---|---|---|
+| 5a aday üretimi | 3.4 | %52 |
+| ↳ konu seçimi (`KonuHesabi.Dogru`) | 2.4 | %37 |
+| ↳ ön koşul değerlendirmesi | 0.6 | %9 |
+| 7a durum hash'i + yayın | 1.5 (hash 1.35) | %23 (hash %21) |
+| 5b seçici | 0.33 | %5 |
+| algı + kurallar + kriz | 0.13 | %2 |
+| diyalog işleyici | 0.13 | %2 |
+
+Kalan 5. adım payı (olay yazımı vb.) ≈ %15. Diyalog işleyicisinin kendisi tick'in yalnızca ≈ %2'si.
+
+### Aday 1 ve 2 (en çok iki, profilin en büyük payından)
+
+1. **Konu hesabı** (`KonuHesabi`, ≈ %37): `Ilgi` döngüsü her inanılan önerme için iki `ToString` ayırıyordu, ama önermenin kendisi dinleyeni içermediği için eşitlik denetimi zaten sonucu değiştirmiyordu (kaldırıldı); desene uyan önerme indeksleri dinleyenden bağımsızdır, konuşan görüntüsünde bir kez hesaplanır; `Onerme.Ayristir` sonuçları `ZihinDeposu`'nda önbelleklenir. Konu seçimi ≈ 2.4 → ≈ 1.1 ms.
+2. **Durum hash'i** (≈ %21): `Hash64.Akis` ile parça parça akıtılır (`dünya + zihinler + ek` birleştirilmiş metin ve UTF-8 bayt dizisi ayrılmaz); `Hesapla(a + b)` ile birebir aynı değer (vekil çifti parçalar arasına düşse bile; testle ve rastgele 2000 örnekle). Tahsis ≈ −%26 (2.86 → 1.80–2.4 MB/tick, profil koşusu), hash süresinin kendisi belirgin düşmedi (iki profil koşusunda 1.35 → 1.16 ve 0.55 ms; koşular arası gürültü büyük, nedeni araştırılmadı).
+
+Dört ana golden ve üç diyalog golden'ı ile Kasaba golden'ları (`kasaba-hani-1`, `kasaba-hani-diyalog-1`) birebir aynı; olay biçimi değişmedi. Toplam kazanç %30 eşiğinin üstünde (−%41), değişiklikler korundu.
+
+### GC ve en yavaş tick
+
+- 840 tick (5 × 168) içinde GC olan tick ≈ %15–25 (gen0 ≈ 140–220, gen1 ≈ 40–90, gen2 ≈ 11–55 olay); GC'li tick ortalaması ≈ 6.4 ms, GC'siz ortalama ≈ 3.3 ms (ortanca ≈ 2.6 ms).
+- Tick süresi ile tick tahsisi arasındaki Pearson korelasyonu ≈ **0.33–0.37** (orta). p95 üstü 43 tick'in yaklaşık yarısında GC var (ortalama duraklama ≈ 2.4 ms); GC duraklamaları bu tick'lerin süresinin yalnızca ≈ %10–14'ünü açıklar. En yavaş tick'ler **aynı tick numaralarında** tekrarlanıyor (ör. t80–83, t111–116, t162–164, koşudan koşuya aynı): bu **belirleyici iş yükü tepeleri**dir (aynı seed ve betik), yalnızca GC değil. GC bir kısmını büyütür (gen2 duraklaması tek tick'te 13–20 ms gördüm), ama tepenin kaynağı iş yükü.
+
+### Süreç içi 2× fark ve ADR-015'teki iki modlu davranış
+
+Süreç içi en hızlı koşu ≈ 1.9 ms, en yavaş ≈ 4.9 ms (2.5×); nedeni araştırılmadı, kanıt yok. ADR-015'teki iki modlu süreç davranışı **kısmen görüldü**: süreç ortancalarının çoğu tek tepede (p10–p90 2.5–3.6 ms), ama kapalıda 20 sürecin 2'si, açıkta 1'i medyanın 1.3 katından yüksek (4.1–4.9 ms); nedeni bilinmiyor, bu koşuda kanıtlanmadı.
+
+**Kalan fark yok (kriter tutuyor); 50 NPC bu hafta ölçülmedi (Kasaba 8 NPC; 50 NPC v0.2 hedefi).** `tools/olcum --senaryo` çıktısı BenchmarkDotNet değildir; BenchmarkDotNet tablosu 11. haftadadır.

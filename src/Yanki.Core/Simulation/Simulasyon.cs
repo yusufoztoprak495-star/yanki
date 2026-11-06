@@ -1392,6 +1392,22 @@ namespace Yanki.Core.Simulation
             {
                 GercekEkle(g);
             }
+
+            // Başlangıç inançları (9. hafta): NPC kimliğine göre ordinal sırayla (içinde dosya sırası), mevcut kanit_eklendi olayıyla; gordu, kaynak = NPC, kök yazılmaz (etkin kök NPC'nin kendisi).
+            var sirali = new List<KeyValuePair<string, string>>(s.BaslangicInanclari);
+            var indeksler = new List<int>();
+            for (var i = 0; i < sirali.Count; i++)
+            {
+                indeksler.Add(i);
+            }
+
+            indeksler.Sort((x, y) => { var c = string.CompareOrdinal(sirali[x].Key, sirali[y].Key); return c != 0 ? c : x.CompareTo(y); });
+            foreach (var ix in indeksler)
+            {
+                var bi = sirali[ix];
+                Ekle(Yanki.Core.Mind.ZihinOlaylari.KanitEklendi(
+                    Gunluk.SonrakiId, 0, Gunluk.SonrakiSira(0), bi.Key, bi.Value, "gordu", bi.Key, _algiAyarlari.GorduKanitGucu, new long[0], "senaryo"));
+            }
         }
 
         private void VarlikEkle(string id, string tur) =>
@@ -1520,6 +1536,14 @@ namespace Yanki.Core.Simulation
 
             foreach (var eylem in katalog.Eylemler)
             {
+                foreach (var aktor in eylem.Aktorler)
+                {
+                    if (!varliklar.Contains(aktor) || aktor == senaryo.OyuncuId)
+                    {
+                        throw new ArgumentException($"Eylem \"{eylem.Id}\": aktor \"{aktor}\" bu senaryoda bir NPC degil.", nameof(katalog));
+                    }
+                }
+
                 foreach (var etki in eylem.Etkiler)
                 {
                     if (etki.Hedef.Length > 0 && !RolAdiMi(etki.Hedef) && !varliklar.Contains(etki.Hedef))

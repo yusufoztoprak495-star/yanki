@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Yazım araçları (9. hafta): senaryo doğrulama (yanki validate) ve kapsama (yanki coverage) mantığı.
+    Metin ve dosya adı alır, dosya sistemine dokunmaz; dosyayı CLI okur. 10. haftada Blazor demosu da kullanabilir.
+    Çekirdek ve Dialogue ile aynı kısıtlar: LangVersion 9.0, NuGet yok, iki hedef, determinizm kuralları (YasakliApiTests tarar).
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
+    <RootNamespace>Yanki.Authoring</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Yanki.Core\Yanki.Core.csproj" />
+    <ProjectReference Include="..\Yanki.Dialogue\Yanki.Dialogue.csproj" />
+  </ItemGroup>
+
+</Project>

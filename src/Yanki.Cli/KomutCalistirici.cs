@@ -58,6 +58,10 @@ namespace Yanki.Cli
                     return Diyalog(args, cikti, hata);
                 case "diyalog-replay":
                     return DiyalogReplay(args, cikti, hata);
+                case "validate":
+                    return DogrulamaKomutu.Calistir(args, cikti, hata);
+                case "coverage":
+                    return KapsamKomutu.Calistir(args, cikti, hata);
                 default:
                     hata.WriteLine($"Bilinmeyen komut: {args[0]}");
                     KullanimYaz(hata);
@@ -79,6 +83,8 @@ namespace Yanki.Cli
             w.WriteLine("  yanki why <oturum.json> <olayId>     (nedensellik zinciri; karar olayında adaylar ve puan bileşenleri)");
             w.WriteLine("  yanki diyalog <oturum.json> --sablon <sablon.json> [--neden <satir_no>]   (kayıttan diyalog satırları; --neden seçilen şablonu, kriterleri ve olayın why zincirini gösterir)");
             w.WriteLine("  yanki diyalog-replay <golden.json> [--guncelle]   (tests/golden/diyalog/: kayit, sablon, diyalog_hash, sablon_hash; çıkış kodu 3 diyalog_hash, 7 sablon_hash)");
+            w.WriteLine("  yanki validate <senaryo_dizini | scenario.json> [--sablon <sablon.json>] [--uyari-hata]   (hata ve uyarılar dosya:satir ile; çıkış 0 temiz, 1 hata var)");
+            w.WriteLine("  yanki coverage <senaryo_dizini> [--seeds N] [--tick T] [--sablon <sablon.json>]   (oynanislar/*.json betikleri x seed; Markdown rapor; çıkış 0 plan 3 kriteri tuttu, 2 tutmadı)");
             w.WriteLine("  yanki --version");
         }
 

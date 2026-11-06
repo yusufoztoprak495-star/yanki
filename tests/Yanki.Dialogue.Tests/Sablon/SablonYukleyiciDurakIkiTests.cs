@@ -47,6 +47,7 @@ namespace Yanki.Dialogue.Tests.Sablon
         [Theory]
         [InlineData("inanc(borclu(*,*,*))", ">=", "0.5")]
         [InlineData("kaynak(borclu(*,*,*), oyuncu)", "==", "true")]
+        [InlineData("kok(borclu(*,*,*), oyuncu)", "==", "true")]
         [InlineData("hafiza_var(yardim_etti, oyuncu, 168)", "==", "true")]
         public void Anlatici_yasaklari_yalnizca_konusanin_anlatici_oldugu_niyette_gecerli_cevap_veren_kendi_inancini_kullanabilir(string alan, string op, string deger)
         {

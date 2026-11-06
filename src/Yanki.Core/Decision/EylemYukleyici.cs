@@ -26,7 +26,7 @@ namespace Yanki.Core.Decision
         private static readonly string[] EylemAnahtarlari =
         {
             "id", "olay_turu", "hedef", "taban", "on_kosullar", "olcutler", "kisilik_carpani", "fikir_carpani",
-            "ruh_hali_carpani", "celisen_ozellikler", "etkiler", "aktarim", "konu_desenleri", "yalan_onermeleri", "gorunurluk", "stres_tabani", "cooldown", "kapsam", "en_fazla", "ihlal_bayraklari",
+            "ruh_hali_carpani", "celisen_ozellikler", "etkiler", "aktarim", "konu_desenleri", "yalan_onermeleri", "gorunurluk", "stres_tabani", "cooldown", "kapsam", "en_fazla", "ihlal_bayraklari", "aktorler",
         };
 
         private static readonly string[] OlcutAnahtarlari = { "alan", "min", "max", "egri" };
@@ -451,6 +451,34 @@ namespace Yanki.Core.Decision
                 return null;
             }
 
+            var aktorler = new List<string>();
+            var aktorDugumu = oge.Al("aktorler");
+            if (aktorDugumu != null)
+            {
+                if (aktorDugumu.Tur != JsonTuru.Dizi || aktorDugumu.Elemanlar.Count == 0)
+                {
+                    Hata(aktorDugumu.Satir, "\"aktorler\" bos olmayan bir kimlik dizisi olmali");
+                }
+                else
+                {
+                    foreach (var a in aktorDugumu.Elemanlar)
+                    {
+                        if (a.Tur != JsonTuru.Metin || !Kimlik.GecerliKimlikMi(a.MetinDeger))
+                        {
+                            Hata(a.Satir, "\"aktorler\" ogesi gecerli bir kimlik olmali");
+                        }
+                        else if (aktorler.Contains(a.MetinDeger))
+                        {
+                            Hata(a.Satir, "\"aktorler\" icinde kimlik tekrar ediyor: \"" + a.MetinDeger + "\"");
+                        }
+                        else
+                        {
+                            aktorler.Add(a.MetinDeger);
+                        }
+                    }
+                }
+            }
+
             var ihlaller = Brakes.IhlalBayragi.OkuDizi(
                 oge, "ihlal_bayraklari", hedef == EylemHedefTuru.Yok ? new[] { "ben" } : new[] { "ben", "eylem.hedef" }, Hata);
             foreach (var ib in ihlaller)
@@ -466,7 +494,7 @@ namespace Yanki.Core.Decision
                 return null;
             }
 
-            return new EylemTanimi(kimlik, olayTuru, hedef, taban, kriterler, olcutler, kisilikCarpani, fikirCarpani, ruhHali, celisen, etkiler, oge.Satir, aktarim, konuDesenleri, yalanOnermeleri, gorunurluk, stresTabani, Brakes.TetikSiniri.Oku(oge, true, Hata), ihlaller);
+            return new EylemTanimi(kimlik, olayTuru, hedef, taban, kriterler, olcutler, kisilikCarpani, fikirCarpani, ruhHali, celisen, etkiler, oge.Satir, aktarim, konuDesenleri, yalanOnermeleri, gorunurluk, stresTabani, Brakes.TetikSiniri.Oku(oge, true, Hata), ihlaller, aktorler);
         }
 
         // aktarim, konu_desenleri, yalan_onermeleri, gorunurluk alanları ve aktarımsız eylemde yasakları.

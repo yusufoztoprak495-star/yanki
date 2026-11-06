@@ -1,0 +1,870 @@
+{
+  "kurallar": [
+    {
+      "id": "aile_iftirasi",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(borclu(Mehmet, *, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(kardes(Mehmet, ben))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "kok(borclu(Mehmet, *, *), oyuncu)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "aileme_iftira",
+          "deger": -22,
+          "sure": 432
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 1
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "aile_iftirasi_npc",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(borclu(Mehmet, *, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(kardes(Mehmet, ben))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "kok(borclu(Mehmet, *, *), oyuncu)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "aileme_iftira_npc",
+          "deger": -12,
+          "sure": 336
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "borc_duyuldu",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(borclu(Mehmet, *, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(kardes(Mehmet, ben))",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "gercek(sahip!(muhur, ben))",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "borc_dedikodusu",
+          "deger": -3,
+          "sure": 168
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "borc_sikintisi_goruldu",
+      "ne_zaman": "borc_sikintisi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(borclu(olay.fail, ben, 500))",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "borclu_gordum",
+          "deger": -5,
+          "sure": 240
+        }
+      ],
+      "cooldown": 96
+    },
+    {
+      "id": "kese_goruldu",
+      "ne_zaman": "para_sayildi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "kisilik(acgozluluk)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "kese_goruldu",
+          "deger": -1,
+          "sure": 240
+        }
+      ],
+      "cooldown": 72
+    },
+    {
+      "id": "borc_talebi_hedef",
+      "ne_zaman": "borc_istendi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(borclu(ben, olay.fail, 500))",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "borc_baskisi",
+          "deger": -10,
+          "sure": 240
+        },
+        {
+          "tur": "duygu",
+          "duygu": "korku",
+          "siddet": 0.3,
+          "hedef": "olay.fail"
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 1
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "borc_talebi_tanik",
+      "ne_zaman": "borc_istendi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(borclu(olay.hedef, olay.fail, 500))",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.hedef",
+          "modifier": "borclu_goruldu",
+          "deger": -4,
+          "sure": 168
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "borc_odendi_alacakli",
+      "ne_zaman": "borc_odendi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(borclu(Mehmet, ben, 500))",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "borc_minneti",
+          "deger": 25,
+          "sure": 336
+        },
+        {
+          "tur": "yay",
+          "degisken": "han_itibari",
+          "delta": 1
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": -1
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "borc_odendi_tanik",
+      "ne_zaman": "borc_odendi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "iyilik_gordu",
+          "deger": 8,
+          "sure": 168
+        }
+      ],
+      "cooldown": 24
+    },
+    {
+      "id": "borc_odendi_kardes",
+      "ne_zaman": "borc_odendi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(kardes(Mehmet, ben))",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "kardesime_yardim",
+          "deger": 20,
+          "sure": 336
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "ele_verme_istendi",
+      "ne_zaman": "ele_verdirme_istendi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "ele_ver_baskisi",
+          "deger": -10,
+          "sure": 72
+        },
+        {
+          "tur": "duygu",
+          "duygu": "korku",
+          "siddet": 0.3,
+          "hedef": "olay.fail"
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 1
+        }
+      ],
+      "cooldown": 24
+    },
+    {
+      "id": "kardes_ele_verildi_tanik",
+      "ne_zaman": "kardes_ele_verildi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "kardesini_ele_verdi",
+          "deger": -8,
+          "sure": 240
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "kardes_ele_verildi_hedef",
+      "ne_zaman": "kardes_ele_verildi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "ele_veren_kardes",
+          "deger": -6,
+          "sure": 240
+        },
+        {
+          "tur": "eksen",
+          "hedef": "olay.fail",
+          "eksen": "guven",
+          "delta": -3
+        }
+      ]
+    },
+    {
+      "id": "yardima_minnet",
+      "ne_zaman": "yardim_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "minnet",
+          "deger": 15,
+          "sure": 168
+        },
+        {
+          "tur": "yay",
+          "degisken": "han_itibari",
+          "delta": 1
+        }
+      ],
+      "cooldown": 24
+    },
+    {
+      "id": "hakarete_kirgin",
+      "ne_zaman": "hakaret_et",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "eksen",
+          "hedef": "oyuncu",
+          "eksen": "guven",
+          "delta": -20
+        },
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.5,
+          "hedef": "oyuncu"
+        },
+        {
+          "tur": "yay",
+          "degisken": "han_itibari",
+          "delta": -1
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 1
+        }
+      ],
+      "cooldown": 12
+    },
+    {
+      "id": "hakaret_tanik",
+      "ne_zaman": "hakaret_et",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "kaba_gorundu",
+          "deger": -6,
+          "sure": 168
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "tehdit_korkusu",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "duygu",
+          "duygu": "korku",
+          "siddet": 0.5,
+          "hedef": "olay.fail"
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 2
+        }
+      ],
+      "cooldown": 12
+    },
+    {
+      "id": "tehdit_tanik",
+      "ne_zaman": "tehdit_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "eksen",
+          "hedef": "olay.fail",
+          "eksen": "guven",
+          "delta": -5
+        }
+      ],
+      "cooldown": 12
+    },
+    {
+      "id": "saklayana_supheli",
+      "ne_zaman": "sakladi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "supheli_davranis",
+          "deger": -8,
+          "sure": 168
+        }
+      ],
+      "cooldown": 24
+    },
+    {
+      "id": "muhur_soruldu_hedef",
+      "ne_zaman": "muhur_soruldu",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "sorguya_cekildim",
+          "deger": -6,
+          "sure": 240
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "muhur_soran_supheli",
+      "ne_zaman": "muhur_soruldu",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(fail)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "fikir(olay.hedef)",
+          "op": "<",
+          "deger": 10
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.hedef",
+          "modifier": "muhur_supheli",
+          "deger": -10,
+          "sure": 336
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "muhur_yeri_ogrenildi_npc",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(konum!(muhur, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(sahip!(muhur, ben))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "kok(konum!(muhur, *), oyuncu)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "muhuru_buldu",
+          "deger": 20,
+          "sure": 336
+        },
+        {
+          "tur": "gercek",
+          "islem": "ekle",
+          "gercek": "konum!(muhur,muhtarlik)"
+        },
+        {
+          "tur": "yay",
+          "degisken": "han_itibari",
+          "delta": 1
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "muhur_yeri_ogrenildi",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(konum!(muhur, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "gercek(sahip!(muhur, ben))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "kok(konum!(muhur, *), oyuncu)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "oyuncu",
+          "modifier": "muhur_minneti",
+          "deger": 25,
+          "sure": 336
+        },
+        {
+          "tur": "gercek",
+          "islem": "ekle",
+          "gercek": "konum!(muhur,muhtarlik)"
+        },
+        {
+          "tur": "yay",
+          "degisken": "han_itibari",
+          "delta": 1
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": -1
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "kese_calindi_magdur",
+      "ne_zaman": "kese_calindi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "hirsiz",
+          "deger": -30,
+          "sure": 720
+        },
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.6,
+          "hedef": "olay.fail"
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 2
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "kese_calindi_tanik",
+      "ne_zaman": "kese_calindi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "hirsizlik_gordum",
+          "deger": -25,
+          "sure": 720
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 1
+        }
+      ],
+      "en_fazla": 1
+    },
+    {
+      "id": "kese_haberi",
+      "ne_zaman": "anlatti",
+      "kriterler": [
+        {
+          "alan": "olay_konusu(kese_calindi(*, *))",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "kok(kese_calindi(*, *), oyuncu)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "dedikodu_yapti",
+          "deger": -2,
+          "sure": 120
+        }
+      ],
+      "cooldown": 24
+    },
+    {
+      "id": "suclanan_kirgin",
+      "ne_zaman": "suclandi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "suclandim",
+          "deger": -20,
+          "sure": 336
+        },
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.5,
+          "hedef": "olay.fail"
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": 1
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "suclama_tanik",
+      "ne_zaman": "suclandi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(tanik)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.hedef",
+          "modifier": "suclu_sanildi",
+          "deger": -8,
+          "sure": 168
+        }
+      ],
+      "cooldown": 48
+    },
+    {
+      "id": "itiraf_alindi",
+      "ne_zaman": "itiraf_etti",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "modifier",
+          "hedef": "olay.fail",
+          "modifier": "durust_cikti",
+          "deger": 10,
+          "sure": 336
+        },
+        {
+          "tur": "eksen",
+          "hedef": "olay.fail",
+          "eksen": "guven",
+          "delta": 5
+        },
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "id": "toplanti_sakinlestirdi",
+      "ne_zaman": "toplanti_cagrildi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(fail)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "yay",
+          "degisken": "kasaba_gerginligi",
+          "delta": -3
+        }
+      ],
+      "cooldown": 72,
+      "kapsam": "kural"
+    },
+    {
+      "id": "misafirperverlik",
+      "ne_zaman": "misafir_agirlandi",
+      "kriterler": [
+        {
+          "alan": "olay_rolu(fail)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "yay",
+          "degisken": "han_itibari",
+          "delta": 1
+        }
+      ],
+      "cooldown": 24,
+      "kapsam": "kural"
+    }
+  ]
+}

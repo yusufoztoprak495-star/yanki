@@ -30,7 +30,7 @@ Bir kriter JSON nesnesidir:
 
 ## Sorgu fonksiyonu sözlüğü
 
-v0.1'de sabit, belgelenmiş küçük bir set (18 fonksiyon; 15'i v0.1 listesi, `olay_rolu` 4. haftada, `konu_puani` ve `olay_konusu` 6. haftada Yusuf'un kararıyla eklendi). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
+v0.1'de sabit, belgelenmiş küçük bir set (19 fonksiyon; 15'i v0.1 listesi, `olay_rolu` 4. haftada, `konu_puani` ve `olay_konusu` 6. haftada, `kok` 9. haftada Yusuf'un kararıyla eklendi). **Bu sözlük Yusuf'un tasarım alanıdır; v0.1 listesi Yusuf tarafından onaylandı. Değişiklikler onun onayıyla yapılır.**
 İpuçları: ruh hali, stres, mekan, zaman, kimden duydu, kaç kişi biliyor, yalan söylendi mi, bir eylemi en son ne zaman yaptı.
 
 | #   | Fonksiyon                                 | Ne sorar                                                                                                                                                                                   | Döndürdüğü                                     | Örnek kriter                               |
@@ -53,6 +53,7 @@ v0.1'de sabit, belgelenmiş küçük bir set (18 fonksiyon; 15'i v0.1 listesi, `
 | 16  | `yay(degisken)`                           | Senaryo düzeyindeki dramatik yay değişkeninin değeri                                                                                                                                       | sayı                                           | `yay(kasaba_gerginligi) aralik [2, 4]`     |
 | 17 | `konu_puani(kime)` | Bu NPC'nin o kişiye anlatabileceği en yüksek konu puanı (yalnızca `aktarim: dogru` eylemlerinin ön koşul ve ölçütlerinde; konu havuzu eylemin `konu_desenleri`) | sayı 0..1 | `konu_puani(eylem.hedef) >= 0.2` |
 | 18 | `olay_konusu(onerme)` | Sonuç kuralında mevcut olay `anlatti` ise ve anlatılan önerme desene uyuyorsa; yalnızca içeriği duyan dinleyen (`olay.hedef`) için doğru, konuşan ve tanık için yanlış | doğru/yanlış | `olay_konusu(borclu(Mehmet, *, *))` |
+| 19 | `kok(onerme, kisi)` | Bu önerme için etkin kökü bu kişi olan bir kanıt var mı (söylentiyi ilk anlatan; `kaynak` ise kimden duyulduğuna bakar). `gordu`/`cikarim` kanıtında kök NPC'nin kendisidir. Kök kimin söylediğini gösterir, önermenin doğru ya da yalan olduğunu göstermez | doğru/yanlış | `kok(borclu(Mehmet, *, *), oyuncu)` |
 
 ## Bağlama durumu (3. hafta)
 
@@ -112,6 +113,17 @@ Ayrıntı: `docs/notes/dedikodu.md`, `docs/notes/stres.md`.
 ## Yay değişkenleri (7. hafta)
 
 Senaryoda `"yay_degiskenleri": { "kasaba_gerginligi": { "baslangic": 0, "min": 0, "max": 10 } }` ile tanımlanır. Etki (kural ve eylem): `{ "tur": "yay", "degisken": "kasaba_gerginligi", "delta": 1 }`; değer aralığa kırpılır, kırpılırsa `yay_siniri` freni yazılır. `yay_degisti` olayı algılanmaz ve kural tetiklemez (`ne_zaman: yay_degisti` reddedilir); `KuralId` ve `NedenOlaylar` taşır, `why` zincire iner. Kriterler değişkeni kuralların aynı adımda tuttuğu **tek görüntüden** okur; aynı adımdaki birden çok delta sabit sırayla toplanır. Anlatısal "sonuç bandı" kapısı yoktur: aralık için `aralik` operatörünü kullanın.
+
+## Söylenti kökü (9. hafta)
+
+Sözlük 18'den **19 fonksiyona** çıktı (Yusuf'un kararı, ADR-016): `kok(onerme, kisi)`, `kaynak(onerme, kisi)` ile simetriktir. `kaynak` kanıtı kimden DUYDUĞUNA, `kok` söylentiyi kimin başlattığına bakar.
+
+- Kök, dinleyenin kendi zihnindeki kanıtta zaten vardır (ADR-012, `Kanit.Kok`); yeni bilgi kaynağı yoktur. Anlatımda konuşanın o önerme için **en güçlü güncel kanıtının** (`Zihin.EnGucluKanit`) etkin kökü dinleyene geçer.
+- `gordu` ve `cikarim` kanıtında etkin kök NPC'nin kendisidir (`kok(p, ben)` doğrudur); kökü yazılmamış eski `duydu` kanıtında anlatan kök sayılır.
+- Birden çok kanıt varken herhangi birinin kökü eşleşirse doğrudur (`kaynak` ile aynı); hiçbir kanıt silinmez.
+- `inanc`, `kaynak` gibi `degil(yuklem(...))` önermesi kabul eder.
+- Kural, eylem ön koşulu/ölçütü ve kriz satırı bağlamlarında çözülür. **Diyalog şablonunda** konuşanın anlatıcı olduğu niyetlerde `inanc`, `kaynak`, `hafiza_var` gibi **yasaktır** (yalan gizliliği: konuşan kendi kanıt yapısını şablona sızdırmaz).
+- Yalan gizliliği değişmez: kök yalnızca kimin söylediğini gösterir, doğru ya da yalan olduğunu göstermez (`KokSorgusuTests`).
 
 ## Diyalog şablonu bağlamı (8. hafta)
 

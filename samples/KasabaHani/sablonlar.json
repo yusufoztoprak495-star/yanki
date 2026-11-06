@@ -1,0 +1,1279 @@
+{
+  "dil": "tr",
+  "adlar": {
+    "Riza": "Rıza",
+    "Mehmet": "Mehmet",
+    "Ayse": "Ayşe",
+    "Kerem": "Kerem",
+    "Osman": "Osman",
+    "Can": "Can",
+    "Fatma": "Fatma",
+    "Dursun": "Dursun",
+    "oyuncu": {
+      "ad": "yabancı",
+      "cins": true
+    },
+    "muhur": {
+      "ad": "mühür",
+      "cins": true,
+      "yumusak": "mühr"
+    },
+    "kasa": {
+      "ad": "kasa",
+      "cins": true
+    },
+    "depo": {
+      "ad": "depo",
+      "cins": true
+    },
+    "han": {
+      "ad": "han",
+      "cins": true
+    },
+    "pazar": {
+      "ad": "pazar",
+      "cins": true
+    },
+    "tarla": {
+      "ad": "tarla",
+      "cins": true
+    },
+    "dukkan": {
+      "ad": "dükkan",
+      "cins": true
+    },
+    "muhtarlik": {
+      "ad": "muhtarlık",
+      "cins": true,
+      "yumusak": "muhtarlığ"
+    },
+    "ahir": {
+      "ad": "ahır",
+      "cins": true
+    }
+  },
+  "onerme_metinleri": {
+    "borclu": {
+      "metin": "{0} {1.yonelme} {2} lira borçlu",
+      "olumsuz": "{0} {1.yonelme} {2} lira borçlu değil",
+      "sayilar": [
+        2
+      ],
+      "ozne": [
+        0
+      ],
+      "ben": {
+        "0": {
+          "metin": "ben {1.yonelme} {2} lira borçluyum",
+          "olumsuz": "ben {1.yonelme} {2} lira borçlu değilim"
+        }
+      },
+      "sen": {
+        "0": {
+          "metin": "senin {1.yonelme} {2} lira borçlu olduğun söyleniyor",
+          "olumsuz": "senin {1.yonelme} {2} lira borçlu olmadığın söyleniyor"
+        }
+      }
+    },
+    "kardes": {
+      "metin": "{0} ile {1} kardeş",
+      "olumsuz": "{0} ile {1} kardeş değil",
+      "ozne": [
+        0,
+        1
+      ],
+      "ben": {
+        "0": {
+          "metin": "ben ile {1} kardeşiz",
+          "olumsuz": "ben ile {1} kardeş değiliz"
+        },
+        "1": {
+          "metin": "{0} ile ben kardeşiz",
+          "olumsuz": "{0} ile ben kardeş değiliz"
+        }
+      },
+      "sen": {
+        "0": {
+          "metin": "{1} ile senin kardeş olduğunuz söyleniyor",
+          "olumsuz": "{1} ile senin kardeş olmadığınız söyleniyor"
+        },
+        "1": {
+          "metin": "{0} ile senin kardeş olduğunuz söyleniyor",
+          "olumsuz": "{0} ile senin kardeş olmadığınız söyleniyor"
+        }
+      }
+    },
+    "konum!": {
+      "metin": "{0.tamlayan} yeri {1.bulunma}",
+      "olumsuz": "{0.tamlayan} yeri {1.bulunma} değil"
+    },
+    "kese_calindi": {
+      "metin": "{0} {1.tamlayan} kesesini çalmış",
+      "olumsuz": "{0} {1.tamlayan} kesesini çalmamış",
+      "ozne": [
+        0,
+        1
+      ],
+      "ben": {
+        "0": {
+          "metin": "ben {1.tamlayan} kesesini çaldım",
+          "olumsuz": "ben {1.tamlayan} kesesini çalmadım"
+        },
+        "1": {
+          "metin": "{0} benim kesemi çalmış",
+          "olumsuz": "{0} benim kesemi çalmamış"
+        }
+      },
+      "sen": {
+        "0": {
+          "metin": "senin {1.tamlayan} kesesini çaldığın söyleniyor",
+          "olumsuz": "senin {1.tamlayan} kesesini çalmadığın söyleniyor"
+        },
+        "1": {
+          "metin": "{0} senin kesenini çalmış",
+          "olumsuz": "{0} senin kesenini çalmamış"
+        }
+      }
+    }
+  },
+  "esleme": [
+    {
+      "olay_turu": "anlatti",
+      "kaynak": "npc",
+      "niyet": "anlatma",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "anlatti",
+      "kaynak": "oyuncu",
+      "niyet": "anlatim_cevabi",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "selam_oldu",
+      "niyet": "selam",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "borc_istendi",
+      "niyet": "borc_talebi",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "tehdit_etti",
+      "niyet": "tehdit",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "suclandi",
+      "niyet": "suclama",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "muhur_soruldu",
+      "niyet": "muhur_sorusu",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "kese_calindi",
+      "niyet": "hirsizlik_tepkisi",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "kardes_ele_verildi",
+      "niyet": "ele_verme",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "yardim_etti",
+      "niyet": "tesekkur",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "borc_odendi",
+      "niyet": "borc_tesekkur",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "hakaret_et",
+      "niyet": "hakaret_cevabi",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "sakladi",
+      "niyet": "saklama_cevabi",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "ele_verdirme_istendi",
+      "niyet": "ele_ver_cevabi",
+      "konusan": "hedef"
+    },
+    {
+      "olay_turu": "toplanti_cagrildi",
+      "niyet": "toplanti",
+      "konusan": "fail",
+      "dinleyensiz": true
+    },
+    {
+      "olay_turu": "misafir_agirlandi",
+      "niyet": "misafir",
+      "konusan": "fail",
+      "dinleyensiz": true
+    },
+    {
+      "olay_turu": "itiraf_etti",
+      "niyet": "itiraf",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "patladi",
+      "niyet": "patlama",
+      "konusan": "fail"
+    },
+    {
+      "olay_turu": "kacti",
+      "niyet": "kacis",
+      "konusan": "fail",
+      "dinleyensiz": true
+    },
+    {
+      "olay_turu": "sakinlesti",
+      "niyet": "sakinlik",
+      "konusan": "fail",
+      "dinleyensiz": true
+    },
+    {
+      "olay_turu": "borc_sikintisi",
+      "niyet": "sikinti",
+      "konusan": "fail",
+      "dinleyensiz": true
+    },
+    {
+      "olay_turu": "para_sayildi",
+      "niyet": "para",
+      "konusan": "fail",
+      "dinleyensiz": true
+    }
+  ],
+  "gramer": {
+    "giris": [
+      "Dinle",
+      "Bak",
+      "Şunu duydum"
+    ],
+    "sir": [
+      "Kimseye söyleme",
+      "Aramızda kalsın"
+    ]
+  },
+  "sablonlar": [
+    {
+      "id": "anlat_genel",
+      "concept": "anlatma",
+      "genel": true,
+      "metin": "#giris# #dinleyen#: #konu#."
+    },
+    {
+      "id": "anlat_dedikoducu",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Duymadın mı #dinleyen#? #konu.baslik#."
+    },
+    {
+      "id": "anlat_gergin",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "stres()",
+          "op": ">=",
+          "deger": 15,
+          "agirlik": 3,
+          "zorunlu": true
+        }
+      ],
+      "metin": "#sir# #dinleyen#, ama #konu#."
+    },
+    {
+      "id": "anlat_dost",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "fikir_bandi(dinleyen)",
+          "op": "==",
+          "deger": "dost",
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "tekrar": {
+        "tekrar_bekleme": 6
+      },
+      "metin": "Sana güveniyorum #dinleyen#, #konu#."
+    },
+    {
+      "id": "anlat_kizgin",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "duygu(ofke)",
+          "op": ">=",
+          "deger": 0.4,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Sinirliyim #dinleyen#, ama #konu#."
+    },
+    {
+      "id": "anlat_korkak",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "duygu(korku)",
+          "op": ">=",
+          "deger": 0.3,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Fısıldıyorum #dinleyen#: #konu#."
+    },
+    {
+      "id": "anlat_soguk",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "fikir_bandi(dinleyen)",
+          "op": "==",
+          "deger": "soguk",
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Sana söylemem normalde, #dinleyen#, ama #konu#."
+    },
+    {
+      "id": "anlat_dogru",
+      "concept": "anlatma",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Doğrusu şu #dinleyen#: #konu#."
+    },
+    {
+      "id": "cevap_anlatim_genel",
+      "concept": "anlatim_cevabi",
+      "genel": true,
+      "metin": "Öyle mi? #konu#, demek."
+    },
+    {
+      "id": "cevap_anlatim_supheli",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "tekrar": {
+        "tekrar_bekleme": 1
+      },
+      "metin": "Bunu kimden duydun #dinleyen#? İnanması zor."
+    },
+    {
+      "id": "cevap_anlatim_sosyal",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "tekrar": {
+        "tekrar_bekleme": 1
+      },
+      "metin": "Ooo, bunu herkese anlatmalıyım!"
+    },
+    {
+      "id": "cevap_anlatim_borc",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.65,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "konu_deseni": "borclu(Mehmet,Riza,500)",
+      "tekrar": {
+        "tekrar_bekleme": 1
+      },
+      "metin": "Borç iki kişinin meselesi #dinleyen#, başkasına anlatılmaz."
+    },
+    {
+      "id": "cevap_anlatim_muhur",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(cesaret)",
+          "op": "<=",
+          "deger": 0.35,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "konu_deseni": "konum!(muhur,*)",
+      "tekrar": {
+        "tekrar_bekleme": 1
+      },
+      "metin": "Mühür orada mıydı! Ne kadar teşekkür etsem az."
+    },
+    {
+      "id": "cevap_anlatim_kese",
+      "concept": "anlatim_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "konu_deseni": "kese_calindi(Kerem,Ayse)",
+      "tekrar": {
+        "tekrar_bekleme": 1
+      },
+      "metin": "Kerem mi? Gözüm zaten üzerindeydi."
+    },
+    {
+      "id": "selam_genel",
+      "concept": "selam",
+      "genel": true,
+      "metin": "Merhaba #dinleyen#."
+    },
+    {
+      "id": "selam_sakin",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 2,
+          "zorunlu": true
+        },
+        {
+          "alan": "modifier_var(oyuncu, aileme_iftira)",
+          "op": "==",
+          "deger": false,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Hoş geldin #dinleyen#, bir ihtiyacın var mı?"
+    },
+    {
+      "id": "selam_iftira_ayse",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "modifier_var(oyuncu, aileme_iftira)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 3,
+          "zorunlu": true
+        },
+        {
+          "alan": "kaynak(borclu(Mehmet, *, *), Ayse)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 3,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Ağabeyim hakkında ne dediğini Ayşe'den duydum."
+    },
+    {
+      "id": "selam_iftira_genel",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "modifier_var(oyuncu, aileme_iftira)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Ağabeyim hakkında söylediklerini duydum, #dinleyen#."
+    },
+    {
+      "id": "selam_soguk",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "fikir_bandi(oyuncu)",
+          "op": "==",
+          "deger": "soguk",
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Seni görmek istemiyorum #dinleyen#."
+    },
+    {
+      "id": "selam_borc_hafiza",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "hafiza_var(borc_odendi, oyuncu, 48)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 3,
+          "zorunlu": true
+        }
+      ],
+      "hafiza": {
+        "tur": "borc_odendi",
+        "fail": "oyuncu",
+        "son_n_tick": 48
+      },
+      "metin": "#hafiza.zaman# borç meselesinde elini uzattın #dinleyen#, unutmadım."
+    },
+    {
+      "id": "selam_muhur_hafiza",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "kok(konum!(muhur, depo), oyuncu)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 3,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Mührün yerini sen söylemiştin #dinleyen#, minnettarım."
+    },
+    {
+      "id": "selam_hirsiz_hafiza",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "hafiza_var(kese_calindi, Kerem, 48)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 3,
+          "zorunlu": true
+        }
+      ],
+      "hafiza": {
+        "tur": "kese_calindi",
+        "fail": "Kerem",
+        "son_n_tick": 48
+      },
+      "metin": "#hafiza.zaman# Kerem'in kese işini gördüm. Dikkatli ol #dinleyen#."
+    },
+    {
+      "id": "selam_gergin",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "stres()",
+          "op": ">=",
+          "deger": 30,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Beni rahat bırak #dinleyen#, çok gerginim."
+    },
+    {
+      "id": "selam_dedikoducu",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Hoş geldin #dinleyen#! Duyduklarımı anlatayım mı?"
+    },
+    {
+      "id": "selam_cesur",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "kisilik(cesaret)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Yine mi sen #dinleyen#? Senden korkmuyorum."
+    },
+    {
+      "id": "selam_acgozlu",
+      "concept": "selam",
+      "kriterler": [
+        {
+          "alan": "kisilik(acgozluluk)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bir şey almaya geldiysen kesenin ağzını aç #dinleyen#."
+    },
+    {
+      "id": "borc_talebi_genel",
+      "concept": "borc_talebi",
+      "genel": true,
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "borc_cevabi"
+      },
+      "metin": "Hesabımızı unutma #dinleyen#."
+    },
+    {
+      "id": "borc_talebi_nazik",
+      "concept": "borc_talebi",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.6,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "borc_cevabi"
+      },
+      "metin": "Acelem yok #dinleyen#, ama hesap hesaptır."
+    },
+    {
+      "id": "borc_talebi_soguk",
+      "concept": "borc_talebi",
+      "kriterler": [
+        {
+          "alan": "fikir_bandi(dinleyen)",
+          "op": "==",
+          "deger": "soguk",
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "borc_cevabi"
+      },
+      "metin": "Sabrım tükeniyor #dinleyen#."
+    },
+    {
+      "id": "borc_cevabi_genel",
+      "concept": "borc_cevabi",
+      "genel": true,
+      "metin": "Biliyorum, ödeyeceğim."
+    },
+    {
+      "id": "borc_cevabi_utangac",
+      "concept": "borc_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(cesaret)",
+          "op": "<",
+          "deger": 0.5,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bir süre daha bekle, n'olur."
+    },
+    {
+      "id": "borc_cevabi_korkak",
+      "concept": "borc_cevabi",
+      "kriterler": [
+        {
+          "alan": "duygu(korku)",
+          "op": ">=",
+          "deger": 0.3,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Beni sıkıştırma!"
+    },
+    {
+      "id": "tehdit_genel",
+      "concept": "tehdit",
+      "genel": true,
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "cevap"
+      },
+      "metin": "Sana son kez söylüyorum #dinleyen#."
+    },
+    {
+      "id": "tehdit_gecmis",
+      "concept": "tehdit",
+      "kriterler": [
+        {
+          "alan": "fikir(dinleyen)",
+          "op": "<",
+          "deger": -10,
+          "agirlik": 1,
+          "zorunlu": true
+        },
+        {
+          "alan": "hafiza_var(tehdit_etti, ben, 48)",
+          "op": "==",
+          "deger": true,
+          "agirlik": 2
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "cevap"
+      },
+      "metin": "Sabrımı sınama #dinleyen#, ben lafımı iki kez söylemem."
+    },
+    {
+      "id": "tehdit_cesur",
+      "concept": "tehdit",
+      "kriterler": [
+        {
+          "alan": "kisilik(cesaret)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "cevap"
+      },
+      "metin": "Senden korkmuyorum #dinleyen#; sen benden kork."
+    },
+    {
+      "id": "cevap_genel",
+      "concept": "cevap",
+      "genel": true,
+      "metin": "Sakin ol, konuşalım."
+    },
+    {
+      "id": "cevap_kinli",
+      "concept": "cevap",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bunu unutmam."
+    },
+    {
+      "id": "cevap_korkak",
+      "concept": "cevap",
+      "kriterler": [
+        {
+          "alan": "duygu(korku)",
+          "op": ">=",
+          "deger": 0.2,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Lütfen... zarar verme."
+    },
+    {
+      "id": "suclama_genel",
+      "concept": "suclama",
+      "genel": true,
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "savunma"
+      },
+      "metin": "Kese meselesini açıklamalısın #dinleyen#."
+    },
+    {
+      "id": "suclama_kinli",
+      "concept": "suclama",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "savunma"
+      },
+      "metin": "Seni sakınmayacağım #dinleyen#: kesenin hesabını ver."
+    },
+    {
+      "id": "suclama_durust",
+      "concept": "suclama",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "savunma"
+      },
+      "metin": "Gördüklerimi saklamam #dinleyen#; kese işini anlat."
+    },
+    {
+      "id": "savunma_genel",
+      "concept": "savunma",
+      "genel": true,
+      "metin": "Ben almadım, yemin ederim."
+    },
+    {
+      "id": "savunma_durust",
+      "concept": "savunma",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Doğrusunu söyleyeyim: beni yanlış anlıyorsun."
+    },
+    {
+      "id": "savunma_ofkeli",
+      "concept": "savunma",
+      "kriterler": [
+        {
+          "alan": "duygu(ofke)",
+          "op": ">=",
+          "deger": 0.4,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bana iftira atıyorsun!"
+    },
+    {
+      "id": "muhur_sorusu_genel",
+      "concept": "muhur_sorusu",
+      "genel": true,
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "muhur_cevabi"
+      },
+      "metin": "Mührümü gördün mü #dinleyen#?"
+    },
+    {
+      "id": "muhur_sorusu_supheli",
+      "concept": "muhur_sorusu",
+      "kriterler": [
+        {
+          "alan": "fikir(dinleyen)",
+          "op": "<",
+          "deger": -5,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "sonra": {
+        "hedef": "dinleyen",
+        "concept": "muhur_cevabi"
+      },
+      "metin": "Mührüm kayıp. Bir bildiğin var mı #dinleyen#?"
+    },
+    {
+      "id": "muhur_cevabi_genel",
+      "concept": "muhur_cevabi",
+      "genel": true,
+      "metin": "Görmedim, bilmiyorum."
+    },
+    {
+      "id": "muhur_cevabi_ofkeli",
+      "concept": "muhur_cevabi",
+      "kriterler": [
+        {
+          "alan": "duygu(ofke)",
+          "op": ">=",
+          "deger": 0.3,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Neden bana soruyorsun?"
+    },
+    {
+      "id": "hirsizlik_genel",
+      "concept": "hirsizlik_tepkisi",
+      "genel": true,
+      "metin": "Kesem! Ne yaptın #dinleyen#?"
+    },
+    {
+      "id": "hirsizlik_ofkeli",
+      "concept": "hirsizlik_tepkisi",
+      "kriterler": [
+        {
+          "alan": "duygu(ofke)",
+          "op": ">=",
+          "deger": 0.4,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Seni bu kasabada barındırmam #dinleyen#!"
+    },
+    {
+      "id": "hirsizlik_sosyal",
+      "concept": "hirsizlik_tepkisi",
+      "kriterler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Herkes duyacak bunu #dinleyen#."
+    },
+    {
+      "id": "ele_verme_genel",
+      "concept": "ele_verme",
+      "genel": true,
+      "metin": "Ağabeyim hakkında bir şey söylemem gerek #dinleyen#."
+    },
+    {
+      "id": "ele_verme_stres",
+      "concept": "ele_verme",
+      "kriterler": [
+        {
+          "alan": "stres()",
+          "op": ">=",
+          "deger": 40,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Yapmak istemezdim #dinleyen#, ama ağabeyim için dayanamadım."
+    },
+    {
+      "id": "ele_ver_cevabi_genel",
+      "concept": "ele_ver_cevabi",
+      "genel": true,
+      "metin": "Ağabeyimi ele vermemi mi istiyorsun #dinleyen#? Bunu düşünmem gerek."
+    },
+    {
+      "id": "ele_ver_cevabi_merhamet",
+      "concept": "ele_ver_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Kardeşimi satmak içimden gelmez, ama sana kıyamam da."
+    },
+    {
+      "id": "ele_ver_cevabi_kin",
+      "concept": "ele_ver_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.6,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bunu isteyeni unutmam #dinleyen#."
+    },
+    {
+      "id": "tesekkur_genel",
+      "concept": "tesekkur",
+      "genel": true,
+      "metin": "Sağ ol #dinleyen#."
+    },
+    {
+      "id": "tesekkur_icten",
+      "concept": "tesekkur",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Yardımın için içtenlikle minnettarım #dinleyen#."
+    },
+    {
+      "id": "borc_tesekkur_genel",
+      "concept": "borc_tesekkur",
+      "genel": true,
+      "metin": "Borç için sağ ol #dinleyen#."
+    },
+    {
+      "id": "borc_tesekkur_kardes",
+      "concept": "borc_tesekkur",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.75,
+          "agirlik": 2,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Ağabeyimin yükünü hafiflettin, unutmam #dinleyen#."
+    },
+    {
+      "id": "hakaret_cevabi_genel",
+      "concept": "hakaret_cevabi",
+      "genel": true,
+      "metin": "Bu sözü hak etmedim #dinleyen#."
+    },
+    {
+      "id": "hakaret_cevabi_kinli",
+      "concept": "hakaret_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(kin_tutma)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bunu unutmayacağım #dinleyen#."
+    },
+    {
+      "id": "hakaret_cevabi_cesur",
+      "concept": "hakaret_cevabi",
+      "kriterler": [
+        {
+          "alan": "kisilik(cesaret)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bir daha söylersen karşında bulursun beni."
+    },
+    {
+      "id": "saklama_cevabi_genel",
+      "concept": "saklama_cevabi",
+      "genel": true,
+      "metin": "Bir şey mi saklıyorsun #dinleyen#?"
+    },
+    {
+      "id": "toplanti_genel",
+      "concept": "toplanti",
+      "genel": true,
+      "metin": "Herkes burada toplansın! Konuşacağız."
+    },
+    {
+      "id": "toplanti_gergin",
+      "concept": "toplanti",
+      "kriterler": [
+        {
+          "alan": "stres()",
+          "op": ">=",
+          "deger": 10,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bu gerginlik böyle sürmez, toplanın!"
+    },
+    {
+      "id": "misafir_genel",
+      "concept": "misafir",
+      "genel": true,
+      "metin": "Han herkese açık, buyurun!"
+    },
+    {
+      "id": "misafir_merhametli",
+      "concept": "misafir",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.5,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Soğukta kalmayın, içeri girin."
+    },
+    {
+      "id": "itiraf_genel",
+      "concept": "itiraf",
+      "genel": true,
+      "metin": "Sana söylemem gereken bir şey var #dinleyen#..."
+    },
+    {
+      "id": "itiraf_durust",
+      "concept": "itiraf",
+      "kriterler": [
+        {
+          "alan": "kisilik(durustluk)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Dürüst olmak istiyorum #dinleyen#: gerçeği biliyorsun."
+    },
+    {
+      "id": "patlama_genel",
+      "concept": "patlama",
+      "genel": true,
+      "metin": "Yeter artık!"
+    },
+    {
+      "id": "patlama_ofkeli",
+      "concept": "patlama",
+      "kriterler": [
+        {
+          "alan": "duygu(ofke)",
+          "op": ">=",
+          "deger": 0.6,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Bir kelime daha edersen pişman olursun #dinleyen#!"
+    },
+    {
+      "id": "kacis_genel",
+      "concept": "kacis",
+      "genel": true,
+      "metin": "Burada daha fazla duramam."
+    },
+    {
+      "id": "kacis_korkak",
+      "concept": "kacis",
+      "kriterler": [
+        {
+          "alan": "duygu(korku)",
+          "op": ">=",
+          "deger": 0.2,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Gitmeliyim. Burası güvenli değil."
+    },
+    {
+      "id": "sakinlik_genel",
+      "concept": "sakinlik",
+      "genel": true,
+      "metin": "Neyse, bırakalım artık."
+    },
+    {
+      "id": "sakinlik_merhametli",
+      "concept": "sakinlik",
+      "kriterler": [
+        {
+          "alan": "kisilik(merhamet)",
+          "op": ">=",
+          "deger": 0.7,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Boşuna kızmışız, gönül koymayalım."
+    },
+    {
+      "id": "sikinti_genel",
+      "concept": "sikinti",
+      "genel": true,
+      "metin": "Bu borç beni bitiriyor..."
+    },
+    {
+      "id": "sikinti_utangac",
+      "concept": "sikinti",
+      "kriterler": [
+        {
+          "alan": "kisilik(cesaret)",
+          "op": "<",
+          "deger": 0.5,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Kimseye söyleyemiyorum, borç boynumu büküyor."
+    },
+    {
+      "id": "para_genel",
+      "concept": "para",
+      "genel": true,
+      "metin": "Bu hafta kese iyi doldu."
+    },
+    {
+      "id": "para_dedikoducu",
+      "concept": "para",
+      "kriterler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "op": ">=",
+          "deger": 0.8,
+          "agirlik": 1,
+          "zorunlu": true
+        }
+      ],
+      "metin": "Kimin ne kazandığını da bilirim, hepsi burada."
+    }
+  ]
+}

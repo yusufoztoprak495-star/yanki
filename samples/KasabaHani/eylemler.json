@@ -1,0 +1,523 @@
+{
+  "eylemler": [
+    {
+      "id": "git",
+      "hedef": "komsu_mekan",
+      "taban": 0.25,
+      "olcutler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "egri": {
+            "tur": "lojistik",
+            "k": 6,
+            "m": 0.4
+          }
+        }
+      ],
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "sosyallik"
+          }
+        ]
+      },
+      "aktorler": [
+        "Ayse",
+        "Can",
+        "Fatma",
+        "Kerem"
+      ]
+    },
+    {
+      "id": "dinlen",
+      "olay_turu": "dinlendi",
+      "hedef": "yok",
+      "taban": 0.3,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ]
+    },
+    {
+      "id": "anlat",
+      "olay_turu": "anlatti",
+      "hedef": "npc",
+      "taban": 2,
+      "aktarim": "dogru",
+      "konu_desenleri": [
+        "borclu(*,*,*)",
+        "kardes(*,*)",
+        "konum!(muhur,*)",
+        "kese_calindi(*,*)"
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(sosyallik)",
+          "egri": {
+            "tur": "lojistik",
+            "k": 6,
+            "m": 0.4
+          }
+        },
+        {
+          "alan": "konu_puani(eylem.hedef)"
+        }
+      ],
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "sosyallik"
+          }
+        ]
+      }
+    },
+    {
+      "id": "yalan_soyle",
+      "olay_turu": "anlatti",
+      "hedef": "npc",
+      "taban": 1,
+      "aktarim": "yalan",
+      "yalan_onermeleri": [
+        "degil(kese_calindi(Kerem,Ayse))",
+        "degil(borclu(Mehmet,Riza,500))"
+      ],
+      "celisen_ozellikler": [
+        "durustluk"
+      ],
+      "stres_tabani": 30,
+      "kisilik_carpani": {
+        "ozellikler": [
+          {
+            "ozellik": "durustluk",
+            "ters": true
+          }
+        ]
+      },
+      "on_kosullar": [
+        {
+          "alan": "hafiza_var(kese_calindi, ben, 72)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "hafiza_var(itiraf_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(sakinlesti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(kacti, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "aktorler": [
+        "Kerem"
+      ]
+    },
+    {
+      "id": "borc_iste",
+      "olay_turu": "borc_istendi",
+      "hedef": "npc",
+      "taban": 1.5,
+      "olcutler": [
+        {
+          "alan": "kisilik(acgozluluk)"
+        }
+      ],
+      "on_kosullar": [
+        {
+          "alan": "ayni_mekanda(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "modifier_var(eylem.hedef, borclu_gordum)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "cooldown": 48,
+      "kapsam": "hedef",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.4
+        }
+      ],
+      "aktorler": [
+        "Riza"
+      ]
+    },
+    {
+      "id": "borc_sikintisi",
+      "olay_turu": "borc_sikintisi",
+      "hedef": "yok",
+      "taban": 1.2,
+      "cooldown": 96,
+      "kapsam": "npc",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.3
+        }
+      ],
+      "aktorler": [
+        "Mehmet"
+      ]
+    },
+    {
+      "id": "para_say",
+      "olay_turu": "para_sayildi",
+      "hedef": "yok",
+      "taban": 1,
+      "cooldown": 72,
+      "kapsam": "npc",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.2
+        }
+      ],
+      "aktorler": [
+        "Ayse"
+      ]
+    },
+    {
+      "id": "tehdit_et",
+      "olay_turu": "tehdit_etti",
+      "hedef": "npc",
+      "taban": 2,
+      "on_kosullar": [
+        {
+          "alan": "fikir(eylem.hedef)",
+          "op": "<",
+          "deger": -10
+        },
+        {
+          "alan": "hafiza_var(patladi, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(sakinlesti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(itiraf_etti, ben, 24)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "hafiza_var(kacti, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(kin_tutma)"
+        },
+        {
+          "alan": "kisilik(cesaret)"
+        }
+      ],
+      "celisen_ozellikler": [
+        "merhamet"
+      ],
+      "stres_tabani": 45,
+      "etkiler": [
+        {
+          "tur": "duygu",
+          "duygu": "ofke",
+          "siddet": 0.5,
+          "hedef": "eylem.hedef"
+        }
+      ],
+      "aktorler": [
+        "Dursun"
+      ]
+    },
+    {
+      "id": "kese_calmak",
+      "olay_turu": "kese_calindi",
+      "hedef": "npc",
+      "taban": 1.2,
+      "on_kosullar": [
+        {
+          "alan": "ayni_mekanda(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "modifier_var(eylem.hedef, kese_goruldu)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(acgozluluk)"
+        },
+        {
+          "alan": "kisilik(cesaret)"
+        }
+      ],
+      "celisen_ozellikler": [
+        "durustluk"
+      ],
+      "stres_tabani": 25,
+      "cooldown": 72,
+      "kapsam": "npc",
+      "en_fazla": 1,
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.6
+        }
+      ],
+      "aktorler": [
+        "Kerem"
+      ]
+    },
+    {
+      "id": "kasa_acmak",
+      "olay_turu": "kasa_acildi",
+      "hedef": "yok",
+      "taban": 0.8,
+      "ihlal_bayraklari": [
+        {
+          "bayrak": "calinamaz",
+          "varlik": "kasa"
+        }
+      ],
+      "on_kosullar": [
+        {
+          "alan": "kisilik(acgozluluk)",
+          "op": ">=",
+          "deger": 0.7
+        }
+      ],
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.3
+        }
+      ]
+    },
+    {
+      "id": "suclama",
+      "olay_turu": "suclandi",
+      "hedef": "npc",
+      "taban": 2.5,
+      "on_kosullar": [
+        {
+          "alan": "inanc(kese_calindi(eylem.hedef, *))",
+          "op": ">=",
+          "deger": 0.5
+        },
+        {
+          "alan": "hafiza_var(suclandi, ben, 48)",
+          "op": "==",
+          "deger": false
+        },
+        {
+          "alan": "ayni_mekanda(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(kin_tutma)"
+        }
+      ],
+      "cooldown": 48,
+      "kapsam": "hedef",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.5
+        }
+      ]
+    },
+    {
+      "id": "muhur_sor",
+      "olay_turu": "muhur_soruldu",
+      "hedef": "npc",
+      "taban": 1.5,
+      "on_kosullar": [
+        {
+          "alan": "ayni_mekanda(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "hafiza_var(muhur_soruldu, ben, 48)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(durustluk)"
+        }
+      ],
+      "cooldown": 48,
+      "kapsam": "hedef",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.4
+        }
+      ],
+      "aktorler": [
+        "Osman"
+      ]
+    },
+    {
+      "id": "yardim_et",
+      "olay_turu": "komsu_yardimi",
+      "hedef": "npc",
+      "taban": 1,
+      "olcutler": [
+        {
+          "alan": "kisilik(merhamet)"
+        }
+      ],
+      "on_kosullar": [
+        {
+          "alan": "fikir(eylem.hedef)",
+          "op": "<",
+          "deger": 0
+        },
+        {
+          "alan": "ayni_mekanda(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        }
+      ],
+      "cooldown": 72,
+      "kapsam": "hedef",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.3
+        }
+      ]
+    },
+    {
+      "id": "kardesi_ele_ver",
+      "olay_turu": "kardes_ele_verildi",
+      "hedef": "npc",
+      "taban": 2,
+      "on_kosullar": [
+        {
+          "alan": "hafiza_var(ele_verdirme_istendi, oyuncu, 24)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "ayni_mekanda(eylem.hedef)",
+          "op": "==",
+          "deger": true
+        },
+        {
+          "alan": "hafiza_var(kardes_ele_verildi, ben, 48)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "celisen_ozellikler": [
+        "merhamet"
+      ],
+      "stres_tabani": 70,
+      "cooldown": 48,
+      "kapsam": "npc",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.7
+        }
+      ],
+      "aktorler": [
+        "Can"
+      ]
+    },
+    {
+      "id": "toplanti_cagir",
+      "olay_turu": "toplanti_cagrildi",
+      "hedef": "yok",
+      "taban": 2,
+      "on_kosullar": [
+        {
+          "alan": "yay(kasaba_gerginligi)",
+          "op": ">=",
+          "deger": 4
+        },
+        {
+          "alan": "hafiza_var(toplanti_cagrildi, ben, 48)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(sosyallik)"
+        }
+      ],
+      "cooldown": 72,
+      "kapsam": "npc",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.3
+        }
+      ],
+      "aktorler": [
+        "Osman"
+      ]
+    },
+    {
+      "id": "misafir_agirla",
+      "olay_turu": "misafir_agirlandi",
+      "hedef": "yok",
+      "taban": 1,
+      "on_kosullar": [
+        {
+          "alan": "yay(han_itibari)",
+          "op": ">=",
+          "deger": 4
+        },
+        {
+          "alan": "hafiza_var(misafir_agirlandi, ben, 24)",
+          "op": "==",
+          "deger": false
+        }
+      ],
+      "olcutler": [
+        {
+          "alan": "kisilik(merhamet)"
+        }
+      ],
+      "cooldown": 24,
+      "kapsam": "npc",
+      "etkiler": [
+        {
+          "tur": "hafiza",
+          "onem": 0.3
+        }
+      ],
+      "aktorler": [
+        "Riza"
+      ]
+    }
+  ]
+}

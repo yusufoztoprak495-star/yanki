@@ -146,7 +146,7 @@ namespace Yanki.Scenarios.Tests
             Assert.Equal(beklenen, sim.Zihinler.DurumHash());
         }
 
-        private static void SinirlarIcinde(Simulasyon sim)
+        internal static void SinirlarIcinde(Simulasyon sim)
         {
             OnbellekTaze(sim);
             var kisiler = sim.Zihinler.Kimlikler.Concat(new[] { sim.OyuncuId }).ToArray();
@@ -170,7 +170,7 @@ namespace Yanki.Scenarios.Tests
             }
         }
 
-        private static void NedenleriGunluktedir(Simulasyon sim)
+        internal static void NedenleriGunluktedir(Simulasyon sim)
         {
             foreach (var o in sim.Gunluk.Olaylar)
             {
@@ -181,7 +181,7 @@ namespace Yanki.Scenarios.Tests
             }
         }
 
-        private static void ZincirSiniriAsilmaz(Simulasyon sim)
+        internal static void ZincirSiniriAsilmaz(Simulasyon sim)
         {
             // Bağımsız yeniden hesap: kural çıktısı 1 + nedenlerinin en büyüğü, algı eklemez, diğerleri 0.
             var kurallar = new HashSet<string>(sim.Kurallar.Select(k => k.Id), StringComparer.Ordinal);
@@ -195,7 +195,7 @@ namespace Yanki.Scenarios.Tests
             }
         }
 
-        private static void YalanGizliligi(Simulasyon sim)
+        internal static void YalanGizliligi(Simulasyon sim)
         {
             // Doğru ve yalan anlatım dışarıdan ayırt edilemez: aynı yük anahtarları, aynı neden sayısı, yalan bilgisi yük/fren/olay türünde yok.
             var anlatimlar = sim.Gunluk.Olaylar.Where(o => o.Tur == "anlatti" && o.KuralId.StartsWith("eylem:", StringComparison.Ordinal)).ToArray();

@@ -1,0 +1,40 @@
+name: Coverage (elle)
+
+# Elle tetiklenir (workflow_dispatch); her push'ta çalışmaz. Kasaba Hanı için `yanki coverage --seeds 20` (yaklaşık 2.5 dk) ve plan 3 kriteri:
+# her sonuç kuralı en az bir kez tetiklenir, hiçbiri tetiklenmelerin %30'undan fazlasını almaz. Kriter tutmazsa çıkış kodu 2 ve iş kırmızı olur.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Kasaba Hanı coverage (plan 3 kriteri)
+    runs-on: ubuntu-24.04
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      CI: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build src/Yanki.Cli/Yanki.Cli.csproj -c Release
+
+      - name: Coverage (20 seed)
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet src/Yanki.Cli/bin/Release/net10.0/yanki.dll coverage samples/KasabaHani --seeds 20 | tee coverage.md
+
+      - name: Raporu yükle
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: kasaba-coverage
+          path: coverage.md

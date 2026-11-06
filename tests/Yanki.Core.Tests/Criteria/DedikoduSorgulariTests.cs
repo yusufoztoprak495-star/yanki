@@ -52,9 +52,9 @@ namespace Yanki.Core.Tests.Criteria
         private static OnermeDeseni[] Desenler(params string[] d) => d.Select(OnermeDeseni.Ayristir).ToArray();
 
         [Fact]
-        public void Sozluk_18_fonksiyondur_ve_yeni_ikisi_tanimlidir()
+        public void Sozluk_19_fonksiyondur_ve_yeni_ikisi_tanimlidir()
         {
-            Assert.Equal(18, SorguSozlugu.Hepsi.Count);
+            Assert.Equal(19, SorguSozlugu.Hepsi.Count);
             var kp = SorguSozlugu.Bul("konu_puani")!;
             Assert.Equal(1, kp.ArgumanSayisi);
             Assert.Equal(DonusTuru.Sayi, kp.Donus);
