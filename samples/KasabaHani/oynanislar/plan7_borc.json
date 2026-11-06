@@ -1,0 +1,29 @@
+{
+  "ad": "plan7_borc",
+  "aciklama": "Plan 7 sahnesi: oyuncu Ayşe'ye Mehmet'in borcunu anlatır; Can'la konuşma söylentiden önce (tick 1) ve sonra (tick 6).",
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    },
+    {
+      "tick": 1,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "borclu(Mehmet,Riza,500)"
+      }
+    },
+    {
+      "tick": 6,
+      "tur": "selam_oldu",
+      "hedef": "Can"
+    },
+    {
+      "tick": 7,
+      "tur": "ele_verdirme_istendi",
+      "hedef": "Can"
+    }
+  ]
+}

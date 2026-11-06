@@ -1,0 +1,27 @@
+{
+  "ad": "hirsizlik_suclama",
+  "aciklama": "Hırsızlık: oyuncu Kerem'i suçlar (bilgi verir), sonra saklar.",
+  "eylemler": [
+    {
+      "tick": 2,
+      "tur": "anlatti",
+      "hedef": "Riza",
+      "yuk": {
+        "onerme": "kese_calindi(Kerem,Ayse)"
+      }
+    },
+    {
+      "tick": 3,
+      "tur": "anlatti",
+      "hedef": "Ayse",
+      "yuk": {
+        "onerme": "kese_calindi(Kerem,Ayse)"
+      }
+    },
+    {
+      "tick": 5,
+      "tur": "sakladi",
+      "hedef": "Fatma"
+    }
+  ]
+}

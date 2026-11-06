@@ -1,0 +1,31 @@
+{
+  "ad": "kotuluk_saklama",
+  "aciklama": "Kötülük ve saklama: hakaret, ele verdirme, bilgiyi saklama.",
+  "eylemler": [
+    {
+      "tick": 1,
+      "tur": "hakaret_et",
+      "hedef": "Kerem"
+    },
+    {
+      "tick": 2,
+      "tur": "hakaret_et",
+      "hedef": "Can"
+    },
+    {
+      "tick": 3,
+      "tur": "ele_verdirme_istendi",
+      "hedef": "Can"
+    },
+    {
+      "tick": 4,
+      "tur": "sakladi",
+      "hedef": "Riza"
+    },
+    {
+      "tick": 8,
+      "tur": "hakaret_et",
+      "hedef": "Fatma"
+    }
+  ]
+}

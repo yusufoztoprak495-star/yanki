@@ -1,0 +1,77 @@
+{
+  "surum": 1,
+  "menu": [
+    {
+      "id": "selamla",
+      "aile": "konus",
+      "tur": "selam_oldu",
+      "hedef_turu": "npc",
+      "metin": "Selam ver"
+    },
+    {
+      "id": "borc_anlat",
+      "aile": "bilgi_ver",
+      "tur": "anlatti",
+      "hedef_turu": "npc",
+      "yuk": {
+        "onerme": "borclu(Mehmet,Riza,500)"
+      },
+      "metin": "Mehmet'in Rıza'ya 500 lira borcu olduğunu anlat"
+    },
+    {
+      "id": "muhur_yeri_anlat",
+      "aile": "bilgi_ver",
+      "tur": "anlatti",
+      "hedef_turu": "npc",
+      "yuk": {
+        "onerme": "yeri(muhur,depo)"
+      },
+      "metin": "Mührün depoda olduğunu söyle"
+    },
+    {
+      "id": "kerem_suclu_anlat",
+      "aile": "bilgi_ver",
+      "tur": "anlatti",
+      "hedef_turu": "npc",
+      "yuk": {
+        "onerme": "kese_calindi(Kerem,Ayse)"
+      },
+      "metin": "Kerem'in Ayşe'nin kesesini çaldığını söyle"
+    },
+    {
+      "id": "sakla",
+      "aile": "sakla",
+      "tur": "sakladi",
+      "hedef_turu": "npc",
+      "metin": "Bildiğin bir şeyi sakla"
+    },
+    {
+      "id": "yardim_et",
+      "aile": "iyilik",
+      "tur": "yardim_etti",
+      "hedef_turu": "npc",
+      "metin": "Yardım et"
+    },
+    {
+      "id": "borc_ode",
+      "aile": "iyilik",
+      "tur": "borc_odendi",
+      "hedef_turu": "npc",
+      "metin": "Mehmet'in borcunu ödemeye yardım et"
+    },
+    {
+      "id": "hakaret_et",
+      "aile": "kotuluk",
+      "tur": "hakaret_et",
+      "hedef_turu": "npc",
+      "metin": "Hakaret et"
+    },
+    {
+      "id": "ele_ver_iste",
+      "aile": "kotuluk",
+      "tur": "ele_verdirme_istendi",
+      "hedef_turu": "npc",
+      "metin": "Kardeşini ele vermesini iste"
+    }
+  ]
+}
