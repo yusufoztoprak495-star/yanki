@@ -159,6 +159,20 @@ namespace Yanki.Scenarios.Tests
             Assert.Contains(s.Bulgular, b => b.Tur == "sablon" && b.Kimlik == "cevap_genel" && b.Mesaj.Contains("followup", StringComparison.Ordinal));
         }
 
+        [Fact]
+        public void Yalan_onermesindeki_yer_tutucu_konu_desenini_ulasilamaz_yapmaz()
+        {
+            var eylem = @"{ ""eylemler"": [ { ""id"": ""dinlen"", ""olay_turu"": ""dinlendi"", ""hedef"": ""yok"", ""taban"": 1, ""etkiler"": [ { ""tur"": ""hafiza"", ""onem"": 0.2 } ] },
+  { ""id"": ""yalan"", ""olay_turu"": ""anlatti"", ""hedef"": ""npc"", ""taban"": 1, ""aktarim"": ""yalan"", ""yalan_onermeleri"": [""degil(borclu({ben},Can,500))""], ""celisen_ozellikler"": [""durustluk""], ""stres_tabani"": 30 } ] }";
+            var sablon = SablonGovde.Replace("\"esleme\": [", "\"esleme\": [ { \"olay_turu\": \"anlatti\", \"kaynak\": \"oyuncu\", \"niyet\": \"anlatim_cevabi\", \"konusan\": \"hedef\" },")
+                .Replace("__SABLONLAR__", DinlenmeGenel + @", { ""id"": ""cevap_genel"", ""concept"": ""anlatim_cevabi"", ""genel"": true, ""metin"": ""Peki."" }, { ""id"": ""cevap_yalan"", ""concept"": ""anlatim_cevabi"", ""konu_deseni"": ""degil(borclu(Ayse,Can,500))"", ""kriterler"": [ { ""alan"": ""kisilik(sosyallik)"", ""op"": "">="", ""deger"": 0.1, ""zorunlu"": true } ], ""metin"": ""Hm."" }");
+
+            var s = SenaryoDogrulayici.Dogrula(Girdi(eylemler: eylem, sablon: sablon));
+
+            Assert.True(s.HataSayisi == 0, string.Join(" | ", Mesajlar(s)));
+            Assert.DoesNotContain(s.Bulgular, b => b.Tur == "sablon" && b.Kimlik == "cevap_yalan");
+        }
+
         // ---- Korumalı kimlik ----
 
         [Fact]

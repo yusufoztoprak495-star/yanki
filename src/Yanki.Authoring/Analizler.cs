@@ -287,7 +287,8 @@ namespace Yanki.Authoring
             arg = new string[parcalar.Length];
             for (var i = 0; i < parcalar.Length; i++)
             {
-                arg[i] = parcalar[i].Trim();
+                // {ben} / {eylem.hedef} gibi çalışma anında doldurulan yer tutucu her kimliğe karşılık gelebilir: joker sayılır (yanlış "ulaşılamaz" uyarısı vermemek için).
+                arg[i] = parcalar[i].IndexOf('{') >= 0 ? "*" : parcalar[i].Trim();
             }
 
             return true;

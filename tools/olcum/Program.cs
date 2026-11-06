@@ -520,7 +520,16 @@ namespace Yanki.Olcum
             _yuklenen = yuklenen;
             if (betikYolu != null)
             {
-                var betik = Yanki.Authoring.BetikOkuyucu.Oku(File.ReadAllText(betikYolu), betikYolu);
+                Yanki.Authoring.Betik betik;
+                try
+                {
+                    betik = Yanki.Authoring.BetikOkuyucu.Oku(File.ReadAllText(betikYolu), betikYolu);
+                }
+                catch (Yanki.Authoring.BetikHatasi e)
+                {
+                    return e.Message;
+                }
+
                 _betik = betik.Eylemler.Select(e => (e.Tick, e.Eylem)).ToList();
             }
 

@@ -295,8 +295,8 @@ namespace Yanki.Authoring
 
     /// <summary>
     /// <c>yanki coverage</c> (9. hafta, K kararı): senaryoyu her betik × seed için koşar, ayrıca oyuncusuz koşar. Sayım YALNIZCA olay günlüğünden ve diyalog satırlarından türer
-    /// (KuralId, olay türü, şablon kimliği); simülasyona sayaç ya da yeni olay eklenmez. Bir "kural tetiklenmesi", motorun sayaçlarındaki gibi
-    /// (kural, tick, npc, tetikleyici nedenler) imzasıdır. Payda yalnızca sonuç kuralı tetiklenmeleridir (algı, eylem, kriz, fren ve oyuncu eylemleri hariç).
+    /// (KuralId, olay türü, şablon kimliği); simülasyona sayaç ya da yeni olay eklenmez. Bir "kural tetiklenmesi" ayrık (kural, tick, npc, tetikleyici nedenler) imzasıdır
+    /// (motorun cooldown/en_fazla sayacı yalnızca ARDIŞIK aynı imzayı birleştirir; coverage her ayrık imzayı bir kez sayar, yani aynı tick'te araya giren başka imzalarda ikisi ayrışabilir). Payda yalnızca sonuç kuralı tetiklenmeleridir (algı, eylem, kriz, fren ve oyuncu eylemleri hariç).
     /// </summary>
     public static class KapsamHesabi
     {
