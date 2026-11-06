@@ -16,6 +16,7 @@
     <!-- İç ayrıntıları (gramer, ekler, zaman ifadesi, yükleyici) sınamak için. -->
     <InternalsVisibleTo Include="Yanki.Dialogue.Tests" />
     <InternalsVisibleTo Include="Yanki.Scenarios.Tests" />
+    <InternalsVisibleTo Include="Yanki.Authoring" />
   </ItemGroup>
 
   <ItemGroup>

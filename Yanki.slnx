@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Yanki.Cli/Yanki.Cli.csproj" />
+    <Project Path="src/Yanki.Authoring/Yanki.Authoring.csproj" />
     <Project Path="src/Yanki.Core/Yanki.Core.csproj" />
     <Project Path="src/Yanki.Dialogue/Yanki.Dialogue.csproj" />
   </Folder>

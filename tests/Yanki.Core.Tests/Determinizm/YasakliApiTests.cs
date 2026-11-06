@@ -183,11 +183,13 @@ namespace Yanki.Core.Tests.Determinizm
             Assert.True(ihlaller.Count == 0, "Yasaklı API kullanımı:\n" + string.Join("\n", ihlaller));
         }
 
-        [Fact]
-        public void Dialogue_kaynaginda_yasakli_ve_kulture_bagli_api_yoktur()
+        [Theory]
+        [InlineData("Yanki.Dialogue")]
+        [InlineData("Yanki.Authoring")]
+        public void Dialogue_ve_Authoring_kaynaginda_yasakli_ve_kulture_bagli_api_yoktur(string proje)
         {
-            // 8. hafta: determinizm kuralları Yanki.Dialogue için de geçerlidir; ek olarak kültüre bağlı çağrılar yasaktır.
-            var kok = RepoRoot.Combine("src", "Yanki.Dialogue");
+            // 8. hafta: determinizm kuralları Yanki.Dialogue için de geçerlidir; ek olarak kültüre bağlı çağrılar yasaktır. 9. hafta: Yanki.Authoring (validate/coverage) de aynı kurallara tabidir.
+            var kok = RepoRoot.Combine("src", proje);
             var tum = Kurallar.Concat(KulturKurallari).ToList();
             var ihlaller = new List<string>();
             var dosyalar = Directory.EnumerateFiles(kok, "*.cs", SearchOption.AllDirectories)
