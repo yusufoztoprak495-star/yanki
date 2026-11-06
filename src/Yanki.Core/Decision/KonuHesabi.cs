@@ -160,15 +160,11 @@ namespace Yanki.Core.Decision
             var elenenler = new List<ElenenKonu>();
             var g = Goruntu(konusan);
 
-            for (var i = 0; i < g.Metinler.Count; i++)
+            // Desene uyan (ve anlatti olmayan) önermelerin indeksleri dinleyenden bağımsızdır: konuşan görüntüsünde, desen listesi başına bir kez hesaplanır (tick içi hızlandırma; sonuç aynı).
+            foreach (var i in g.Eslesenler(desenler, desenListesi))
             {
                 var metin = g.Metinler[i];
                 var onerme = g.Onermeler[i];
-                if (string.Equals(onerme.Yuklem, "anlatti", StringComparison.Ordinal) || !DesenlerdenBiriUyar(desenListesi, onerme))
-                {
-                    continue;
-                }
-
                 if (!g.Inanilan(i))
                 {
                     elenenler.Add(new ElenenKonu(metin, "konusan buna inanmiyor"));
@@ -412,11 +408,8 @@ namespace Yanki.Core.Decision
 
             foreach (var q in inanilanlar)
             {
-                if (ReferenceEquals(q, onerme) || string.Equals(q.ToString(), onerme.ToString(), StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
+                // Önermenin kendisi atlanırdı (referans ya da metin eşitliği); ama kendisi dinleyeni içermez (yukarıda zaten döndük), yani aşağıdaki koşul onun için zaten yanlıştır:
+                // eşitlik denetimi ve onun iki ToString'i sonucu değiştirmeden çıkarıldı (9. hafta optimizasyonu).
                 if (Icerir(q, dinleyen) && Paylasir(q, onerme))
                 {
                     return _ayar.IlgiBagli;
@@ -435,7 +428,7 @@ namespace Yanki.Core.Decision
                 return onceki;
             }
 
-            var yeni = new KonusanGoruntusu(_zihinler[konusan], _tick);
+            var yeni = new KonusanGoruntusu(_zihinler[konusan], _tick, _zihinler.OnermeAyristir);
             if (_onbellekli)
             {
                 _goruntuler[konusan] = yeni;
@@ -454,7 +447,7 @@ namespace Yanki.Core.Decision
             private readonly bool[] _kanitHesaplandi;
             private List<Onerme>? _inanilanOnermeler;
 
-            public KonusanGoruntusu(Zihin zihin, long tick)
+            public KonusanGoruntusu(Zihin zihin, long tick, Func<string, Onerme> ayristir)
             {
                 _zihin = zihin;
                 _tick = tick;
@@ -462,7 +455,7 @@ namespace Yanki.Core.Decision
                 var onermeler = new List<Onerme>(metinler.Count);
                 foreach (var m in metinler)
                 {
-                    onermeler.Add(Onerme.Ayristir(m));
+                    onermeler.Add(ayristir(m));
                 }
 
                 Metinler = metinler;
@@ -471,6 +464,44 @@ namespace Yanki.Core.Decision
                 _guven = new decimal?[metinler.Count];
                 _kanit = new Kanit?[metinler.Count];
                 _kanitHesaplandi = new bool[metinler.Count];
+            }
+
+            private readonly List<object> _eslesmeAnahtarlari = new List<object>();
+            private readonly List<int[]> _eslesmeIndeksleri = new List<int[]>();
+
+            // Aynı desen listesi nesnesi (EylemTanimi.KonuDesenleri) için eşleşen önerme indeksleri, artan sırayla; anlatti önermeleri hiçbir zaman.
+            public int[] Eslesenler(IEnumerable<OnermeDeseni> anahtar, List<OnermeDeseni> desenler)
+            {
+                for (var k = 0; k < _eslesmeAnahtarlari.Count; k++)
+                {
+                    if (ReferenceEquals(_eslesmeAnahtarlari[k], anahtar))
+                    {
+                        return _eslesmeIndeksleri[k];
+                    }
+                }
+
+                var liste = new List<int>();
+                for (var i = 0; i < Onermeler.Count; i++)
+                {
+                    if (string.Equals(Onermeler[i].Yuklem, "anlatti", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    foreach (var d in desenler)
+                    {
+                        if (d.Uyar(Onermeler[i]))
+                        {
+                            liste.Add(i);
+                            break;
+                        }
+                    }
+                }
+
+                var dizi = liste.ToArray();
+                _eslesmeAnahtarlari.Add(anahtar);
+                _eslesmeIndeksleri.Add(dizi);
+                return dizi;
             }
 
             public IReadOnlyList<string> Metinler { get; }
