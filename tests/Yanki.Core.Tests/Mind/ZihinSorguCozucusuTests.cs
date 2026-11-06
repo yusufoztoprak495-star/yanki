@@ -281,6 +281,7 @@ namespace Yanki.Core.Tests.Mind
                 ["hafiza_var"] = "hafiza_var(yardim_etti, oyuncu, 10)",
                 ["inanc"] = "inanc(borclu(*, *, *))",
                 ["kaynak"] = "kaynak(borclu(*, *, *), Ayse)",
+                ["kok"] = "kok(borclu(*, *, *), oyuncu)",
                 ["kisilik"] = "kisilik(cesaret)",
                 ["modifier_var"] = "modifier_var(Can, minnet)",
                 ["olay_rolu"] = "olay_rolu(hedef)",

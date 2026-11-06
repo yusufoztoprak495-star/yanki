@@ -97,6 +97,9 @@ namespace Yanki.Core.Decision
                 case "kaynak":
                     KanitKaynagi(b, ZihinSorguCozucusu.Desen(cagri, sorgu), ZihinSorguCozucusu.Varlik(cagri, 1, sorgu), olaylar);
                     break;
+                case "kok":
+                    KanitKaynagi(b, ZihinSorguCozucusu.Desen(cagri, sorgu), ZihinSorguCozucusu.Varlik(cagri, 1, sorgu), olaylar, kokMu: true);
+                    break;
                 case "yay":
                     YayKaynagi(b, ZihinSorguCozucusu.Ad(cagri, 0), olaylar, kaynaksiz);
                     break;
@@ -167,7 +170,7 @@ namespace Yanki.Core.Decision
         }
 
         // kisi null ise inanılan önermelerin bütün kanıtları; değilse yalnızca o kişiden gelenler.
-        private static void KanitKaynagi(KararBaglami b, OnermeDeseni desen, string? kisi, SortedSet<long> olaylar)
+        private static void KanitKaynagi(KararBaglami b, OnermeDeseni desen, string? kisi, SortedSet<long> olaylar, bool kokMu = false)
         {
             foreach (var metin in b.Zihin.Onermeler)
             {
@@ -183,7 +186,7 @@ namespace Yanki.Core.Decision
 
                 foreach (var kanit in b.Zihin.Kanitlar(metin))
                 {
-                    if (kisi == null || string.Equals(kanit.Kaynak, kisi, StringComparison.Ordinal))
+                    if (kisi == null || string.Equals(kokMu ? b.Zihin.EtkinKok(kanit) : kanit.Kaynak, kisi, StringComparison.Ordinal))
                     {
                         olaylar.Add(kanit.OlayId);
                     }

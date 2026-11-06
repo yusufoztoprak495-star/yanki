@@ -48,7 +48,7 @@ namespace Yanki.Dialogue
         private static readonly string[] Reddedilen = { "olay_rolu", "olay_konusu", "konu_puani", "gercek", "yalan_soyledi" };
 
         // anlatti niyetine eşlenen şablonlarda ek olarak reddedilenler: doğru ve yalan anlatımı ayırt ettirir (yalan = konuşan buna inanmıyor; gören kişinin hafızası vardır).
-        private static readonly string[] AnlattiReddedilen = { "inanc", "kaynak", "hafiza_var" };
+        private static readonly string[] AnlattiReddedilen = { "inanc", "kaynak", "kok", "hafiza_var" };
 
         // Eşlenemeyen iç olay türleri: zihin/karar/fren/yay/dünya olayları ve aktarım kaydı (yalan bilgisini taşır).
         private static bool IcOlay(string tur) =>
@@ -1006,7 +1006,7 @@ namespace Yanki.Dialogue
         {
             foreach (var k in kriterler)
             {
-                if (k.Alan.Ad != "inanc" && k.Alan.Ad != "kaynak")
+                if (k.Alan.Ad != "inanc" && k.Alan.Ad != "kaynak" && k.Alan.Ad != "kok")
                 {
                     continue;
                 }

@@ -347,6 +347,32 @@ namespace Yanki.Core.Mind
             return false;
         }
 
+        /// <summary>
+        /// Desene uyan bir önerme için etkin kökü <paramref name="kisi"/> olan herhangi bir kanıt var mı (<c>kok(onerme, kisi)</c>, 9. hafta).
+        /// <see cref="KaynakVar(OnermeDeseni, string)"/> ile simetriktir ama kimden DUYULDUĞUNA değil söylentinin KÖKÜNE (ilk anlatan) bakar.
+        /// Kök yalnızca kimin söylediğini gösterir; önermenin doğru ya da yalan olduğunu göstermez.
+        /// </summary>
+        public bool KokVar(OnermeDeseni desen, string kisi)
+        {
+            foreach (var kayit in _inanclar.Values)
+            {
+                if (!desen.Uyar(kayit.Onerme))
+                {
+                    continue;
+                }
+
+                foreach (var k in kayit.Kanitlar)
+                {
+                    if (string.Equals(EtkinKok(k), kisi, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Önermenin en güçlü TEK güncel kanıtı (güncel güce göre; eşitlikte en küçük olay kimliği); kanıt yoksa <c>null</c>.</summary>
         public Kanit? EnGucluKanit(string onerme, long simdikiTick)
         {

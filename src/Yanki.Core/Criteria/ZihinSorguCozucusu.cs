@@ -106,6 +106,8 @@ namespace Yanki.Core.Criteria
                     return SorguDegeri.Mantiksal(ben.YalanSoyledi(Varlik(cagri, 0, baglam)));
                 case "kaynak":
                     return SorguDegeri.Mantiksal(ben.KaynakVar(Desen(cagri, baglam), Varlik(cagri, 1, baglam)));
+                case "kok":
+                    return SorguDegeri.Mantiksal(ben.KokVar(Desen(cagri, baglam), Varlik(cagri, 1, baglam)));
                 case "hafiza_var":
                     return SorguDegeri.Mantiksal(ben.HafizaVar(_gunluk, Ad(cagri, 0), Varlik(cagri, 1, baglam), Tam(cagri, 2), _simdikiTick));
                 default:
