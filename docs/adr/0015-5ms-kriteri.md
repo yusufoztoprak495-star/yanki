@@ -165,7 +165,7 @@ Kalan 5. adım payı (olay yazımı vb.) ≈ %15. Diyalog işleyicisinin kendisi
 ### Aday 1 ve 2 (en çok iki, profilin en büyük payından)
 
 1. **Konu hesabı** (`KonuHesabi`, ≈ %37): `Ilgi` döngüsü her inanılan önerme için iki `ToString` ayırıyordu, ama önermenin kendisi dinleyeni içermediği için eşitlik denetimi zaten sonucu değiştirmiyordu (kaldırıldı); desene uyan önerme indeksleri dinleyenden bağımsızdır, konuşan görüntüsünde bir kez hesaplanır; `Onerme.Ayristir` sonuçları `ZihinDeposu`'nda önbelleklenir. Konu seçimi ≈ 2.4 → ≈ 1.1 ms.
-2. **Durum hash'i** (≈ %21): `Hash64.Akis` ile parça parça akıtılır (`dünya + zihinler + ek` birleştirilmiş metin ve UTF-8 bayt dizisi ayrılmaz); `Hesapla(a + b)` ile birebir aynı değer (vekil çifti parçalar arasına düşse bile; testle ve rastgele 2000 örnekle). Tahsis ≈ −%26 (2.86 → 1.80–2.4 MB/tick, profil koşusu), hash süresinin kendisi bayt başına seri FNV zinciri olduğundan belirgin düşmedi.
+2. **Durum hash'i** (≈ %21): `Hash64.Akis` ile parça parça akıtılır (`dünya + zihinler + ek` birleştirilmiş metin ve UTF-8 bayt dizisi ayrılmaz); `Hesapla(a + b)` ile birebir aynı değer (vekil çifti parçalar arasına düşse bile; testle ve rastgele 2000 örnekle). Tahsis ≈ −%26 (2.86 → 1.80–2.4 MB/tick, profil koşusu), hash süresinin kendisi belirgin düşmedi (iki profil koşusunda 1.35 → 1.16 ve 0.55 ms; koşular arası gürültü büyük, nedeni araştırılmadı).
 
 Dört ana golden ve üç diyalog golden'ı ile Kasaba golden'ları (`kasaba-hani-1`, `kasaba-hani-diyalog-1`) birebir aynı; olay biçimi değişmedi. Toplam kazanç %30 eşiğinin üstünde (−%41), değişiklikler korundu.
 
@@ -176,6 +176,6 @@ Dört ana golden ve üç diyalog golden'ı ile Kasaba golden'ları (`kasaba-hani
 
 ### Süreç içi 2× fark ve ADR-015'teki iki modlu davranış
 
-Süreç içi en hızlı koşu ≈ 1.9 ms, en yavaş ≈ 4.9 ms (2.5×): koşu sırası ilk koşuların JIT/ısınma sonrası bile yavaş olması ve tek tek süreçlerin dağılımı nedeniyle; ADR-015'teki iki modlu süreç davranışı **kısmen görüldü**: süreç ortancalarının çoğu tek tepede (p10–p90 2.5–3.6 ms), ama kapalıda 20 sürecin 2'si, açıkta 1'i medyanın 1.3 katından yüksek (4.1–4.9 ms); nedeni bilinmiyor, bu koşuda kanıtlanmadı.
+Süreç içi en hızlı koşu ≈ 1.9 ms, en yavaş ≈ 4.9 ms (2.5×); nedeni araştırılmadı, kanıt yok. ADR-015'teki iki modlu süreç davranışı **kısmen görüldü**: süreç ortancalarının çoğu tek tepede (p10–p90 2.5–3.6 ms), ama kapalıda 20 sürecin 2'si, açıkta 1'i medyanın 1.3 katından yüksek (4.1–4.9 ms); nedeni bilinmiyor, bu koşuda kanıtlanmadı.
 
 **Kalan fark yok (kriter tutuyor); 50 NPC bu hafta ölçülmedi (Kasaba 8 NPC; 50 NPC v0.2 hedefi).** `tools/olcum --senaryo` çıktısı BenchmarkDotNet değildir; BenchmarkDotNet tablosu 11. haftadadır.
