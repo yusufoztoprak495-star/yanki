@@ -158,3 +158,41 @@ namespace Yanki.Authoring
         }
     }
 }
+
+namespace Yanki.Authoring
+{
+    /// <summary>Hatasız yüklenmiş senaryo: simülasyon kurmak için gereken nesneler (<c>yanki coverage</c> ve ölçüm).</summary>
+    public sealed class YuklenenSenaryo
+    {
+        /// <summary>Senaryo.</summary>
+        public Yanki.Core.Simulation.SenaryoTanimi Senaryo { get; }
+
+        /// <summary>Sonuç kuralları (dosya sırasıyla).</summary>
+        public IReadOnlyList<Yanki.Core.Rules.KuralTanimi> Kurallar { get; }
+
+        /// <summary>NPC eylemleri.</summary>
+        public IReadOnlyList<Yanki.Core.Decision.EylemTanimi> Eylemler { get; }
+
+        /// <summary>Kriz satırları.</summary>
+        public IReadOnlyList<Yanki.Core.Simulation.KrizSatiri> Krizler { get; }
+
+        /// <summary>Şablon dosyası; verilmediyse ya da yüklenemediyse <c>null</c>.</summary>
+        public Yanki.Dialogue.SablonDosyasi? Sablon { get; }
+
+        /// <summary>Yüklenmiş senaryo kurar.</summary>
+        public YuklenenSenaryo(
+            Yanki.Core.Simulation.SenaryoTanimi senaryo, IReadOnlyList<Yanki.Core.Rules.KuralTanimi> kurallar, IReadOnlyList<Yanki.Core.Decision.EylemTanimi> eylemler,
+            IReadOnlyList<Yanki.Core.Simulation.KrizSatiri> krizler, Yanki.Dialogue.SablonDosyasi? sablon)
+        {
+            Senaryo = senaryo;
+            Kurallar = kurallar;
+            Eylemler = eylemler;
+            Krizler = krizler;
+            Sablon = sablon;
+        }
+
+        /// <summary>Bu seed ile yeni bir simülasyon kurar.</summary>
+        public Yanki.Core.Simulation.Simulasyon SimulasyonKur(ulong seed) =>
+            Yanki.Core.Simulation.Simulasyon.Olustur(Senaryo, Kurallar, seed, eylemler: Eylemler, krizler: Krizler);
+    }
+}

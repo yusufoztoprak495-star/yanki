@@ -68,5 +68,25 @@ namespace Yanki.Scenarios.Tests
             Assert.Equal(1, Calistir("validate", Path.Combine(_dizin, "yok")).Kod);
             Assert.Equal(1, Calistir("validate").Kod);
         }
+
+        [Fact]
+        public void Coverage_kriter_tutmazsa_iki_doner_markdown_stdout_a_yazilir()
+        {
+            // HanGerilim'in oynanislar/ dizini yok: yalnızca oyuncusuz koşu var, betikli toplam 0 (kurallar hiç tetiklenmez).
+            var r = Calistir("coverage", Repo("samples", "HanGerilim"), "--seeds", "2", "--tick", "6");
+
+            Assert.Equal(2, r.Kod);
+            Assert.StartsWith("# Kapsama raporu: HanGerilim", r.Cikti, StringComparison.Ordinal);
+            Assert.Contains("hiç tetiklenmedi", r.Cikti, StringComparison.Ordinal);
+            Assert.DoesNotContain(((char)13).ToString(), r.Cikti, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void Coverage_kullanim_hatalari_bir_doner()
+        {
+            Assert.Equal(1, Calistir("coverage").Kod);
+            Assert.Equal(1, Calistir("coverage", Repo("samples", "HanGerilim"), "--seeds", "0").Kod);
+            Assert.Equal(1, Calistir("coverage", Path.Combine(_dizin, "yok")).Kod);
+        }
     }
 }

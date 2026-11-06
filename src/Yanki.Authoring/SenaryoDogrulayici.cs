@@ -17,8 +17,17 @@ namespace Yanki.Authoring
     public static class SenaryoDogrulayici
     {
         /// <summary>Senaryoyu, bağlı dosyaları, isteğe bağlı şablon ve menüyü doğrular.</summary>
-        public static DogrulamaSonucu Dogrula(DogrulamaGirdisi girdi)
+        public static DogrulamaSonucu Dogrula(DogrulamaGirdisi girdi) => Calistir(girdi, out _);
+
+        /// <summary>
+        /// Doğrular ve hata yoksa yüklenmiş nesneleri de verir (coverage aynı yükleme yolunu kullanır; ikinci yükleme yolu yok).
+        /// Hata varsa <paramref name="yuklenen"/> <c>null</c>'dır.
+        /// </summary>
+        public static DogrulamaSonucu Yukle(DogrulamaGirdisi girdi, out YuklenenSenaryo? yuklenen) => Calistir(girdi, out yuklenen);
+
+        private static DogrulamaSonucu Calistir(DogrulamaGirdisi girdi, out YuklenenSenaryo? yuklenen)
         {
+            yuklenen = null;
             if (girdi == null)
             {
                 throw new ArgumentNullException(nameof(girdi));
@@ -173,7 +182,13 @@ namespace Yanki.Authoring
                 MenuDenetimi.Denetle(girdi, senaryo, kurallar, katalog, krizler, sim != null, b);
             }
 
-            return new DogrulamaSonucu(b);
+            var genel = new DogrulamaSonucu(b);
+            if (sim != null && genel.HataSayisi == 0)
+            {
+                yuklenen = new YuklenenSenaryo(senaryo, kurallar, katalog!.Eylemler, krizler, sablon);
+            }
+
+            return genel;
         }
 
         private static bool HataVar(List<Bulgu> b)
