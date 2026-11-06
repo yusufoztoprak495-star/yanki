@@ -5,9 +5,9 @@ Tek bakışta: neredeyiz, ne bitti, Yusuf'tan ne bekleniyor. **Her PR'da güncel
 ## Son güncelleme
 
 - **Tarih:** 2026-11-05
-- **PR:** [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) (8. hafta: diyalog katmanı ve düzeltme turu), `hafta-08` dalı, **açık**; merge'i Yusuf yapar. [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
+- **PR:** [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) (8. hafta: diyalog katmanı ve düzeltme turu), `hafta-08` dalı, **merge edildi** (merge commit `162e180`). [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) (7. hafta), [PR #10](https://github.com/yusufoztoprak495-star/yanki/pull/10) (6. hafta), [PR #9](https://github.com/yusufoztoprak495-star/yanki/pull/9) (5. hafta) ve [PR #8](https://github.com/yusufoztoprak495-star/yanki/pull/8) merge edildi.
 
-## Hafta 8: performans kararı ve diyalog (`hafta-08` dalı, [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) açık, düzeltme turu bitti)
+## Hafta 8: performans kararı ve diyalog (`hafta-08` dalı, [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) merge edildi, düzeltme turu bitti)
 
 - **Bitti:** `Yanki.Dialogue` (olaydan niyet, kriterle şablon seçimi, tekrar, hafıza göndermesi, Türkçe mini gramer, tek seviye followup, `IDialogueRenderer`), `yanki diyalog` / `diyalog-replay`, ayrı şablon dosyası, ADR-014 (Önerildi), ADR-015 (Önerildi), 3 diyalog golden'ı + CI adımı (dört ana golden değişmedi), sıra etkisi diyalog testleri, CsCheck değişmezleri (5 tohum × 200: 5/5 yeşil).
 - **Ölçüm:** 8 NPC gerçekçi, dönüşümlü 20'şer süreç: diyalog kapalı 2.78 ms/tick, açık 3.06 ms (≤ 5 ms tutar); replay 514 vs 541 ms (ADR-015).
@@ -188,5 +188,5 @@ Hafta 8 bu işlerle başladı; hepsi kapandı (bölüm tarihçe olarak kalır):
 ## Sıradaki hafta
 
 - **7. hafta:** tamamlandı, [PR #11](https://github.com/yusufoztoprak495-star/yanki/pull/11) merge edildi. Z4 11. hafta adayıdır; gossip maliyeti 8. haftada çelişki dizini ile giderildi (ADR-015).
-- **8. hafta:** tamamlandı; [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) Yusuf'un merge'ini bekliyor.
+- **8. hafta:** tamamlandı; [PR #13](https://github.com/yusufoztoprak495-star/yanki/pull/13) merge edildi (`162e180`).
 - **9. hafta:** görev metni Yusuf'tan gelecek (kapsam için plan bölüm 12). Devredenler: Kasaba Hanı şablon kümesi ve diyalog maliyetinin gerçek senaryoda yeniden ölçümü (ADR-015), `yanki validate` tam sürümünün şablon doğrulayıcısını (`SablonYukleyici`, uyarılar dahil) kullanması.
