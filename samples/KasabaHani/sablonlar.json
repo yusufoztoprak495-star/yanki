@@ -569,19 +569,14 @@
       "concept": "selam",
       "kriterler": [
         {
-          "alan": "hafiza_var(anlatti, oyuncu, 48)",
+          "alan": "kok(konum!(muhur, depo), oyuncu)",
           "op": "==",
           "deger": true,
           "agirlik": 3,
           "zorunlu": true
         }
       ],
-      "hafiza": {
-        "tur": "anlatti",
-        "fail": "oyuncu",
-        "son_n_tick": 48
-      },
-      "metin": "#hafiza.zaman# mührün yerini söylemiştin #dinleyen#, minnettarım."
+      "metin": "Mührün yerini sen söylemiştin #dinleyen#, minnettarım."
     },
     {
       "id": "selam_hirsiz_hafiza",

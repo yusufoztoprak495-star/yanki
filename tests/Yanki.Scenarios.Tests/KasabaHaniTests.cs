@@ -349,6 +349,53 @@ namespace Yanki.Scenarios.Tests
             Cikti.WriteLine($"Durum 2b: ele verme eylemi seçilen toplam {secildi} (20 seed).");
         }
 
+        // ---- selam_muhur_hafiza: uydurma gönderme yok (hafiza_var konuya bakmaz; şablon kok ile mühüre bağlanır) ----
+
+        private static PlayerAction Anlat(string hedef, string onerme) =>
+            new PlayerAction("anlatti", hedef, new[] { new KeyValuePair<string, string>("onerme", onerme) });
+
+        [Fact]
+        public void Muhur_disinda_bir_sey_anlatilan_NPC_selam_muhur_hafizayi_secmez()
+        {
+            for (ulong seed = 1; seed <= 5; seed++)
+            {
+                // Oyuncu Rıza'ya yalnızca borcu anlatır (mühürden söz etmez); sonra Rıza'ya selam verir.
+                var (sim, motor) = KosOzel(seed, new[] { (1L, Anlat("Riza", "borclu(Mehmet,Riza,500)")), (2L, new PlayerAction("selam_oldu", "Riza")) }, 3, diyalog: true);
+                using (motor)
+                {
+                    var satir = motor!.Satirlar.Single(l => l.Konusan == "Riza" && l.Dinleyen == "oyuncu" && l.Tick == 2);
+                    Assert.NotEqual("selam_muhur_hafiza", satir.SablonId);
+                    Assert.DoesNotContain("Mührün", satir.Metin, StringComparison.Ordinal);
+                    Assert.NotNull(sim);
+                }
+            }
+        }
+
+        [Fact]
+        public void Muhur_yerini_oyuncudan_duyan_NPC_mühür_tasindiktan_sonra_da_selam_muhur_hafizayi_secer()
+        {
+            var secildi = 0;
+            for (ulong seed = 1; seed <= 5; seed++)
+            {
+                var (sim, motor) = KosOzel(seed, new[] { (1L, Anlat("Osman", "konum!(muhur,depo)")), (3L, new PlayerAction("selam_oldu", "Osman")) }, 3, diyalog: true);
+                using (motor)
+                {
+                    // mühür muhtarlığa taşındı (eski konum gerçeği düştü); Osman'ın kanıtı silinmedi, kök oyuncu
+                    Assert.Equal("muhtarlik", sim.Dunya.TekDeger("konum!", "muhur"));
+                    var satir = motor!.Satirlar.Single(l => l.Konusan == "Osman" && l.Dinleyen == "oyuncu" && l.Tick == 3);
+                    // Aynı puanlı doğru hafıza şablonu (Osman aynı pencerede hırsızlığı da gördüyse selam_hirsiz_hafiza) eşitlikte RNG ile seçilebilir; ikisi de doğrudur.
+                    Assert.Contains(satir.SablonId, new[] { "selam_muhur_hafiza", "selam_hirsiz_hafiza" });
+                    if (satir.SablonId == "selam_muhur_hafiza")
+                    {
+                        Assert.Equal("Mührün yerini sen söylemiştin yabancı, minnettarım.", satir.Metin);
+                        secildi++;
+                    }
+                }
+            }
+
+            Assert.True(secildi > 0, "hiçbir seed'de selam_muhur_hafiza seçilmedi: test anlamsız");
+        }
+
         // ---- Üç gerilim tohumu ----
 
         [Fact]

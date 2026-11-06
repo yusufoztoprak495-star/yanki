@@ -51,5 +51,5 @@ dotnet run --project src/Yanki.Cli -c Release -- diyalog-replay tests/golden/diy
 dotnet run --project src/Yanki.Cli -c Release -- diyalog-replay tests/golden/diyalog/<dosya>.golden.json --guncelle # bilerek değiştiyse (gerekçe PR'da)
 ```
 
-Mevcut: `kasaba-hani-diyalog-1` (9. hafta, Kasaba Hanı şablonu, `kasaba-hani-1.json` kaydı; `diyalog_hash` `aade456097c3531f`), `han-gerilim-diyalog-1` (HanGerilim şablonu, `han-gerilim-1.json` kaydı), `soylenti-a` / `soylenti-b` (SiraEtkisiSoylenti, aynı iki oyuncu eylemi farklı sırada; kayıtlar `*.kayit.json`).
+Mevcut: `kasaba-hani-diyalog-1` (9. hafta, Kasaba Hanı şablonu, `kasaba-hani-1.json` kaydı; `diyalog_hash` `aade456097c3531f`, `sablon_hash` `91a3f51384690b6e`: `selam_muhur_hafiza` düzeltmesiyle yalnızca `sablon_hash` değişti, `diyalog_hash` aynı), `han-gerilim-diyalog-1` (HanGerilim şablonu, `han-gerilim-1.json` kaydı), `soylenti-a` / `soylenti-b` (SiraEtkisiSoylenti, aynı iki oyuncu eylemi farklı sırada; kayıtlar `*.kayit.json`).
 Şablon metni değişince `sablon_hash` kırılır; bu yalnızca metin düzeltmesidir, simülasyon hash'leri değişmez.
