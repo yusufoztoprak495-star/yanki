@@ -6,6 +6,10 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/), sürümleme [Se
 
 ### Eklendi
 
+- 9. hafta: `Yanki.Authoring` (`yanki validate`: tek giriş, `dosya:satir` hata/uyarı listesi, kişilik kullanımı, ulaşılamaz şablon, korumalı kimlik, oyuncu menüsü `Submit` denetimi; `yanki coverage`: betik × seed, günlükten sayım, Markdown rapor, şablon grupları, atlanan betik eylemleri), `tools/olcum --senaryo`.
+- 9. hafta: kriter dili sözlüğü 18 → 19 (`kok(onerme, kisi)`), eylem `aktorler`, senaryo `baslangic_inanclari` (tick 0 `kanit_eklendi`, `KuralId: senaryo`), `onerme_metinleri` tek değerli yüklem (`konum!`) ve ünlü düşmesi için yumuşak gövde; ADR-016.
+- 9. hafta: `samples/KasabaHani` (8 NPC, 16 eylem, 31 kural, 80 şablon, 2 yay, 2 korumalı, 3 gerilim tohumu, 9 menü girdisi, 5 oynanış betiği; taslak), golden #5 `kasaba-hani-1` ve `kasaba-hani-diyalog-1`, `KasabaHaniTests`, Kasaba CsCheck değişmezleri; coverage için elle tetiklenen CI işi (`workflow_dispatch`).
+- 9. hafta: performans (hash'ler ve olay biçimi değişmedi): konu hesabında `Ilgi` döngüsü ve eşleşen önerme indeksi, `Onerme` ayrıştırma önbelleği, akışlı durum hash'i (`Hash64.Akis`).
 - 8. hafta: `Yanki.Dialogue` (olaydan niyet, kriterle şablon seçimi, tekrar, hafıza göndermesi, Türkçe mini gramer, tek seviye followup, `IDialogueRenderer`), `yanki diyalog` ve `yanki diyalog-replay`, ayrı şablon dosyası (`sablon_hash`, `diyalog_hash`), örnek şablonlar (HanGerilim, SiraEtkisiSoylenti; taslak), diyalog golden'ları (`tests/golden/diyalog/`) ve CI adımı, ADR-014 (Önerildi).
 - 8. hafta: ADR-015 (5 ms kriteri: 8 NPC v0.1 kriteri, 50 NPC v0.2 hedefi); `tools/olcum --ozet | --butce | --oynat`; `Zihin` çelişki dizini (8 NPC gerçekçi fikstür 11.16 → 2.88 ms/tick, 50 NPC ≈ 1400 → ≈ 330 ms/tick; hash'ler değişmedi).
 - ADR-001..010 gerekçeleri, yeniden yazılmış modül notları ve Devlog #1 (Claude Code yazdı; ADR'ler Yusuf'un onayına kadar "Önerildi").
